@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/AngelZatch/Berrybox-Chat/issues"
   },
-  "homepage": "https://github.com/AngelZatch/Berrybox-Chat#readme"
+  "homepage": "https://github.com/AngelZatch/Berrybox-Chat#readme",
+  "dependencies": {
+    "express": "^4.16.2",
+    "socket.io": "^2.0.4"
+  }
 }
