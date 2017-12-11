@@ -18,9 +18,14 @@
   "homepage": "https://github.com/AngelZatch/Berrybox-Chat#readme",
   "dependencies": {
     "express": "^4.16.2",
+    "lodash": "^4.17.4",
     "socket.io": "^2.0.4"
   },
   "devDependencies": {
-    "gulp": "^3.9.1"
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.2.3",
+    "ts-node": "^4.0.1",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
   }
 }
