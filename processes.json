@@ -1,5 +1,9 @@
 [
     {
-        
+        "script": "dist/services/sync.service.js",
+        "name": "sync.service",
+        "exec_mode": "cluster",
+        "watch": "true",
+        "instances": "1"
     }
 ]
