@@ -6,6 +6,8 @@ const io = require("socket.io")(http);
 
 io.set('transports', ['websocket']);
 
+import { Message } from './../models/message.model';
+
 class SyncService {
     subscribers = [];
     public start() {
@@ -37,10 +39,10 @@ class SyncService {
                     // TODO: Add the client to the list of subscribers
                     this.subscribers.push(client);
 
-                    const welcomeMessage = {
+                    const welcomeMessage = new Message({
                         type: 'system',
                         contents: 'You are now connected to the chat of this box. Welcome!'
-                    }
+                    });
 
                     socket.emit('confirm', welcomeMessage);
                 }
