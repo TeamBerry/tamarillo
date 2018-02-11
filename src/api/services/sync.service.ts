@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as moment from 'moment';
 const express = require("express")();
 const http = require("http").Server(express);
 const io = require("socket.io")(http);
@@ -36,7 +37,12 @@ class SyncService {
                     // TODO: Add the client to the list of subscribers
                     this.subscribers.push(client);
 
-                    socket.emit('confirm', "Connection granted. Welcome.");
+                    const welcomeMessage = {
+                        type: 'system',
+                        contents: 'You are now connected to the chat of this box. Welcome!'
+                    }
+
+                    socket.emit('confirm', welcomeMessage);
                 }
             });
 
