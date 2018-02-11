@@ -1,13 +1,17 @@
 import * as moment from 'moment';
 
 export class Message {
-    type: string;
+    author: string;
     contents: string;
+    source: string;
+    scope: string;
     time: any;
 
     constructor(obj?: any) {
-        this.type = obj && obj.type;
+        this.author = obj && obj.author || null;
         this.contents = obj && obj.contents;
-        this.time = obj && obj.time;
+        this.source = obj && obj.source || null;
+        this.scope = obj && obj.scope || null;
+        this.time = obj && obj.time || moment();
     }
 }
