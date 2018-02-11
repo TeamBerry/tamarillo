@@ -4,6 +4,8 @@ const express = require("express")();
 const http = require("http").Server(express);
 const io = require("socket.io")(http);
 
+const Video = require("./../models/video.model");
+
 io.set('transports', ['websocket']);
 
 import { Message } from './../models/message.model';
@@ -40,13 +42,29 @@ class SyncService {
                     this.subscribers.push(client);
 
                     const welcomeMessage = new Message({
-                        contents: 'You are now connected to the chat of this box. Welcome!',
+                        contents: 'You are now connected to the box.',
                         source: 'system',
                     });
 
                     socket.emit('confirm', welcomeMessage);
                 }
             });
+
+            socket.on('video', (payload) => {
+                // TODO: Get the link, add it to the database
+                console.log("got video from client.", payload);
+                Video.findOne({ link: payload.link }).exec((err, document) => {
+                    if (!document) {
+                        Video.create({ link: payload.link, name: 'Dummy' }, (err, entry) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            console.log(entry);
+                        });
+                    }
+                });
+
+            })
 
             socket.on('sync', (sync) => {
                 console.log(sync);
