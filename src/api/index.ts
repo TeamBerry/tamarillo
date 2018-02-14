@@ -1,9 +1,9 @@
 import * as http from "http";
-import mongoose from "mongoose";
+const mongoose = require('./../config/connection');
 
 import App from "./app";
 
-const port = 3001;
+const port = 3000;
 App.set("port", port);
 
 const server = http.createServer(App);

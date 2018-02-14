@@ -1,7 +1,6 @@
 import * as bodyParser from "body-parser";
 import * as express from "express";
 
-
 class App {
     public express: express.Application;
 
