@@ -1,4 +1,4 @@
-const mongoose = require("./../config/connection");
+import mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
     link: 'string',

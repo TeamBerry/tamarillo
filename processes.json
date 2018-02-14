@@ -13,4 +13,12 @@
         "watch": "true",
         "instances": "1"
     },
+    {
+        "script": "dist/api/index.js",
+        "args": ["-p", "3000"],
+        "name": "api",
+        "exec_mode": "cluster",
+        "watch": "true",
+        "instances": "1"
+    }
 ]
