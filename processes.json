@@ -1,5 +1,16 @@
 [
     {
-        
-    }
+        "script": "dist/services/sync.service.js",
+        "name": "sync.service",
+        "exec_mode": "cluster",
+        "watch": "true",
+        "instances": "1"
+    },
+    {
+        "script": "dist/services/chat.service.js",
+        "name": "chat.service",
+        "exec_mode": "cluster",
+        "watch": "true",
+        "instances": "1"
+    },
 ]
