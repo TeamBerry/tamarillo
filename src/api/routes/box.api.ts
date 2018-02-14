@@ -10,6 +10,7 @@ export class BoxApi {
     }
 
     public init() {
+        console.log("Box APIs initialised.");
         this.router.get("/", this.index);
         this.router.post("/", this.store);
     }
