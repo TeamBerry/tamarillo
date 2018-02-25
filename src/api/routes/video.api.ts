@@ -32,7 +32,7 @@ export class VideoApi {
     }
 
     public show(req: Request, res: Response) {
-        Video.find({ _id: req.params.id }, (err, document) => {
+        Video.findOne({ _id: req.params.id }, (err, document) => {
             if(err){
                 res.status(500).send(err);
             }

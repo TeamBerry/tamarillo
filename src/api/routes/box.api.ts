@@ -33,17 +33,22 @@ export class BoxApi {
     }
 
     public show(req: Request, res: Response) {
-        Box.find({ _id: req.params.box }, (err, document) => {
-            if(err){
-                res.status(500).send(err);
-            }
+        Box.findOne({ _id: req.params.box })
+            .populate({
+                path: 'playlist.video',
+                collection: 'videos'
+            })
+            .exec((err, document) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
 
-            if(document){
-                res.status(200).send(document);
-            }
+                if (document) {
+                    res.status(200).send(document);
+                }
 
-            res.status(204);
-        })
+                res.status(204);
+            });
     }
 
     public store(req: Request, res: Response, next: NextFunction) {
