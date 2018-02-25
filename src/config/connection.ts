@@ -5,7 +5,7 @@ mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
 
 var db = mongoose.connection;
 
-db.once('open', () => {
+db.on('open', () => {
     console.log("Connected to MongoDB.");
 });
 

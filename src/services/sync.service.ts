@@ -1,18 +1,20 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
+const mongoose = require('./../config/connection');
 const express = require("express")();
 const http = require("http").Server(express);
 const io = require("socket.io")(http);
 
 const Video = require("./../models/video.model");
+const Box = require("./../models/box.model");
+import { Message } from './../models/message.model';
 
 io.set('transports', ['websocket']);
 
-import { Message } from './../models/message.model';
-
-class SyncService {
+export class SyncService {
     subscribers = [];
     public start() {
+        console.log("starting sync service...");
         this.subscribers = [];
         http.listen(3001, () => {
             console.log("socket service started. Listening on port 3001...");
@@ -50,21 +52,29 @@ class SyncService {
                 }
             });
 
-            socket.on('video', (payload) => {
+            // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
+            socket.on('video', async (payload) => {
                 // TODO: Get the link, add it to the database
                 console.log("got video from client.", payload);
-                Video.findOne({ link: payload.link }).exec((err, document) => {
-                    if (!document) {
-                        Video.create({ link: payload.link, name: 'Dummy' }, (err, entry) => {
-                            if (err) {
-                                console.log(err);
-                            }
-                            console.log(entry);
-                        });
-                    }
+                const video = await this.getVideo(payload);
+
+                console.log("video: ", video);
+
+                await this.postToBox(video, payload.token);
+
+                // Emit feedback to the chat
+                const recipients = _.filter(this.subscribers,
+                    { token: payload.token, type: 'sync' });
+
+                const feedback = new Message({
+                    contents: 'A video has been added to the playlist.',
+                    source: 'system',
                 });
 
-            })
+                _.each(recipients, (recipient) => {
+                    io.to(recipient.socket).emit('sync', feedback);
+                });
+            });
 
             socket.on('sync', (sync) => {
                 console.log(sync);
@@ -75,6 +85,53 @@ class SyncService {
                 const socketIndex = _.findIndex(this.subscribers, { socketId: socket.id });
                 this.subscribers.splice(socketIndex, 1);
             });
+        });
+    }
+
+    async getVideo(payload) {
+        return Video.find({ link: payload.link }, async (err, document) => {
+            console.log("Search done. Displaying results");
+            if (document.length === 0) {
+                console.log("no video found. Creating one...");
+                // TODO: Get info from YouTube
+                return Video.create({ link: payload.link, name: 'Dummy' }, (err, document) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    console.log("video added.", document);
+
+                    return document;
+                });
+            }
+
+            return document;
+        });
+    }
+
+    async postToBox(video, token) {
+        return Box.findOne({ _id: token }).exec(async (err, document) => {
+            if (err) {
+                console.log(err); // No box found
+            }
+
+            const submission = {
+                timestart: moment(),
+                video: video._id,
+                startTime: null,
+                endTime: null,
+            };
+
+            document.playlist.push(submission);
+
+            return Box.findOneAndUpdate(
+                { _id: token },
+                { $set: { playlist: document.playlist } },
+                (err, document) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    return;
+                });
         });
     }
 }

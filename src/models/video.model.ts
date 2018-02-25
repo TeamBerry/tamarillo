@@ -1,9 +1,8 @@
 import mongoose = require('mongoose');
 
 var schema = new mongoose.Schema({
-    link: 'string',
-    name: 'string',
+    link: String,
+    name: String,
 });
 
-var Video = mongoose.model('Video', schema);
-module.exports = Video;
+module.exports = mongoose.model('Video', schema);

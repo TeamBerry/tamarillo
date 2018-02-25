@@ -7,12 +7,14 @@ export class BoxApi {
 
     constructor() {
         this.router = Router();
+        this.init();
     }
 
     public init() {
-        console.log("Box APIs initialised.");
         this.router.get("/", this.index);
+        this.router.get("/box", this.show);
         this.router.post("/", this.store);
+        console.log("Box APIs initialised.");
     }
 
     public index(req: Request, res: Response) {
@@ -31,7 +33,17 @@ export class BoxApi {
     }
 
     public show(req: Request, res: Response) {
+        Box.find({ _id: req.params.box }, (err, document) => {
+            if(err){
+                res.status(500).send(err);
+            }
 
+            if(document){
+                res.status(200).send(document);
+            }
+
+            res.status(204);
+        })
     }
 
     public store(req: Request, res: Response, next: NextFunction) {
