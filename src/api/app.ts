@@ -1,5 +1,6 @@
 import * as bodyParser from "body-parser";
 import * as express from "express";
+import cors = require("cors");
 
 import BoxApi from './../api/routes/box.api';
 import VideoApi from './../api/routes/video.api';
@@ -9,6 +10,8 @@ class App {
 
     constructor(){
         this.app = express();
+
+        this.app.use(cors());
 
         this.middlewares();
         this.routes();

@@ -1,11 +1,11 @@
 import mongoose = require("mongoose");
 
 var schema = new mongoose.Schema({
-    token: String,
-    playlist: [],
-    title: String,
     creator: String,
+    name: String,
     description: String,
+    lang: String,
+    playlist: [],
 });
 
 module.exports = mongoose.model('Box', schema);
