@@ -54,7 +54,6 @@ export class SyncService {
 
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on('video', async (payload) => {
-                // TODO: Get the link, add it to the database
                 console.log("got video from client.", payload);
                 const video = await this.getVideo(payload);
 
@@ -89,12 +88,12 @@ export class SyncService {
     }
 
     async getVideo(payload) {
-        return Video.find({ link: payload.link }, async (err, document) => {
+        return Video.findOne({ link: payload.link }, async (err, document) => {
             console.log("Search done. Displaying results");
             if (document.length === 0) {
                 console.log("no video found. Creating one...");
                 // TODO: Get info from YouTube
-                return Video.create({ link: payload.link, name: 'Dummy' }, (err, document) => {
+                const document = await Video.create({ link: payload.link, name: 'Dummy' }, (err, document) => {
                     if (err) {
                         console.log(err);
                     }
@@ -109,6 +108,7 @@ export class SyncService {
     }
 
     async postToBox(video, token) {
+        console.log("got video to add to playlist: ", video);
         return Box.findOne({ _id: token }).exec(async (err, document) => {
             if (err) {
                 console.log(err); // No box found
