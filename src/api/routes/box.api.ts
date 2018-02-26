@@ -34,6 +34,7 @@ export class BoxApi {
 
     public show(req: Request, res: Response) {
         Box.findOne({ _id: req.params.box })
+        // FIXME: Doesn't populate correctly, just sends null instead.
             .populate({
                 path: 'playlist.video',
                 collection: 'videos'

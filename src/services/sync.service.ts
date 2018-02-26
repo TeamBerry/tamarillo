@@ -9,6 +9,9 @@ const Video = require("./../models/video.model");
 const Box = require("./../models/box.model");
 import { Message } from './../models/message.model';
 
+/* const ChatService = require('./chat.service'); */
+// TODO: Socket Manager. That will handle all connections and dispatch orders to services.
+
 io.set('transports', ['websocket']);
 
 export class SyncService {
@@ -63,7 +66,7 @@ export class SyncService {
 
                 // Emit feedback to the chat
                 const recipients = _.filter(this.subscribers,
-                    { token: payload.token, type: 'sync' });
+                    { token: payload.token, type: 'chat' });
 
                 const feedback = new Message({
                     contents: 'A video has been added to the playlist.',
@@ -71,7 +74,7 @@ export class SyncService {
                 });
 
                 _.each(recipients, (recipient) => {
-                    io.to(recipient.socket).emit('sync', feedback);
+                    io.to(recipient.socket).emit('chat', feedback);
                 });
             });
 
@@ -89,22 +92,34 @@ export class SyncService {
 
     async getVideo(payload) {
         return Video.findOne({ link: payload.link }, async (err, document) => {
-            console.log("Search done. Displaying results");
-            if (document.length === 0) {
+            console.log("Search done. Displaying results", document);
+            if (!document) {
                 console.log("no video found. Creating one...");
                 // TODO: Get info from YouTube
-                const document = await Video.create({ link: payload.link, name: 'Dummy' }, (err, document) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    console.log("video added.", document);
-
-                    return document;
-                });
+                // FIXME: Doesn't wait for @createVideo to resolve
+                const document = await this.createVideo(payload.link);
+                console.log("video created. Document is: ", document);
             }
-
             return document;
         });
+    }
+
+    /**
+     * Adds a new video to the collection of videos.
+     *
+     * @param {string} link
+     * @returns a document of the created video
+     * @memberof SyncService
+     */
+    async createVideo(link: string){
+        return Video.create({ link: link, name: 'Dummy'}, async (err, document) => {
+            if(err){
+                console.log(err);
+            }
+
+            console.log("Video added: ", document);
+            return document;
+        })
     }
 
     async postToBox(video, token) {
