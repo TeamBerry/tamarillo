@@ -56,15 +56,24 @@ export class SyncService {
             });
 
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
+            /**
+             * When recieving a video from an user, the service searches for it in the video database
+             * and adds the video to the playlist of the box.
+             *
+             * If the video's not found in the database, it is created.
+             *
+             * Once it's done, it emits a confirmation message to the user.
+             */
             socket.on('video', async (payload) => {
-                console.log("got video from client.", payload);
+                console.log("==================== got video from client.", payload);
+
+                // Obtaining video from database. Creating it if needed
                 const video = await this.getVideo(payload);
 
-                console.log("video: ", video);
-
+                // Adding it to the playlist of the box
                 await this.postToBox(video, payload.token);
 
-                // Emit feedback to the chat
+                // Emitting feedback to the chat
                 const recipients = _.filter(this.subscribers,
                     { token: payload.token, type: 'chat' });
 
@@ -90,38 +99,32 @@ export class SyncService {
         });
     }
 
+    /**
+     * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
+     *
+     * @param {any} payload
+     * @returns
+     * @memberof SyncService
+     */
     async getVideo(payload) {
-        return Video.findOne({ link: payload.link }, async (err, document) => {
-            console.log("Search done. Displaying results", document);
-            if (!document) {
-                console.log("no video found. Creating one...");
-                // TODO: Get info from YouTube
-                // FIXME: Doesn't wait for @createVideo to resolve
-                const document = await this.createVideo(payload.link);
-                console.log("video created. Document is: ", document);
-            }
-            return document;
-        });
+        let video = await Video.findOne({ link: payload.link });
+
+        if (!video) {
+            // TODO: Get info from YouTube
+            video = await Video.create({ link: payload.link, name: 'Dummy' });
+        }
+
+        return video;
     }
 
     /**
-     * Adds a new video to the collection of videos.
+     * Adds the obtained video to the playlist of the box
      *
-     * @param {string} link
-     * @returns a document of the created video
+     * @param {any} video
+     * @param {any} token
+     * @returns
      * @memberof SyncService
      */
-    async createVideo(link: string){
-        return Video.create({ link: link, name: 'Dummy'}, async (err, document) => {
-            if(err){
-                console.log(err);
-            }
-
-            console.log("Video added: ", document);
-            return document;
-        })
-    }
-
     async postToBox(video, token) {
         console.log("got video to add to playlist: ", video);
         return Box.findOne({ _id: token }).exec(async (err, document) => {
