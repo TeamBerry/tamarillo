@@ -24,6 +24,9 @@ export class SyncService {
         });
 
         io.on('connection', (socket) => {
+            /**
+             * When an user joins the box, they will have to auth themselves.
+             */
             socket.on('auth', (message) => {
                 console.log("connection attempt made on socket service...");
                 const client = {
@@ -65,7 +68,8 @@ export class SyncService {
              * Once it's done, it emits a confirmation message to the user.
              */
             socket.on('video', async (payload) => {
-                console.log("==================== got video from client.", payload);
+                console.log("got video from client.", payload);
+                // TODO: Check that the client is correctly auth (in the list of subscribers)
 
                 // Obtaining video from database. Creating it if needed
                 const video = await this.getVideo(payload);
@@ -87,10 +91,35 @@ export class SyncService {
                 });
             });
 
+            /**
+             * After the client auth themselves, they need to caught up with the others in the box. It means they will ask for the
+             * current video playing and must have an answer.
+             *
+             * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
+             * a webhook. This is only for in-box requests.
+             */
+            socket.on('start', (box) => {
+                // TODO: Check the user is auth
+
+                // TODO: Get the currently playing video in the box and send it back to whoever asked.
+                /**
+                 * The query is as follows: find in the box the video that has its startTime defined but its endTime still null
+                 */
+
+                // TODO: Send response back on 'sync'
+            })
+
+            /**
+             * Every in-box communication regarding video sync between clients will go through this event.
+             */
             socket.on('sync', (sync) => {
+                // TODO: The whole sync process needs to be redone in here, since it has to leave Logos.
                 console.log(sync);
             });
 
+            /**
+             * When an user leaves the box
+             */
             socket.on('disconnect', () => {
                 console.log("user disconnecting. Deleting from list of subscribers...");
                 const socketIndex = _.findIndex(this.subscribers, { socketId: socket.id });
