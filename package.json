@@ -1,5 +1,5 @@
 {
-  "name": "chat",
+  "name": "Chronos",
   "version": "0.0.1",
   "description": "Node server for berrybox - Handles sync, chat",
   "main": "index.js",
@@ -18,12 +18,16 @@
   "homepage": "https://github.com/AngelZatch/Berrybox-Chat#readme",
   "dependencies": {
     "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
     "express": "^4.16.2",
     "lodash": "^4.17.4",
-    "mongoose": "^4.13.6",
+    "moment": "^2.20.1",
+    "mongodb": "^3.0.2",
+    "mongoose": "^5.0.5",
     "socket.io": "^2.0.4"
   },
   "devDependencies": {
+    "@types/node": "^9.4.6",
     "gulp": "^3.9.1",
     "gulp-typescript": "^3.2.3",
     "ts-node": "^4.0.1",
