@@ -52,7 +52,6 @@ export class SyncService {
      */
     public async onVideo(payload) {
         console.log("got video from client.", payload);
-        // TODO: Check that the client is correctly auth (in the list of subscribers)
 
         // Obtaining video from database. Creating it if needed
         const video = await this.getVideo(payload);
@@ -60,8 +59,9 @@ export class SyncService {
         // Adding it to the playlist of the box
         await this.postToBox(video, payload.token);
 
+        const message = payload.author + ' has added the video "' + video.name + '" to the playlist.';
         const feedback = new Message({
-            contents: 'A video has been added to the playlist.',
+            contents: message,
             source: 'system',
         });
 

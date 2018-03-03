@@ -42,7 +42,8 @@ class ManagerService {
                     origin: message.origin,
                     token: message.token,
                     subscriber: message.subscriber,
-                    socket: socket.id
+                    socket: socket.id,
+                    type: message.type
                 };
 
                 // Connection check. If the user is not valid, he's refused
@@ -78,7 +79,7 @@ class ManagerService {
                 console.log("recieved response from the sync service", response);
 
                 // Emitting feedback to the chat
-                const recipients = _.filter(this.subscribers, { token: payload.token });
+                const recipients = _.filter(this.subscribers, { token: payload.token, type: 'chat' });
 
                 _.each(recipients, (recipient) => {
                     io.to(recipient.socket).emit('chat', response);
@@ -99,11 +100,19 @@ class ManagerService {
 
                 console.log("recieved response from the sync service", response);
 
+                const message = new Message({
+                    contents: 'The video currently playing in the box is ' + response.name,
+                    source: 'system'
+                });
+
                 // Get the recipient from the list of subscribers
-                const recipient = _.filter(this.subscribers, { subscriber: request.subscriber });
+                let recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'sync' });
 
                 // Emit the response back to the client
                 io.to(recipient[0].socket).emit('sync', response);
+
+                recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'chat'});
+                io.to(recipient[0].socket).emit('chat', message);
             });
 
             /**
@@ -123,7 +132,7 @@ class ManagerService {
                 if (await chatService.onChat(message)) {
                     const dispatchedMessage = new Message(message);
                     // We find all subscribers to the box (token of the message) for the chat type
-                    const recipients = _.filter(this.subscribers, { token: message.scope });
+                    const recipients = _.filter(this.subscribers, { token: message.scope, type: 'chat' });
 
                     console.log("found " + recipients.length + " recipients. Sending...");
 
@@ -139,13 +148,14 @@ class ManagerService {
                         source: 'system'
                     });
 
-                    const recipient = _.filter(this.subscribers, { token: message.author });
+                    const recipient = _.filter(this.subscribers, { token: message.author, type: 'chat' });
                     io.to(recipient.socket).emit('chat', response);
                 }
             });
 
             socket.on('disconnect', () => {
                 console.log("user disconnecting. Deleting from list of subscribers...");
+                // FIXME: Throwing an error
                 const socketIndex = _.findIndex(this.subscribers, { socketId: socket.id });
                 this.subscribers.splice(socketIndex, 1);
             });
