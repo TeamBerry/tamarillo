@@ -98,15 +98,31 @@ export class SyncService {
              * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
              * a webhook. This is only for in-box requests.
              */
-            socket.on('start', (box) => {
+            socket.on('start', async (request) => {
+                console.log("recieved query to start sync in the box", request);
                 // TODO: Check the user is auth
 
-                // TODO: Get the currently playing video in the box and send it back to whoever asked.
-                /**
-                 * The query is as follows: find in the box the video that has its startTime defined but its endTime still null
-                 */
+                // Get the currently played video for the request box
+                const boxDetails = await Box.findOne({ _id: request.token }); // TODO: Send only the playlist maybe?
+                const currentVideo = _.filter(boxDetails.playlist, (video) => {
+                    return video.startTime !== null;
+                }); // FIXME: Don't return an array of object, it's just one object.
+                const videoDetails = await Video.findOne({ _id: currentVideo[0].video });
 
-                // TODO: Send response back on 'sync'
+                const response = {
+                    link: videoDetails.link,
+                    name: videoDetails.name,
+                    submissionTime: currentVideo[0].timestart, // TODO: Rename this field as submissionTime in the playlist of the box
+                    startTime: currentVideo[0].startTime,
+                };
+
+                console.log("constructed response for the client: ", response);
+
+                // Get the recipient from the list of subscribers
+                const recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'sync' });
+
+                // Emit the response back to the client
+                io.to(recipient[0].socket).emit('sync', response);
             })
 
             /**
