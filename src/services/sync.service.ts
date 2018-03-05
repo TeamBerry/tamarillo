@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import * as express from "express";
+const axios = require("axios");
 const mongoose = require('./../config/connection');
+const querystring = require("querystring");
 
 const Video = require("./../models/video.model");
 const Box = require("./../models/box.model");
@@ -81,8 +82,10 @@ export class SyncService {
 
         if (!video) {
             // TODO: Get info from YouTube
+            const youtubeDetails = await axios.get('http://youtube.com/get_video_info?video_id=' + payload.link);
+            const parsedData = querystring.parse(youtubeDetails.data);
 
-            video = await Video.create({ link: payload.link, name: 'Dummy' });
+            video = await Video.create({ link: payload.link, name: parsedData.title });
         }
 
         return video;
