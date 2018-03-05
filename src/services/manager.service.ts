@@ -9,6 +9,8 @@ const http = require('http').Server(express);
 const io = require('socket.io')(http);
 io.set('transports', ['websocket']);
 
+const axios = require("axios");
+
 // Models
 const Video = require('./../models/video.model');
 const Box = require('./../models/box.model');
@@ -73,6 +75,11 @@ class ManagerService {
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on('video', async (payload) => {
                 console.log("handling video");
+
+                // Sandbox code. Gonna try to find the details from youtube
+                const youtubeDetails = await axios.get('http://youtube.com/get_video_info?video_id=' + payload.link);
+                console.log("got details from youtube: ", youtubeDetails);
+
                 // Dispatching request to the Sync Service
                 const response = await syncService.onVideo(payload);
 
@@ -111,7 +118,7 @@ class ManagerService {
                 // Emit the response back to the client
                 io.to(recipient[0].socket).emit('sync', response);
 
-                recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'chat'});
+                recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'chat' });
                 io.to(recipient[0].socket).emit('chat', message);
             });
 

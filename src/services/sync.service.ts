@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import * as express from "express";
 const mongoose = require('./../config/connection');
 
 const Video = require("./../models/video.model");
@@ -62,7 +63,7 @@ export class SyncService {
         const message = payload.author + ' has added the video "' + video.name + '" to the playlist.';
         const feedback = new Message({
             contents: message,
-            source: 'system',
+            source: 'bot',
         });
 
         return feedback;
@@ -80,6 +81,7 @@ export class SyncService {
 
         if (!video) {
             // TODO: Get info from YouTube
+
             video = await Video.create({ link: payload.link, name: 'Dummy' });
         }
 
