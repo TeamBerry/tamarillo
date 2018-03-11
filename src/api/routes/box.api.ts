@@ -19,26 +19,24 @@ export class BoxApi {
 
     public index(req: Request, res: Response) {
         console.log("INDEX OF BOXES");
-        Box.find({}, (err, collection) => {
-            if (err) {
-                res.status(500).send(err);
-            }
+        Box.find({})
+            .populate('playlist.video')
+            .exec((err, collection) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
 
-            if (collection) {
-                res.status(200).send(collection);
-            }
+                if (collection) {
+                    res.status(200).send(collection);
+                }
 
-            res.status(204);
-        });
+                res.status(204);
+            });
     }
 
     public show(req: Request, res: Response) {
         Box.findOne({ _id: req.params.box })
-        // FIXME: Doesn't populate correctly, just sends null instead.
-            .populate({
-                path: 'playlist.video',
-                collection: 'videos'
-            })
+            .populate('playlist.video')
             .exec((err, document) => {
                 if (err) {
                     res.status(500).send(err);
