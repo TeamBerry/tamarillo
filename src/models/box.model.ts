@@ -3,9 +3,9 @@ var Schema = mongoose.Schema;
 
 var boxSchema = new Schema({
     creator: String,
-    name: String,
     description: String,
     lang: String,
+    name: String,
     playlist: [{
         timestart: Number,
         video: { type: Schema.Types.ObjectId, ref: 'Video' },
