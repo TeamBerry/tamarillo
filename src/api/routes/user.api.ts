@@ -18,7 +18,18 @@ export class UserApi {
     }
 
     public show(req: Request, res: Response) {
+        User.findOne({ _id: req.params.user })
+            .exec((err, document) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
 
+                if (document) {
+                    res.status(200).send(document);
+                }
+
+                res.status(204);
+            });
     }
 
     public store(req: Request, res: Response) {
