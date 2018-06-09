@@ -5,7 +5,7 @@ import cors = require("cors");
 import BoxApi from './../api/routes/box.api';
 import VideoApi from './../api/routes/video.api';
 import UserApi from "./routes/user.api";
-import { AuthApi } from "./routes/auth.api";
+import AuthApi from "./routes/auth.api";
 
 class App {
     public app: express.Application;
