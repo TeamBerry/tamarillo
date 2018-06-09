@@ -4,7 +4,7 @@ const User = require("./../../models/user.model");
 const fs = require('fs');
 import * as jwt from 'jsonwebtoken';
 
-const RSA_PRIVATE_KEY = fs.readFileSync('src/private_key.ppk');
+const RSA_PRIVATE_KEY = fs.readFileSync('src/private_key.pem');
 
 export class AuthApi {
     public router: Router;
@@ -41,7 +41,7 @@ export class AuthApi {
             const jwtBearerToken = jwt.sign({}, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
                 algorithm: 'RS256',
                 expiresIn: 120,
-                subject: document._id
+                subject: String(document._id)
             });
 
             res.status(200).send(jwtBearerToken);
