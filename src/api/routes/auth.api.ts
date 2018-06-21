@@ -22,31 +22,71 @@ export class AuthApi {
         const mail = req.body.mail;
         const password = req.body.password;
 
-        console.log('mail: ', mail, ' password: ', password);
-
         // Find user in database
-        User.findOne({ mail: mail, password: password }, (err, document) => {
+        User.findOne({ mail: mail, password: password }, (err, user) => {
             if (err) {
                 res.status(500).send(err);
             }
 
             // If password is not correct, send back 401 HTTP error
-            if (!document) {
+            if (!user) {
                 res.status(401); // Unauthorized
             }
 
-            console.log(document);
+            const authResult = authApi.createSession(user);
 
-            // If password is correct, Create & Sign Bearer token and send it back to client
-            const jwtBearerToken = jwt.sign({}, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
-                algorithm: 'RS256',
-                expiresIn: 120,
-                subject: String(document._id)
-            });
-
-            res.status(200).send(jwtBearerToken);
-
+            // Sending bearer token
+            res.status(200).json(authResult);
         });
+    }
+
+    public signup(req: Request, res: Response) {
+        const mail = req.body.mail;
+        const password = req.body.password;
+
+        User.findOne({ mail: mail }, (err, user) => {
+            if (err) {
+                res.status(500).send(err);
+            }
+
+            if (user) {
+                // TODO: Send message if the user already exists
+            } else {
+                User.create({ mail: mail, password: password }, (err, newUser) => {
+                    // TODO: Handle error
+
+                    const authResult = authApi.createSession(newUser);
+
+                    res.status(200).json(authResult);
+                });
+            }
+        });
+
+    }
+
+
+    /**
+     *
+     * Creates the session for the user, based on the results of the login/signup
+     *
+     * @private
+     * @param {*} user The user for whom the session is created
+     * @param {number} [tokenExpiration=1296000] The duration of the session token (defaults to 1296000 seconds or 15 days)
+     * @returns The JSON Web Token
+     * @memberof AuthApi
+     */
+    private createSession(user, tokenExpiration = 1296000) {
+        // If password is correct, Create & Sign Bearer token and send it back to client
+        const jwtBearerToken = jwt.sign({}, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
+            algorithm: 'RS256',
+            expiresIn: tokenExpiration,
+            subject: String(user._id)
+        });
+
+        return {
+            bearer: jwtBearerToken,
+            expiresIn: tokenExpiration
+        };
     }
 }
 
