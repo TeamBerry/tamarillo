@@ -23,9 +23,11 @@ export class SyncService {
     public async onStart(request) {
         // Get the currently played video for the request box
         const boxDetails = await Box.findOne({ _id: request.token }); // TODO: Send only the playlist maybe?
+
         const currentVideo = _.filter(boxDetails.playlist, (video) => {
             return video.startTime !== null;
         }); // FIXME: Don't return an array of object, it's just one object.
+
         const videoDetails = await Video.findOne({ _id: currentVideo[0].video });
 
         const response = {
@@ -70,7 +72,7 @@ export class SyncService {
         });
 
         return {
-            feedback : feedback,
+            feedback: feedback,
             updatedBox: updatedBox
         };
     }

@@ -118,7 +118,9 @@ class ManagerService {
                 io.to(recipient[0].socket).emit('sync', response);
 
                 recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'chat' });
-                io.to(recipient[0].socket).emit('chat', message);
+                if(recipient[0]){
+                    io.to(recipient[0].socket).emit('chat', message);
+                }
             });
 
             /**
