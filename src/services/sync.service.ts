@@ -129,6 +129,8 @@ export class SyncService {
             { $set: { playlist: box.playlist } }
         ).populate('playlist.video');
 
+        // TODO: Call getNextVideo if the video submitted is the only remaining one in the queue
+
         return updatedBox;
     }
 
@@ -150,6 +152,7 @@ export class SyncService {
         const box = await Box.findOne({ _id: token });
 
         // TODO: Find last index to skip ignored videos
+        // FIXME: Cause errors if last video
         const currentVideoIndex = _.findIndex(box.playlist, (video) => {
             return video.startTime !== null && video.endTime === null;
         });
