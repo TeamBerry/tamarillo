@@ -129,6 +129,15 @@ class ManagerService {
             socket.on('sync', async (request) => {
                 // TODO: The whole sync process needs to be redone in here, since it has to leave Logos.
                 console.log("sync: ", request);
+
+                switch (request.order) {
+                    case 'next':
+                        this.transitionToNextVideo(request.boxToken);
+                        break;
+
+                    default:
+                        break;
+                }
             })
 
             /**
@@ -161,6 +170,14 @@ class ManagerService {
                 }
             });
 
+            /**
+             * When the box is updated, it goes through there to be updated in the database and sent
+             * back to all subscribers
+             */
+            socket.on('box', async (box) => {
+
+            })
+
             socket.on('disconnect', () => {
                 console.log("user disconnecting. Deleting from list of subscribers...");
                 // FIXME: Throwing an error
@@ -168,6 +185,27 @@ class ManagerService {
                 this.subscribers.splice(socketIndex, 1);
             });
         })
+    }
+
+    private async transitionToNextVideo(boxToken) {
+        let response = await syncService.getNextVideo(boxToken);
+
+        // Emit box refresh to all the subscribers
+        _.each(this.subscribers, (recipient) => {
+            io.to(recipient.socket).emit('sync', response.nextVideo);
+            io.to(recipient.socket).emit('box', response.updatedBox);
+        });
+
+        // Send chat message for subscribers
+        const message = new Message({
+            contents: 'The video currently playing in the box is ' + response.nextVideo.name,
+            source: 'system'
+        });
+
+        const chatRecipients = _.filter(this.subscribers, { type: 'chat' });
+        _.each(chatRecipients, (recipient) => {
+            io.to(recipient.socket).emit('chat', message);
+        });
     }
 
     /**

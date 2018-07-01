@@ -127,37 +127,56 @@ export class SyncService {
         let updatedBox = await Box.findOneAndUpdate(
             { _id: token },
             { $set: { playlist: box.playlist } }
-        )
+        ).populate('playlist.video');
 
         return updatedBox;
+    }
 
-        /* return Box.findOne({ _id: token }).exec(async (err, document) => {
-            if (err) {
-                console.log(err); // No box found
-            }
+    /**
+     * Gets the next video from the playlist to play when the previous one ends. Will
+     * update the playlist of the box, and send JSON containing all the info for subscribers
+     * in the box
+     *
+     * @param {*} token The token of the box
+     * @returns JSON of the nextVideo and the updatedBox
+     * @memberof SyncService
+     */
+    public async getNextVideo(token) {
+        console.log('getting next video to play for the box: ', token, '...');
 
-            const submissionTime = moment().format();
+        const transitionTime = moment().format('x');
 
-            const submission = {
-                submitted_at: submissionTime,
-                video: video._id,
-                startTime: null,
-                endTime: null,
-                ignored: false
-            };
+        // Get next video for box, and refresh playlist
+        const box = await Box.findOne({ _id: token });
 
-            document.playlist.unshift(submission);
+        // TODO: Find last index to skip ignored videos
+        const currentVideoIndex = _.findIndex(box.playlist, (video) => {
+            return video.startTime !== null && video.endTime === null;
+        });
 
-            return Box.findOneAndUpdate(
-                { _id: token },
-                { $set: { playlist: document.playlist } },
-                (err, document) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    return;
-                });
-        }); */
+        box.playlist[currentVideoIndex].endTime = transitionTime;
+        box.playlist[currentVideoIndex - 1].startTime = transitionTime;
+
+        let updatedBox = await Box.findOneAndUpdate(
+            { _id: token },
+            { $set: { playlist: box.playlist } }
+        ).populate('playlist.video');
+
+        console.log('UPDATED BOX: ', updatedBox);
+
+        const nextVideo = updatedBox.playlist[currentVideoIndex - 1];
+
+        const response = {
+            link: nextVideo.video.link,
+            name: nextVideo.video.name,
+            submitted_at: nextVideo.submitted_at,
+            startTime: transitionTime,
+        };
+
+        return {
+            nextVideo: response,
+            updatedBox: updatedBox
+        };
     }
 }
 
