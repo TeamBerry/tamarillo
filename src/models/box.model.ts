@@ -7,10 +7,11 @@ var boxSchema = new Schema({
     lang: String,
     name: String,
     playlist: [{
-        timestart: Number,
+        submitted_at: Number,
         video: { type: Schema.Types.ObjectId, ref: 'Video' },
         startTime: Number,
         endTime: Number,
+        ignored: Boolean // Indicates if the video has to be ignored by the autoplay. False by deafult
     }],
 });
 

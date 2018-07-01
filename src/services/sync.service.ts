@@ -31,7 +31,7 @@ export class SyncService {
         const response = {
             link: videoDetails.link,
             name: videoDetails.name,
-            submissionTime: currentVideo[0].timestart, // TODO: Rename this field as submissionTime in the playlist of the box
+            submitted_at: currentVideo[0].submitted_at,
             startTime: currentVideo[0].startTime,
         };
 
@@ -57,6 +57,8 @@ export class SyncService {
 
         // Obtaining video from database. Creating it if needed
         const video = await this.getVideo(payload);
+
+        // TODO: Identify the author who submitted the video
 
         // Adding it to the playlist of the box
         await this.postToBox(video, payload.token);
@@ -99,21 +101,48 @@ export class SyncService {
      * @returns
      * @memberof SyncService
      */
-    private async postToBox(video, token) {
+    public async postToBox(video, token) {
         console.log("got video to add to playlist: ", video);
-        return Box.findOne({ _id: token }).exec(async (err, document) => {
+
+        let box = await Box.findOne({ _id: token });
+
+        const submissionTime = moment().format('x');
+
+        const submission = {
+            video: video._id,
+            startTime: null,
+            endTime: null,
+            ignored: false,
+            submitted_at: submissionTime
+        };
+
+        box.playlist.unshift(submission);
+
+        console.log('Adding video to the playlist of the box at moment', submission);
+
+        let updatedBox = await Box.findOneAndUpdate(
+            { _id: token },
+            { $set: { playlist: box.playlist } }
+        )
+
+        return updatedBox;
+
+        /* return Box.findOne({ _id: token }).exec(async (err, document) => {
             if (err) {
                 console.log(err); // No box found
             }
 
+            const submissionTime = moment().format();
+
             const submission = {
-                timestart: moment(),
+                submitted_at: submissionTime,
                 video: video._id,
                 startTime: null,
                 endTime: null,
+                ignored: false
             };
 
-            document.playlist.push(submission);
+            document.playlist.unshift(submission);
 
             return Box.findOneAndUpdate(
                 { _id: token },
@@ -124,7 +153,7 @@ export class SyncService {
                     }
                     return;
                 });
-        });
+        }); */
     }
 }
 
