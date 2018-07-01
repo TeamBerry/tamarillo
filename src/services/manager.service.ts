@@ -83,8 +83,13 @@ class ManagerService {
                 const recipients = _.filter(this.subscribers, { token: payload.token, type: 'chat' });
 
                 _.each(recipients, (recipient) => {
-                    io.to(recipient.socket).emit('chat', response);
+                    io.to(recipient.socket).emit('chat', response.feedback);
                 });
+
+                // Emit box refresh to all the subscribers
+                _.each(this.subscribers, (recipient) => {
+                    io.to(recipient.socket).emit('box', response.updatedBox);
+                })
             });
 
             /**

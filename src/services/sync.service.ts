@@ -61,7 +61,7 @@ export class SyncService {
         // TODO: Identify the author who submitted the video
 
         // Adding it to the playlist of the box
-        await this.postToBox(video, payload.token);
+        const updatedBox = await this.postToBox(video, payload.token);
 
         const message = payload.author + ' has added the video "' + video.name + '" to the playlist.';
         const feedback = new Message({
@@ -69,7 +69,10 @@ export class SyncService {
             source: 'bot',
         });
 
-        return feedback;
+        return {
+            feedback : feedback,
+            updatedBox: updatedBox
+        };
     }
 
     /**
@@ -83,7 +86,6 @@ export class SyncService {
         let video = await Video.findOne({ link: payload.link });
 
         if (!video) {
-            // TODO: Get info from YouTube
             const youtubeDetails = await axios.get('http://youtube.com/get_video_info?video_id=' + payload.link);
             const parsedData = querystring.parse(youtubeDetails.data);
 
