@@ -50,10 +50,12 @@ export class AuthApi {
             }
 
             if (user) {
-                // TODO: Send message if the user already exists
+                res.status(400); // 400 Bad Request
             } else {
                 User.create({ mail: mail, password: password }, (err, newUser) => {
-                    // TODO: Handle error
+                    if(err){
+                        res.status(500).send(err);
+                    }
 
                     const authResult = authApi.createSession(newUser);
 
