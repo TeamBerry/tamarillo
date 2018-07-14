@@ -6,6 +6,7 @@ const querystring = require("querystring");
 
 const Video = require("./../models/video.model");
 const Box = require("./../models/box.model");
+const User = require("./../models/user.model");
 import { Message } from './../models/message.model';
 
 export class SyncService {
@@ -60,12 +61,19 @@ export class SyncService {
         // Obtaining video from database. Creating it if needed
         const video = await this.getVideo(payload);
 
-        // TODO: Identify the author who submitted the video
+        // Finding the user who submitted the video
+        const user = await User.findOne({ token: payload.author });
 
         // Adding it to the playlist of the box
         const updatedBox = await this.postToBox(video, payload.token);
 
-        const message = payload.author + ' has added the video "' + video.name + '" to the playlist.';
+        let message: string;
+        if (user) {
+            message = user.name + ' has added the video "' + video.name + '" to the playlist.';
+        } else {
+            message = 'The video "' + video.name + '" has been added to the playlist';
+        }
+
         const feedback = new Message({
             contents: message,
             source: 'bot',
@@ -106,8 +114,6 @@ export class SyncService {
      * @memberof SyncService
      */
     public async postToBox(video, token) {
-        console.log("got video to add to playlist: ", video);
-
         let box = await Box.findOne({ _id: token });
 
         const submissionTime = moment().format('x');
@@ -121,8 +127,6 @@ export class SyncService {
         };
 
         box.playlist.unshift(submission);
-
-        console.log('Adding video to the playlist of the box at moment', submission);
 
         let updatedBox = await Box.findOneAndUpdate(
             { _id: token },
