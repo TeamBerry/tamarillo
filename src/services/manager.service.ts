@@ -93,7 +93,7 @@ class ManagerService {
             });
 
             /**
-             * After the client auth themselves, they need to caught up with the others in the box. It means they will ask for the
+             * After the client auth themselves, they need to be caught up with the others in the box. It means they will ask for the
              * current video playing and must have an answer.
              *
              * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
@@ -144,8 +144,6 @@ class ManagerService {
              * What to do when you've got a chat message
              */
             socket.on('chat', async (message) => {
-                console.log("recieved chat message", message);
-
                 if (await chatService.onChat(message)) {
                     const dispatchedMessage = new Message(message);
                     // We find all subscribers to the box (token of the message) for the chat type
