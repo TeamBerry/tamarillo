@@ -23,22 +23,22 @@ export class SyncService {
      */
     public async onStart(request): Promise<{ link: any, name: any, submitted_at: any, startTime: any }> {
         // Get the currently played video for the request box
-        const boxDetails = await Box.findOne({ _id: request.token }); // TODO: Send only the playlist maybe?
+        const currentVideo = await this.getCurrentVideo(request.token);
 
-        const currentVideo = _.filter(boxDetails.playlist, (video) => {
-            return video.startTime !== null;
-        }); // FIXME: Don't return an array of object, it's just one object.
+        if (currentVideo) {
+            const videoDetails = await Video.findOne({ _id: currentVideo.video });
 
-        const videoDetails = await Video.findOne({ _id: currentVideo[0].video });
+            const response = {
+                link: videoDetails.link,
+                name: videoDetails.name,
+                submitted_at: currentVideo.submitted_at,
+                startTime: currentVideo.startTime,
+            };
 
-        const response = {
-            link: videoDetails.link,
-            name: videoDetails.name,
-            submitted_at: currentVideo[0].submitted_at,
-            startTime: currentVideo[0].startTime,
-        };
+            return response;
+        }
 
-        return response;
+        return null;
     }
 
     /**
@@ -71,8 +71,6 @@ export class SyncService {
 
         // Adding it to the playlist of the box
         const updatedBox = await this.postToBox(video, payload.token);
-
-        console.log('UPDATED BOX: ', updatedBox);
 
         let message: string;
         if (user) {
@@ -141,24 +139,32 @@ export class SyncService {
             { new: true }
         ).populate('playlist.video');
 
-        // TODO: Call getNextVideo if the video submitted is the only remaining one in the queue
-
         return updatedBox;
     }
 
+    public async getCurrentVideo(token) {
+        const box = await Box.findOne({ _id: token });
+
+        const currentVideo = _.find(box.playlist, (video) => {
+            return video.startTime !== null && video.endTime === null;
+        });
+
+        return currentVideo;
+    }
+
     /**
-     * Gets the next video from the playlist to play when the previous one ends. Will
+     * Gets the next video from the playlist to play. Will
      * update the playlist of the box, and send JSON containing all the info for subscribers
      * in the box
      *
      * @param {*} token The token of the box
-     * @returns JSON of the nextVideo (which can be null) and the updatedBox
+     * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof SyncService
      */
     public async getNextVideo(token) {
         const transitionTime = moment().format('x');
+        let response = null;
 
-        // Get next video for box, and refresh playlist
         const box = await Box.findOne({ _id: token });
 
         // TODO: Find last index to skip ignored videos
@@ -166,38 +172,70 @@ export class SyncService {
             return video.startTime !== null && video.endTime === null;
         });
 
-        // Ends the current video, the one that just ended
-        box.playlist[currentVideoIndex].endTime = transitionTime;
-
-        // Searches for a new one
+        // A video was playing and just ended
         if (currentVideoIndex !== -1) {
-            box.playlist[currentVideoIndex - 1].startTime = transitionTime;
-        }
+            // Ends the current video, the one that just ended
+            box.playlist[currentVideoIndex].endTime = transitionTime;
 
-        // Updates the box
-        let updatedBox = await Box.findOneAndUpdate(
-            { _id: token },
-            { $set: { playlist: box.playlist } },
-            { new: true }
-        ).populate('playlist.video');
+            // Searches for a new one
+            if (currentVideoIndex !== 0) {
+                box.playlist[currentVideoIndex - 1].startTime = transitionTime;
+            }
 
-        let response = null;
+            // Updates the box
+            let updatedBox = await Box.findOneAndUpdate(
+                { _id: token },
+                { $set: { playlist: box.playlist } },
+                { new: true }
+            ).populate('playlist.video');
 
-        if (currentVideoIndex !== -1) {
-            const nextVideo = updatedBox.playlist[currentVideoIndex - 1];
+            if (currentVideoIndex !== 0) {
+                const nextVideo = updatedBox.playlist[currentVideoIndex - 1];
 
-            response = {
-                link: nextVideo.video.link,
-                name: nextVideo.video.name,
-                submitted_at: nextVideo.submitted_at,
-                startTime: transitionTime,
+                response = {
+                    link: nextVideo.video.link,
+                    name: nextVideo.video.name,
+                    submitted_at: nextVideo.submitted_at,
+                    startTime: transitionTime,
+                };
+            }
+
+            return {
+                nextVideo: response,
+                updatedBox: updatedBox
             };
+        } else {
+            // No video was playing before, the playlist was over (which means the service already entered the if condition once but found nothing)
+            const nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
+                return video.startTime === null;
+            });
+
+            if (nextVideoIndex !== -1) {
+                box.playlist[nextVideoIndex].startTime = transitionTime;
+
+                let updatedBox = await Box.findOneAndUpdate(
+                    { _id: token },
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                ).populate('playlist.video');
+
+                const nextVideo = updatedBox.playlist[nextVideoIndex];
+
+                response = {
+                    link: nextVideo.video.link,
+                    name: nextVideo.video.name,
+                    submitted_at: nextVideo.submitted_at,
+                    startTime: transitionTime
+                };
+
+                return {
+                    nextVideo: response,
+                    updatedBox: updatedBox
+                };
+            }
         }
 
-        return {
-            nextVideo: response,
-            updatedBox: updatedBox
-        };
+        return null;
     }
 }
 
