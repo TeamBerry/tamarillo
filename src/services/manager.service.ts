@@ -111,9 +111,15 @@ class ManagerService {
              *
              * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
              * a webhook. This is only for in-box requests.
+             *
+             * @param request has this structure :
+             * {
+             *  "token": the token of the box
+             *  "subscriber": the token of the user
+             * }
              */
             socket.on('start', async (request) => {
-                const response = await syncService.onStart(request);
+                const response = await syncService.onStart(request.token);
                 let message: Message = new Message({
                     source: 'system'
                 });
@@ -122,7 +128,7 @@ class ManagerService {
                     message.contents = 'The video currently playing in the box is "' + response.name + '"';
 
                     // Get the recipient from the list of subscribers
-                    let recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'sync' });
+                    let recipient = _.find(this.subscribers, { subscriber: request.subscriber, type: 'sync' });
 
                     // Emit the response back to the client
                     io.to(recipient.socket).emit('sync', response);
@@ -130,7 +136,7 @@ class ManagerService {
                     message.contents = 'No video is currently playing in the box.';
                 }
 
-                let recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'chat' });
+                let recipient = _.find(this.subscribers, { subscriber: request.subscriber, type: 'chat' });
                 if (recipient) {
                     io.to(recipient.socket).emit('chat', message);
                 }
@@ -170,7 +176,7 @@ class ManagerService {
                         source: 'system'
                     });
 
-                    const recipient = _.filter(this.subscribers, { token: message.author, type: 'chat' });
+                    const recipient = _.find(this.subscribers, { token: message.author, type: 'chat' });
                     io.to(recipient.socket).emit('chat', response);
                 }
             });
@@ -190,7 +196,16 @@ class ManagerService {
         })
     }
 
-    private async transitionToNextVideo(boxToken) {
+
+    /**
+     * Method called when the video ends; gets the next video in the playlist and sends it
+     * to all subscribers in the box
+     *
+     * @private
+     * @param {string} boxToken
+     * @memberof ManagerService
+     */
+    private async transitionToNextVideo(boxToken: string) {
         let response = await syncService.getNextVideo(boxToken);
         let message: Message = new Message({
             source: 'system'

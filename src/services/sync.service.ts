@@ -17,13 +17,13 @@ export class SyncService {
      * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
      * a webhook. This is only for in-box requests.
      *
-     * @param {any} request
+     * @param {string} boxToken The token of the box
      * @returns {Promise<{ link: any, name: any, submitted_at: any, startTime: any }>}
      * @memberof SyncService
      */
-    public async onStart(request): Promise<{ link: any, name: any, submitted_at: any, startTime: any }> {
+    public async onStart(boxToken: string): Promise<{ link: any, name: any, submitted_at: any, startTime: any }> {
         // Get the currently played video for the request box
-        const currentVideo = await this.getCurrentVideo(request.token);
+        const currentVideo = await this.getCurrentVideo(boxToken);
 
         if (currentVideo) {
             const videoDetails = await Video.findOne({ _id: currentVideo.video });
