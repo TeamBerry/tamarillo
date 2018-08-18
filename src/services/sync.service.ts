@@ -6,6 +6,7 @@ const querystring = require("querystring");
 
 const Video = require("./../models/video.model");
 const Box = require("./../models/box.model");
+const User = require("./../models/user.model");
 import { Message } from './../models/message.model';
 
 export class SyncService {
@@ -16,28 +17,28 @@ export class SyncService {
      * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
      * a webhook. This is only for in-box requests.
      *
-     * @param {any} request
-     * @returns
+     * @param {string} boxToken The token of the box
+     * @returns {Promise<{ link: any, name: any, submitted_at: any, startTime: any }>}
      * @memberof SyncService
      */
-    public async onStart(request) {
+    public async onStart(boxToken: string): Promise<{ link: any, name: any, submitted_at: any, startTime: any }> {
         // Get the currently played video for the request box
-        const boxDetails = await Box.findOne({ _id: request.token }); // TODO: Send only the playlist maybe?
-        const currentVideo = _.filter(boxDetails.playlist, (video) => {
-            return video.startTime !== null;
-        }); // FIXME: Don't return an array of object, it's just one object.
-        const videoDetails = await Video.findOne({ _id: currentVideo[0].video });
+        const currentVideo = await this.getCurrentVideo(boxToken);
 
-        const response = {
-            link: videoDetails.link,
-            name: videoDetails.name,
-            submitted_at: currentVideo[0].submitted_at,
-            startTime: currentVideo[0].startTime,
-        };
+        if (currentVideo) {
+            const videoDetails = await Video.findOne({ _id: currentVideo.video });
 
-        console.log("constructed response for the client: ", response);
+            const response = {
+                link: videoDetails.link,
+                name: videoDetails.name,
+                submitted_at: currentVideo.submitted_at,
+                startTime: currentVideo.startTime,
+            };
 
-        return response;
+            return response;
+        }
+
+        return null;
     }
 
     /**
@@ -48,46 +49,62 @@ export class SyncService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {any} payload
-     * @returns
+     * @param {any} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     *
+     * {
+     *  'link': The YouTube uID of the video to add
+     *
+     *  'author': The Berrybox uID of the user who submitted the video
+     *
+     *  'token': The Berrybox uID of the box to which the video is added
+     * }
+     *
+     * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof SyncService
      */
-    public async onVideo(payload) {
-        console.log("got video from client.", payload);
-
+    public async onVideo(payload): Promise<{ feedback: any, updatedBox: any }> {
         // Obtaining video from database. Creating it if needed
-        const video = await this.getVideo(payload);
+        const video = await this.getVideo(payload.link);
 
-        // TODO: Identify the author who submitted the video
+        // Finding the user who submitted the video
+        const user = await User.findOne({ token: payload.author });
 
         // Adding it to the playlist of the box
-        await this.postToBox(video, payload.token);
+        const updatedBox = await this.postToBox(video, payload.token);
 
-        const message = payload.author + ' has added the video "' + video.name + '" to the playlist.';
+        let message: string;
+        if (user) {
+            message = user.name + ' has added the video "' + video.name + '" to the playlist.';
+        } else {
+            message = 'The video "' + video.name + '" has been added to the playlist';
+        }
+
         const feedback = new Message({
             contents: message,
             source: 'bot',
         });
 
-        return feedback;
+        return {
+            feedback: feedback,
+            updatedBox: updatedBox
+        };
     }
 
     /**
      * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
      *
-     * @param {any} payload
+     * @param {string} link the unique YouTube ID of the video
      * @returns
      * @memberof SyncService
      */
-    private async getVideo(payload) {
-        let video = await Video.findOne({ link: payload.link });
+    private async getVideo(link: string) {
+        let video = await Video.findOne({ link: link });
 
         if (!video) {
-            // TODO: Get info from YouTube
-            const youtubeDetails = await axios.get('http://youtube.com/get_video_info?video_id=' + payload.link);
+            const youtubeDetails = await axios.get('http://youtube.com/get_video_info?video_id=' + link);
             const parsedData = querystring.parse(youtubeDetails.data);
 
-            video = await Video.create({ link: payload.link, name: parsedData.title });
+            video = await Video.create({ link: link, name: parsedData.title });
         }
 
         return video;
@@ -96,14 +113,12 @@ export class SyncService {
     /**
      * Adds the obtained video to the playlist of the box
      *
-     * @param {any} video
-     * @param {any} token
+     * @param {any} video The video to add to the playlist
+     * @param {string} token The uID of the box
      * @returns
      * @memberof SyncService
      */
-    public async postToBox(video, token) {
-        console.log("got video to add to playlist: ", video);
-
+    public async postToBox(video, token: string) {
         let box = await Box.findOne({ _id: token });
 
         const submissionTime = moment().format('x');
@@ -113,47 +128,114 @@ export class SyncService {
             startTime: null,
             endTime: null,
             ignored: false,
-            submitted_at: submissionTime
+            submitted_at: submissionTime,
         };
 
         box.playlist.unshift(submission);
 
-        console.log('Adding video to the playlist of the box at moment', submission);
-
         let updatedBox = await Box.findOneAndUpdate(
             { _id: token },
-            { $set: { playlist: box.playlist } }
-        )
+            { $set: { playlist: box.playlist } },
+            { new: true }
+        ).populate('playlist.video');
 
         return updatedBox;
+    }
 
-        /* return Box.findOne({ _id: token }).exec(async (err, document) => {
-            if (err) {
-                console.log(err); // No box found
+    public async getCurrentVideo(token) {
+        const box = await Box.findOne({ _id: token });
+
+        const currentVideo = _.find(box.playlist, (video) => {
+            return video.startTime !== null && video.endTime === null;
+        });
+
+        return currentVideo;
+    }
+
+    /**
+     * Gets the next video from the playlist to play. Will
+     * update the playlist of the box, and send JSON containing all the info for subscribers
+     * in the box
+     *
+     * @param {*} token The token of the box
+     * @returns JSON of the nextVideo and the updatedBox, or null
+     * @memberof SyncService
+     */
+    public async getNextVideo(token) {
+        const transitionTime = moment().format('x');
+        let response = null;
+
+        const box = await Box.findOne({ _id: token });
+
+        // TODO: Find last index to skip ignored videos
+        const currentVideoIndex = _.findIndex(box.playlist, (video) => {
+            return video.startTime !== null && video.endTime === null;
+        });
+
+        // A video was playing and just ended
+        if (currentVideoIndex !== -1) {
+            // Ends the current video, the one that just ended
+            box.playlist[currentVideoIndex].endTime = transitionTime;
+
+            // Searches for a new one
+            if (currentVideoIndex !== 0) {
+                box.playlist[currentVideoIndex - 1].startTime = transitionTime;
             }
 
-            const submissionTime = moment().format();
-
-            const submission = {
-                submitted_at: submissionTime,
-                video: video._id,
-                startTime: null,
-                endTime: null,
-                ignored: false
-            };
-
-            document.playlist.unshift(submission);
-
-            return Box.findOneAndUpdate(
+            // Updates the box
+            let updatedBox = await Box.findOneAndUpdate(
                 { _id: token },
-                { $set: { playlist: document.playlist } },
-                (err, document) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    return;
-                });
-        }); */
+                { $set: { playlist: box.playlist } },
+                { new: true }
+            ).populate('playlist.video');
+
+            if (currentVideoIndex !== 0) {
+                const nextVideo = updatedBox.playlist[currentVideoIndex - 1];
+
+                response = {
+                    link: nextVideo.video.link,
+                    name: nextVideo.video.name,
+                    submitted_at: nextVideo.submitted_at,
+                    startTime: transitionTime,
+                };
+            }
+
+            return {
+                nextVideo: response,
+                updatedBox: updatedBox
+            };
+        } else {
+            // No video was playing before, the playlist was over (which means the service already entered the if condition once but found nothing)
+            const nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
+                return video.startTime === null;
+            });
+
+            if (nextVideoIndex !== -1) {
+                box.playlist[nextVideoIndex].startTime = transitionTime;
+
+                let updatedBox = await Box.findOneAndUpdate(
+                    { _id: token },
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                ).populate('playlist.video');
+
+                const nextVideo = updatedBox.playlist[nextVideoIndex];
+
+                response = {
+                    link: nextVideo.video.link,
+                    name: nextVideo.video.name,
+                    submitted_at: nextVideo.submitted_at,
+                    startTime: transitionTime
+                };
+
+                return {
+                    nextVideo: response,
+                    updatedBox: updatedBox
+                };
+            }
+        }
+
+        return null;
     }
 }
 
