@@ -1,4 +1,6 @@
 import mongoose = require("mongoose");
+const Video = require('./video.model');
+
 var Schema = mongoose.Schema;
 
 var userSchema = new Schema({
@@ -16,6 +18,7 @@ var userSchema = new Schema({
         color: String,
     },
     badges: [],
+    favorites: [{ type: String, ref: 'Video' }]
 });
 
 module.exports = mongoose.model('User', userSchema);

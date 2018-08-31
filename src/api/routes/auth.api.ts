@@ -23,7 +23,10 @@ export class AuthApi {
         const password = req.body.password;
 
         // Find user in database
-        User.findOne({ mail: mail, password: password }, (err, user) => {
+        User
+            .findOne({ mail: mail, password: password })
+            .populate('favorites')
+            .exec((err, user) => {
             if (err) {
                 res.status(500).send(err);
             }
@@ -87,6 +90,7 @@ export class AuthApi {
 
         return {
             bearer: jwtBearerToken,
+            subject: user,
             expiresIn: tokenExpiration
         };
     }

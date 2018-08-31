@@ -29,6 +29,7 @@ export class SyncService {
             const videoDetails = await Video.findOne({ _id: currentVideo.video });
 
             const response = {
+                _id: videoDetails._id,
                 link: videoDetails.link,
                 name: videoDetails.name,
                 submitted_at: currentVideo.submitted_at,
@@ -193,6 +194,7 @@ export class SyncService {
                 const nextVideo = updatedBox.playlist[currentVideoIndex - 1];
 
                 response = {
+                    _id: nextVideo.video._id,
                     link: nextVideo.video.link,
                     name: nextVideo.video.name,
                     submitted_at: nextVideo.submitted_at,
@@ -222,6 +224,7 @@ export class SyncService {
                 const nextVideo = updatedBox.playlist[nextVideoIndex];
 
                 response = {
+                    _id: nextVideo.video._id,
                     link: nextVideo.video.link,
                     name: nextVideo.video.name,
                     submitted_at: nextVideo.submitted_at,
