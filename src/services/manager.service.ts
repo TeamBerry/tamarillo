@@ -12,6 +12,7 @@ io.set('transports', ['websocket']);
 // Models
 const Video = require('./../models/video.model');
 const Box = require('./../models/box.model');
+const User = require('./../models/user.model');
 import { Message } from './../models/message.model';
 
 // Import services that need to be managed
@@ -168,7 +169,20 @@ class ManagerService {
              */
             socket.on('chat', async (message) => {
                 if (await chatService.onChat(message)) {
-                    const dispatchedMessage = new Message(message);
+                    // We get the author of the message
+                    let author = await User.findById(message.author);
+
+                    const dispatchedMessage = new Message({
+                        author: {
+                            _id: author._id,
+                            name: author.name
+                        },
+                        contents: message.contents,
+                        source: message.source,
+                        scope: message.scope,
+                        time: message.time
+                    });
+
                     // We find all subscribers to the box (token of the message) for the chat type
                     const recipients = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
 
