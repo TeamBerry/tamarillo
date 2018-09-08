@@ -68,7 +68,7 @@ export class SyncService {
         const video = await this.getVideo(payload.link);
 
         // Finding the user who submitted the video
-        const user = await User.findOne({ token: payload.userToken });
+        const user = await User.findById(payload.userToken);
 
         // Adding it to the playlist of the box
         const updatedBox = await this.postToBox(video, payload.boxToken);

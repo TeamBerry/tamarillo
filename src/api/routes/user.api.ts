@@ -19,7 +19,7 @@ export class UserApi {
     }
 
     public show(req: Request, res: Response) {
-        User.findOne({ _id: req.params.user })
+        User.findById(req.params.user)
             .populate('favorites')
             .exec((err, document) => {
                 if (err) {
@@ -56,8 +56,8 @@ export class UserApi {
             favoritesList.push(favorite._id);
         });
 
-        User.findOneAndUpdate(
-            { _id: req.params.user },
+        User.findByIdAndUpdate(
+            req.params.user,
             { $set: { favorites: favoritesList } },
             { new: true })
             .populate('favorites')
@@ -69,8 +69,6 @@ export class UserApi {
                 if (document) {
                     res.status(200).send(document);
                 }
-
-                console.log(document);
 
                 res.status(204);
             });
