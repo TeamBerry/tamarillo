@@ -71,7 +71,7 @@ export class SyncService {
         const user = await User.findById(payload.userToken);
 
         // Adding it to the playlist of the box
-        const updatedBox = await this.postToBox(video, payload.boxToken);
+        const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken);
 
         let message: string;
         if (user) {
@@ -116,10 +116,11 @@ export class SyncService {
      *
      * @param {any} video The video to add to the playlist
      * @param {string} boxToken The doucment ID of the box
+     * @param {string} userToken The document ID of the user who submitted the video
      * @returns
      * @memberof SyncService
      */
-    public async postToBox(video, boxToken: string) {
+    public async postToBox(video, boxToken: string, userToken: string) {
         let box = await Box.findOne({ _id: boxToken });
 
         const submissionTime = moment().format('x');
@@ -130,15 +131,18 @@ export class SyncService {
             endTime: null,
             ignored: false,
             submitted_at: submissionTime,
+            submitted_by: userToken
         };
 
         box.playlist.unshift(submission);
 
-        let updatedBox = await Box.findOneAndUpdate(
-            { _id: boxToken },
-            { $set: { playlist: box.playlist } },
-            { new: true }
-        ).populate('playlist.video');
+        let updatedBox = await Box
+            .findOneAndUpdate(
+                { _id: boxToken },
+                { $set: { playlist: box.playlist } },
+                { new: true }
+            ).populate('playlist.video')
+            .populate('playlist.submitted_by', '_id name');
 
         return updatedBox;
     }

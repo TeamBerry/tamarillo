@@ -22,6 +22,7 @@ export class BoxApi {
         Box.find({})
             .populate('creator', '_id name')
             .populate('playlist.video')
+            .populate('playlist.submitted_by', '_id name')
             .exec((err, collection) => {
                 if (err) {
                     res.status(500).send(err);
@@ -39,6 +40,7 @@ export class BoxApi {
         Box.findById(req.params.box)
             .populate('creator', '_id name')
             .populate('playlist.video')
+            .populate('playlist.submitted_by', '_id name')
             .exec((err, document) => {
                 if (err) {
                     res.status(500).send(err);
