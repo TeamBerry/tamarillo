@@ -18,28 +18,12 @@ export class SyncService {
      * a webhook. This is only for in-box requests.
      *
      * @param {string} boxToken The token of the box
-     * @returns {Promise<{ link: any, name: any, submitted_at: any, startTime: any }>}
+     * @returns video
      * @memberof SyncService
      */
-    public async onStart(boxToken: string): Promise<{ link: any, name: any, submitted_at: any, startTime: any }> {
-        // Get the currently played video for the request box
-        const currentVideo = await this.getCurrentVideo(boxToken);
-
-        if (currentVideo) {
-            const videoDetails = await Video.findOne({ _id: currentVideo.video });
-
-            const response = {
-                _id: videoDetails._id,
-                link: videoDetails.link,
-                name: videoDetails.name,
-                submitted_at: currentVideo.submitted_at,
-                startTime: currentVideo.startTime,
-            };
-
-            return response;
-        }
-
-        return null;
+    public async onStart(boxToken: string) {
+        const response = await this.getCurrentVideo(boxToken);
+        return response;
     }
 
     /**
@@ -147,14 +131,35 @@ export class SyncService {
         return updatedBox;
     }
 
-    public async getCurrentVideo(boxToken) {
-        const box = await Box.findOne({ _id: boxToken });
+    /**
+     * Gets the currently playing video of the box and returns it
+     *
+     * @param {string} boxToken The document id of the box
+     * @returns the video. The structure is the same as a playlist entry
+     * @memberof SyncService
+     */
+    public async getCurrentVideo(boxToken: string) {
+        const box = await Box.findById(boxToken);
 
-        const currentVideo = _.find(box.playlist, (video) => {
+        let currentVideo = _.find(box.playlist, (video) => {
             return video.startTime !== null && video.endTime === null;
         });
 
-        return currentVideo;
+        if (currentVideo) { // TODO: Refactor this to filter and populate the initial query
+            // Find and "manually populate" the video details
+            const videoDetails = await Video.findById(currentVideo.video).select('_id link name');
+
+            currentVideo.video = videoDetails;
+
+            // Find and "manually populate" the user details
+            const userDetails = await User.findById(currentVideo.submitted_by).select('_id name');
+
+            currentVideo.submitted_by = userDetails;
+
+            return currentVideo;
+        }
+
+        return null;
     }
 
     /**
@@ -162,15 +167,15 @@ export class SyncService {
      * update the playlist of the box, and send JSON containing all the info for subscribers
      * in the box
      *
-     * @param {*} boxToken The document ID of the box
+     * @param {string} boxToken The document ID of the box
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof SyncService
      */
-    public async getNextVideo(boxToken) {
+    public async getNextVideo(boxToken: string) {
         const transitionTime = moment().format('x');
         let response = null;
 
-        const box = await Box.findOne({ _id: boxToken });
+        const box = await Box.findById(boxToken);
 
         // TODO: Find last index to skip ignored videos
         const currentVideoIndex = _.findIndex(box.playlist, (video) => {
@@ -188,26 +193,22 @@ export class SyncService {
             }
 
             // Updates the box
-            let updatedBox = await Box.findOneAndUpdate(
-                { _id: boxToken },
-                { $set: { playlist: box.playlist } },
-                { new: true }
-            ).populate('playlist.video');
+            let updatedBox = await Box
+                .findOneAndUpdate(
+                    { _id: boxToken },
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                )
+                .populate('playlist.video')
+                .populate('playlist.submitted_by', '_id name');
 
+            let nextVideo = null;
             if (currentVideoIndex !== 0) {
-                const nextVideo = updatedBox.playlist[currentVideoIndex - 1];
-
-                response = {
-                    _id: nextVideo.video._id,
-                    link: nextVideo.video.link,
-                    name: nextVideo.video.name,
-                    submitted_at: nextVideo.submitted_at,
-                    startTime: transitionTime,
-                };
+                nextVideo = updatedBox.playlist[currentVideoIndex - 1];
             }
 
             return {
-                nextVideo: response,
+                nextVideo: nextVideo,
                 updatedBox: updatedBox
             };
         } else {
@@ -219,24 +220,19 @@ export class SyncService {
             if (nextVideoIndex !== -1) {
                 box.playlist[nextVideoIndex].startTime = transitionTime;
 
-                let updatedBox = await Box.findOneAndUpdate(
-                    { _id: boxToken },
-                    { $set: { playlist: box.playlist } },
-                    { new: true }
-                ).populate('playlist.video');
+                let updatedBox = await Box
+                    .findOneAndUpdate(
+                        { _id: boxToken },
+                        { $set: { playlist: box.playlist } },
+                        { new: true }
+                    )
+                    .populate('playlist.video')
+                    .populate('playlist.submitted_by', '_id name');
 
                 const nextVideo = updatedBox.playlist[nextVideoIndex];
 
-                response = {
-                    _id: nextVideo.video._id,
-                    link: nextVideo.video.link,
-                    name: nextVideo.video.name,
-                    submitted_at: nextVideo.submitted_at,
-                    startTime: transitionTime
-                };
-
                 return {
-                    nextVideo: response,
+                    nextVideo,
                     updatedBox: updatedBox
                 };
             }

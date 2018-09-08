@@ -123,7 +123,7 @@ class ManagerService {
                 });
 
                 if (response) {
-                    message.contents = 'The video currently playing in the box is "' + response.name + '"';
+                    message.contents = 'The video currently playing in the box is "' + response.video.name + '"';
 
                     // Get the recipient from the list of subscribers
                     let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'sync' });
@@ -242,7 +242,7 @@ class ManagerService {
 
             if (response.nextVideo) {
                 // Send chat message for subscribers
-                message.contents = 'The video currently playing in the box is ' + response.nextVideo.name;
+                message.contents = 'The video currently playing in the box is ' + response.nextVideo.video.name;
             } else {
                 message.contents = 'The playlist has no upcoming videos.';
             }
