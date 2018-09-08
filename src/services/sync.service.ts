@@ -55,9 +55,9 @@ export class SyncService {
      * {
      *  'link': The YouTube uID of the video to add
      *
-     *  'author': The Berrybox uID of the user who submitted the video
+     *  'userToken': The document ID of the user who submitted the video
      *
-     *  'token': The Berrybox uID of the box to which the video is added
+     *  'boxToken': The document ID of the box to which the video is added
      * }
      *
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
@@ -68,10 +68,10 @@ export class SyncService {
         const video = await this.getVideo(payload.link);
 
         // Finding the user who submitted the video
-        const user = await User.findOne({ token: payload.author });
+        const user = await User.findOne({ token: payload.userToken });
 
         // Adding it to the playlist of the box
-        const updatedBox = await this.postToBox(video, payload.token);
+        const updatedBox = await this.postToBox(video, payload.boxToken);
 
         let message: string;
         if (user) {
@@ -115,12 +115,12 @@ export class SyncService {
      * Adds the obtained video to the playlist of the box
      *
      * @param {any} video The video to add to the playlist
-     * @param {string} token The uID of the box
+     * @param {string} boxToken The doucment ID of the box
      * @returns
      * @memberof SyncService
      */
-    public async postToBox(video, token: string) {
-        let box = await Box.findOne({ _id: token });
+    public async postToBox(video, boxToken: string) {
+        let box = await Box.findOne({ _id: boxToken });
 
         const submissionTime = moment().format('x');
 
@@ -135,7 +135,7 @@ export class SyncService {
         box.playlist.unshift(submission);
 
         let updatedBox = await Box.findOneAndUpdate(
-            { _id: token },
+            { _id: boxToken },
             { $set: { playlist: box.playlist } },
             { new: true }
         ).populate('playlist.video');
@@ -143,8 +143,8 @@ export class SyncService {
         return updatedBox;
     }
 
-    public async getCurrentVideo(token) {
-        const box = await Box.findOne({ _id: token });
+    public async getCurrentVideo(boxToken) {
+        const box = await Box.findOne({ _id: boxToken });
 
         const currentVideo = _.find(box.playlist, (video) => {
             return video.startTime !== null && video.endTime === null;
@@ -158,15 +158,15 @@ export class SyncService {
      * update the playlist of the box, and send JSON containing all the info for subscribers
      * in the box
      *
-     * @param {*} token The token of the box
+     * @param {*} boxToken The document ID of the box
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof SyncService
      */
-    public async getNextVideo(token) {
+    public async getNextVideo(boxToken) {
         const transitionTime = moment().format('x');
         let response = null;
 
-        const box = await Box.findOne({ _id: token });
+        const box = await Box.findOne({ _id: boxToken });
 
         // TODO: Find last index to skip ignored videos
         const currentVideoIndex = _.findIndex(box.playlist, (video) => {
@@ -185,7 +185,7 @@ export class SyncService {
 
             // Updates the box
             let updatedBox = await Box.findOneAndUpdate(
-                { _id: token },
+                { _id: boxToken },
                 { $set: { playlist: box.playlist } },
                 { new: true }
             ).populate('playlist.video');
@@ -216,7 +216,7 @@ export class SyncService {
                 box.playlist[nextVideoIndex].startTime = transitionTime;
 
                 let updatedBox = await Box.findOneAndUpdate(
-                    { _id: token },
+                    { _id: boxToken },
                     { $set: { playlist: box.playlist } },
                     { new: true }
                 ).populate('playlist.video');

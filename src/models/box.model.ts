@@ -2,7 +2,7 @@ import mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 var boxSchema = new Schema({
-    creator: String,
+    creator: { type: Schema.Types.ObjectId, ref: 'User' },
     description: String,
     lang: String,
     name: String,

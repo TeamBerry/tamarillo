@@ -20,6 +20,7 @@ export class BoxApi {
     public index(req: Request, res: Response) {
         console.log("INDEX OF BOXES");
         Box.find({})
+            .populate('creator', '_id name')
             .populate('playlist.video')
             .exec((err, collection) => {
                 if (err) {
@@ -36,6 +37,7 @@ export class BoxApi {
 
     public show(req: Request, res: Response) {
         Box.findOne({ _id: req.params.box })
+            .populate('creator', '_id name')
             .populate('playlist.video')
             .exec((err, document) => {
                 if (err) {

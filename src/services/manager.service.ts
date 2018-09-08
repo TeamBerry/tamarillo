@@ -37,25 +37,22 @@ class ManagerService {
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on('auth', (message) => {
-                console.log("Connection attempt made on socket service...");
                 const client = {
                     origin: message.origin,
-                    token: message.token,
-                    subscriber: message.subscriber,
+                    boxToken: message.boxToken,
+                    userToken: message.userToken,
                     socket: socket.id,
                     type: message.type
                 };
 
                 // Connection check. If the user is not valid, he's refused
-                if (!message.token) {
+                if (!message.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied."
                     };
                     socket.emit('denied', message);
                 } else {
-                    console.log("Client accepted: ", client);
-
                     this.subscribers.push(client);
 
                     const message = new Message({
@@ -74,9 +71,9 @@ class ManagerService {
              * {
              *  'link': The YouTube uID of the video to add
              *
-             *  'author': The Berrybox uID of the user who submitted the video
+             *  'userToken': The document ID of the user who submitted the video
              *
-             *  'token': The Berrybox uID of the box to which the video is added
+             *  'boxToken': The document ID of the box to which the video is added
              * }
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
@@ -85,7 +82,7 @@ class ManagerService {
                 const response = await syncService.onVideo(payload);
 
                 // Emitting feedback to the chat
-                const recipients = _.filter(this.subscribers, { token: payload.token, type: 'chat' });
+                const recipients = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
 
                 _.each(recipients, (recipient) => {
                     io.to(recipient.socket).emit('chat', response.feedback);
@@ -101,7 +98,7 @@ class ManagerService {
                     return video.startTime !== null && video.endTime === null;
                 });
                 if (currentVideoIndex === -1) {
-                    this.transitionToNextVideo(payload.token);
+                    this.transitionToNextVideo(payload.boxToken);
                 }
             });
 
@@ -114,12 +111,12 @@ class ManagerService {
              *
              * @param request has this structure :
              * {
-             *  "token": the token of the box
-             *  "subscriber": the token of the user
+             *  "boxToken": the document ID of the box
+             *  "userToken": the document ID of the user
              * }
              */
             socket.on('start', async (request) => {
-                const response = await syncService.onStart(request.token);
+                const response = await syncService.onStart(request.boxToken);
                 let message: Message = new Message({
                     source: 'system'
                 });
@@ -128,7 +125,7 @@ class ManagerService {
                     message.contents = 'The video currently playing in the box is "' + response.name + '"';
 
                     // Get the recipient from the list of subscribers
-                    let recipient = _.find(this.subscribers, { subscriber: request.subscriber, type: 'sync' });
+                    let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'sync' });
 
                     // Emit the response back to the client
                     io.to(recipient.socket).emit('sync', response);
@@ -136,7 +133,7 @@ class ManagerService {
                     message.contents = 'No video is currently playing in the box.';
                 }
 
-                let recipient = _.find(this.subscribers, { subscriber: request.subscriber, type: 'chat' });
+                let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'chat' });
                 if (recipient) {
                     io.to(recipient.socket).emit('chat', message);
                 }
@@ -159,12 +156,21 @@ class ManagerService {
 
             /**
              * What to do when you've got a chat message
+             *
+             * @param message The message has the following structure:
+             * {
+             *  'author': the document ID of the user who sent the message,
+             *  'contents': the contents of the message,
+             *  'source': the source (user, bot, system...)
+             *  'scope': the document ID of the box or of the user the message is targetting
+             *  'time': the timestamp of the message
+             * }
              */
             socket.on('chat', async (message) => {
                 if (await chatService.onChat(message)) {
                     const dispatchedMessage = new Message(message);
                     // We find all subscribers to the box (token of the message) for the chat type
-                    const recipients = _.filter(this.subscribers, { token: message.scope, type: 'chat' });
+                    const recipients = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
 
                     // To all of them, we send the message
                     _.each(recipients, (recipient) => {
@@ -176,7 +182,7 @@ class ManagerService {
                         source: 'system'
                     });
 
-                    const recipient = _.find(this.subscribers, { token: message.author, type: 'chat' });
+                    const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
                     io.to(recipient.socket).emit('chat', response);
                 }
             });
