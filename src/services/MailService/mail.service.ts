@@ -15,7 +15,7 @@ class MailService {
      * @memberof MailService
      */
     sendMail(mail){
-        console.log(mail);
+        console.log('Received mail to send: ', mail);
 
         const transporter = nodemailer.createTransport({
             ignoreTLS: true,
@@ -36,9 +36,7 @@ class MailService {
                 console.error(err);
             }
 
-            console.log('Messages sent: ', info.messageId);
-
-            console.log('Preview URL: ', nodemailer.getTestMessageUrl(info));
+            console.log('Mail sent: ', info.messageId);
         })
 
 

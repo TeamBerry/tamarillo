@@ -1,5 +1,8 @@
 import { Request, Response, Router } from 'express';
 
+var Redis = require('ioredis');
+var publisher = new Redis();
+
 const User = require("./../../models/user.model");
 const fs = require('fs');
 import * as jwt from 'jsonwebtoken';
@@ -27,20 +30,20 @@ export class AuthApi {
             .findOne({ mail: mail, password: password })
             .populate('favorites')
             .exec((err, user) => {
-            if (err) {
-                res.status(500).send(err);
-            }
+                if (err) {
+                    res.status(500).send(err);
+                }
 
-            // If password is not correct, send back 401 HTTP error
-            if (!user) {
-                res.status(401); // Unauthorized
-            }
+                // If password is not correct, send back 401 HTTP error
+                if (!user) {
+                    res.status(401); // Unauthorized
+                }
 
-            const authResult = authApi.createSession(user);
+                const authResult = authApi.createSession(user);
 
-            // Sending bearer token
-            res.status(200).json(authResult);
-        });
+                // Sending bearer token
+                res.status(200).json(authResult);
+            });
     }
 
     public signup(req: Request, res: Response) {
@@ -56,9 +59,12 @@ export class AuthApi {
                 res.status(400); // 400 Bad Request
             } else {
                 User.create({ mail: mail, password: password }, (err, newUser) => {
-                    if(err){
+                    if (err) {
                         res.status(500).send(err);
                     }
+
+                    // Once the user is created, we send a mail to the address to welcome him
+                    publisher.publish('mail', 'Hello world');
 
                     const authResult = authApi.createSession(newUser);
 
@@ -97,5 +103,4 @@ export class AuthApi {
 }
 
 const authApi = new AuthApi();
-authApi.init();
 export default authApi.router;
