@@ -20,8 +20,6 @@ export class MailWatcher {
             } else {
                 console.info('Connected to the Redis "mail" queue');
                 this.listen();
-
-                publisher.publish('mail', 'Hello world!');
             }
         });
     }
