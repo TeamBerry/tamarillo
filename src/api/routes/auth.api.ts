@@ -16,6 +16,7 @@ export class AuthApi {
 
     public init() {
         this.router.post("/login", this.login);
+        this.router.post("/signup", this.signup);
     }
 
     public login(req: Request, res: Response) {
@@ -53,9 +54,9 @@ export class AuthApi {
             }
 
             if (user) {
-                res.status(400); // 400 Bad Request
+                res.status(400).send('DUPLICATE_MAIL'); // 400 Bad Request
             } else {
-                User.create({ mail: mail, password: password }, (err, newUser) => {
+                User.create({ mail: mail, password: password, name: req.body.username }, (err, newUser) => {
                     if(err){
                         res.status(500).send(err);
                     }
