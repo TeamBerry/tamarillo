@@ -73,5 +73,4 @@ export class BoxApi {
 }
 
 const boxApi = new BoxApi();
-boxApi.init();
 export default boxApi.router;

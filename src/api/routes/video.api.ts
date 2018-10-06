@@ -57,5 +57,4 @@ export class VideoApi {
 }
 
 const videoApi = new VideoApi();
-videoApi.init();
 export default videoApi.router;
