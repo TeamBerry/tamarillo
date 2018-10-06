@@ -1,6 +1,5 @@
 var Redis = require('ioredis');
 var redis = new Redis();
-var publisher = new Redis();
 
 import mailService from './mail.service';
 
