@@ -12,8 +12,11 @@ class MailService {
      *
      * @memberof MailService
      */
-    sendMail(){
-
+    sendMail(mail){
+        console.log(mail);
     }
 
 }
+
+const mailService = new MailService();
+export default mailService;

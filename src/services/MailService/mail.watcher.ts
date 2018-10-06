@@ -1,5 +1,8 @@
-var redis = require('redis');
-var client = redis.createClient();
+var Redis = require('ioredis');
+var redis = new Redis();
+var publisher = new Redis();
+
+import mailService from './mail.service';
 
 /**
  * Watches the "mail" Redis queue and sends the
@@ -11,18 +14,24 @@ var client = redis.createClient();
 export class MailWatcher {
 
     init() {
-        client.on('connect', () => {
-            console.log('Mail Watcher is now connected to Redis');
-        });
+        redis.subscribe('mail', (err, count) => {
+            if (err) {
+                console.error('Impossible to connect to Redis');
+            } else {
+                console.info('Connected to the Redis "mail" queue');
+                this.listen();
 
-        client.on('error', () => {
-            console.log('Mail Watcher couldn\'t connect to Redis');
-        })
+                publisher.publish('mail', 'Hello world!');
+            }
+        });
     }
 
-    listen(){
-        // TODO: Connect to the queue and listen for specific jobs
+    listen() {
         // When I detect a "mail" job, I send it to the service
+        redis.on('message', (channel, message) => {
+            // Calls the service `sendMail` method
+            mailService.sendMail(message);
+        });
     }
 }
 
