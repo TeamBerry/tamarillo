@@ -14,8 +14,8 @@ class MailService {
      *
      * @memberof MailService
      */
-    sendMail(mail){
-        console.log('Received mail to send: ', mail);
+    async sendMail(mailDetails): Promise<any>{
+        console.log('Received mail to send: ', mailDetails);
 
         const transporter = nodemailer.createTransport({
             ignoreTLS: true,
@@ -25,21 +25,13 @@ class MailService {
 
         const mailOptions = {
             from: 'system@berrybox.com',
-            to: 'angelzatch@gmail.com',
+            to: mailDetails.mail,
             subject: 'Test mail',
             text: 'Hey!',
-            html: 'HELLO WORLD'
+            html: 'HELLO WORLD' // TODO: Template the mail
         };
 
-        transporter.sendMail(mailOptions, (err, info) => {
-            if(err){
-                console.error(err);
-            }
-
-            console.log('Mail sent: ', info.messageId);
-        })
-
-
+        return transporter.sendMail(mailOptions);
     }
 
 }

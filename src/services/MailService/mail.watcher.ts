@@ -1,5 +1,5 @@
-var Redis = require('ioredis');
-var redis = new Redis();
+var Queue = require('bull');
+var mailQueue = new Queue('mail');
 
 import mailService from './mail.service';
 
@@ -11,27 +11,23 @@ import mailService from './mail.service';
  * @class MailWatcher
  */
 export class MailWatcher {
-
-    init() {
-        redis.subscribe('mail', (err, count) => {
-            if (err) {
-                console.error('Impossible to connect to Redis');
-            } else {
-                console.info('Connected to the Redis "mail" queue');
-                this.listen();
-            }
-        });
-    }
-
     listen() {
         // When I detect a "mail" job, I send it to the service
-        redis.on('message', (channel, message) => {
-            // Calls the service `sendMail` method
-            mailService.sendMail(message);
-        });
+        mailQueue.process(async (job, done) => {
+            await mailService
+                .sendMail(job.data)
+                .then((response) => {
+                    console.log('mail has been sent.');
+                    done(response);
+                })
+                .catch((error) => {
+                    console.error('An error has occured.');
+                    done(error);
+                });
+        })
     }
 }
 
 const mailWatcher = new MailWatcher();
-mailWatcher.init();
+mailWatcher.listen();
 export default mailWatcher;
