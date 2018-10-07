@@ -6,6 +6,7 @@
     "scripts": {
         "test": "mocha test/**/*.ts",
         "compile": "tsc",
+        "start": "tsc && pm2 start processes.json",
         "restart": "tsc && pm2 restart processes.json"
     },
     "repository": {
