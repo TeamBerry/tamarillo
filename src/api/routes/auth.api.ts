@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 
-var Redis = require('ioredis');
-var publisher = new Redis();
+var Queue = require('bull');
+var mailQueue = new Queue('mail');
 
 const User = require("./../../models/user.model");
 const fs = require('fs');
@@ -18,6 +18,7 @@ export class AuthApi {
     }
 
     public init() {
+        this.testBull();
         this.router.post("/login", this.login);
         this.router.post("/signup", this.signup);
     }
@@ -64,8 +65,13 @@ export class AuthApi {
                         res.status(500).send(err);
                     }
 
-                    // Once the user is created, we send a mail to the address to welcome him
-                    publisher.publish('mail', 'Hello world');
+                    // Once the user is crated, we send a mail to the address to welcome him
+                    const mailJob = {
+                        mail: mail,
+                        name: name,
+                        type: 'signup'
+                    }
+                    mailQueue.add(mailJob);
 
                     const authResult = authApi.createSession(newUser);
 
@@ -100,6 +106,17 @@ export class AuthApi {
             subject: user,
             expiresIn: tokenExpiration
         };
+    }
+
+    private testBull() {
+        console.log('Sending test to mail queue');
+        mailQueue.add(
+            {
+                mail: 'angelzatch@gmail.com',
+                name: 'AngelZatch',
+                type: 'signup'
+            }
+        );
     }
 }
 
