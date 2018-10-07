@@ -11,10 +11,22 @@ import mailService from './mail.service';
  * @class MailWatcher
  */
 export class MailWatcher {
+    /**
+     * Listens to the mail queue and processes any job it finds.
+     *
+     * The whole process goes as follows: When the mail watcher sees a
+     * job in the mail queue, it contacts the method `sendMail` of the
+     * Mail Service so that a mail is sent accordingly.
+     *
+     * Depending on the status of the sending of the mail, the watcher will
+     * set the job as done or failed. A failed job will be retried.
+     *
+     * @memberof MailWatcher
+     */
     listen() {
         // When I detect a "mail" job, I send it to the service
-        mailQueue.process(async (job, done) => {
-            await mailService
+        mailQueue.process((job, done) => {
+            mailService
                 .sendMail(job.data)
                 .then((response) => {
                     console.log('mail has been sent.');
