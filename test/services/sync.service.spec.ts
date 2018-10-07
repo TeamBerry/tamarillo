@@ -1,8 +1,6 @@
-import * as chai from 'chai';
-import * as sinon from 'sinon';
+var chai = require('chai');
+var sinon = require('sinon');
 const expect = chai.expect;
-
-import SyncService from './../../src/services/sync.service';
 
 describe("SyncService", () => {
 
