@@ -81,5 +81,4 @@ export class UserApi {
 
 
 const userApi = new UserApi();
-userApi.init();
 export default userApi.router;

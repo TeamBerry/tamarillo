@@ -1,5 +1,8 @@
 import { Request, Response, Router } from 'express';
 
+var Queue = require('bull');
+var mailQueue = new Queue('mail');
+
 const User = require("./../../models/user.model");
 const fs = require('fs');
 import * as jwt from 'jsonwebtoken';
@@ -15,6 +18,7 @@ export class AuthApi {
     }
 
     public init() {
+        this.testBull();
         this.router.post("/login", this.login);
         this.router.post("/signup", this.signup);
     }
@@ -28,20 +32,20 @@ export class AuthApi {
             .findOne({ mail: mail, password: password })
             .populate('favorites')
             .exec((err, user) => {
-            if (err) {
-                res.status(500).send(err);
-            }
+                if (err) {
+                    res.status(500).send(err);
+                }
 
-            // If password is not correct, send back 401 HTTP error
-            if (!user) {
-                res.status(401); // Unauthorized
-            }
+                // If password is not correct, send back 401 HTTP error
+                if (!user) {
+                    res.status(401); // Unauthorized
+                }
 
-            const authResult = authApi.createSession(user);
+                const authResult = authApi.createSession(user);
 
-            // Sending bearer token
-            res.status(200).json(authResult);
-        });
+                // Sending bearer token
+                res.status(200).json(authResult);
+            });
     }
 
     public signup(req: Request, res: Response) {
@@ -57,9 +61,17 @@ export class AuthApi {
                 res.status(400).send('DUPLICATE_MAIL'); // 400 Bad Request
             } else {
                 User.create({ mail: mail, password: password, name: req.body.username }, (err, newUser) => {
-                    if(err){
+                    if (err) {
                         res.status(500).send(err);
                     }
+
+                    // Once the user is crated, we send a mail to the address to welcome him
+                    const mailJob = {
+                        mail: mail,
+                        name: name,
+                        type: 'signup'
+                    }
+                    mailQueue.add(mailJob);
 
                     const authResult = authApi.createSession(newUser);
 
@@ -95,8 +107,18 @@ export class AuthApi {
             expiresIn: tokenExpiration
         };
     }
+
+    private testBull() {
+        console.log('Sending test to mail queue');
+        mailQueue.add(
+            {
+                mail: 'angelzatch@gmail.com',
+                name: 'AngelZatch',
+                type: 'signup'
+            }
+        );
+    }
 }
 
 const authApi = new AuthApi();
-authApi.init();
 export default authApi.router;
