@@ -118,12 +118,11 @@ class ManagerService {
              */
             socket.on('start', async (request) => {
                 const response = await syncService.onStart(request.boxToken);
-                let message: Message = new Message({
-                    source: 'system'
-                });
+                let message: Message = new Message();
 
                 if (response) {
-                    message.contents = 'The video currently playing in the box is "' + response.video.name + '"';
+                    message.contents = 'Currently playing: "' + response.video.name + '"';
+                    message.source = 'bot';
 
                     // Get the recipient from the list of subscribers
                     let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'sync' });
@@ -132,6 +131,7 @@ class ManagerService {
                     io.to(recipient.socket).emit('sync', response);
                 } else {
                     message.contents = 'No video is currently playing in the box.';
+                    message.source = 'system';
                 }
 
                 let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'chat' });
@@ -227,9 +227,7 @@ class ManagerService {
      */
     private async transitionToNextVideo(boxToken: string) {
         let response = await syncService.getNextVideo(boxToken);
-        let message: Message = new Message({
-            source: 'system'
-        });
+        let message: Message = new Message();
 
         if (response) {
             // Emit box refresh to all the subscribers
@@ -242,9 +240,11 @@ class ManagerService {
 
             if (response.nextVideo) {
                 // Send chat message for subscribers
-                message.contents = 'The video currently playing in the box is ' + response.nextVideo.video.name;
+                message.contents = 'Currently playing: ' + response.nextVideo.video.name;
+                message.source = 'bot';
             } else {
                 message.contents = 'The playlist has no upcoming videos.';
+                message.source = 'system';
             }
             const chatRecipients = _.filter(this.subscribers, { type: 'chat' });
             _.each(chatRecipients, (recipient) => {
