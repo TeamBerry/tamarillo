@@ -51,6 +51,7 @@ export class AuthApi {
     public signup(req: Request, res: Response) {
         const mail = req.body.mail;
         const password = req.body.password;
+        const name = req.body.name;
 
         User.findOne({ mail: mail }, (err, user) => {
             if (err) {
@@ -60,7 +61,7 @@ export class AuthApi {
             if (user) {
                 res.status(400).send('DUPLICATE_MAIL'); // 400 Bad Request
             } else {
-                User.create({ mail: mail, password: password, name: req.body.username }, (err, newUser) => {
+                User.create({ mail: mail, password: password, name: name }, (err, newUser) => {
                     if (err) {
                         res.status(500).send(err);
                     }
