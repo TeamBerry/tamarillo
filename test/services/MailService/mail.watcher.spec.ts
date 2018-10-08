@@ -7,5 +7,4 @@ describe('MailWatcher', () => {
 
     });
 
-    it('Processes a mail job from the queue', () => {})
 })
