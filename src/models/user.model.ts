@@ -18,7 +18,13 @@ var userSchema = new Schema({
         color: String,
     },
     badges: [],
-    favorites: [{ type: String, ref: 'Video' }]
+    favorites: [{ type: String, ref: 'Video' }],
+    joined_at: Date
 });
+
+userSchema.pre('save', (next) => {
+    userSchema.joined_at = new Date();
+    next();
+})
 
 module.exports = mongoose.model('User', userSchema);
