@@ -1,24 +1,29 @@
-[
-    {
-        "script": "dist/services/sync.service.js",
-        "name": "sync.service",
-        "exec_mode": "cluster",
-        "watch": "true",
-        "instances": "1"
-    },
-    {
-        "script": "dist/services/chat.service.js",
-        "name": "chat.service",
-        "exec_mode": "cluster",
-        "watch": "true",
-        "instances": "1"
-    },
-    {
+[{
         "script": "dist/api/index.js",
         "args": ["-p", "3000"],
         "name": "api",
         "exec_mode": "cluster",
-        "watch": "true",
-        "instances": "1"
+        "watch": true,
+        "instances": 1,
+        "max_restarts": 5,
+        "min_uptime": 3000
+    },
+    {
+        "script": "dist/services/manager.service.js",
+        "name": "manager.service",
+        "watch": true,
+        "exec_mode": "cluster",
+        "instances": 1,
+        "max_restarts": 5,
+        "min_uptime": 3000
+    },
+    {
+        "script": "dist/services/MailService/mail.watcher.js",
+        "name": "mailWatcher",
+        "watch": false,
+        "exec_mode": "cluster",
+        "instances": 1,
+        "max_restarts": 5,
+        "min_uptime": 3000
     }
 ]

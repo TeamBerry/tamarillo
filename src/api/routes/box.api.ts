@@ -19,26 +19,28 @@ export class BoxApi {
 
     public index(req: Request, res: Response) {
         console.log("INDEX OF BOXES");
-        Box.find({}, (err, collection) => {
-            if (err) {
-                res.status(500).send(err);
-            }
+        Box.find({})
+            .populate('creator', '_id name')
+            .populate('playlist.video')
+            .populate('playlist.submitted_by', '_id name')
+            .exec((err, collection) => {
+                if (err) {
+                    res.status(500).send(err);
+                }
 
-            if (collection) {
-                res.status(200).send(collection);
-            }
+                if (collection) {
+                    res.status(200).send(collection);
+                }
 
-            res.status(204);
-        });
+                res.status(204);
+            });
     }
 
     public show(req: Request, res: Response) {
-        Box.findOne({ _id: req.params.box })
-        // FIXME: Doesn't populate correctly, just sends null instead.
-            .populate({
-                path: 'playlist.video',
-                collection: 'videos'
-            })
+        Box.findById(req.params.box)
+            .populate('creator', '_id name')
+            .populate('playlist.video')
+            .populate('playlist.submitted_by', '_id name')
             .exec((err, document) => {
                 if (err) {
                     res.status(500).send(err);
@@ -71,5 +73,4 @@ export class BoxApi {
 }
 
 const boxApi = new BoxApi();
-boxApi.init();
 export default boxApi.router;

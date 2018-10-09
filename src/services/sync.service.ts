@@ -1,162 +1,95 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
+const axios = require("axios");
 const mongoose = require('./../config/connection');
-const express = require("express")();
-const http = require("http").Server(express);
-const io = require("socket.io")(http);
+const querystring = require("querystring");
 
 const Video = require("./../models/video.model");
 const Box = require("./../models/box.model");
+const User = require("./../models/user.model");
 import { Message } from './../models/message.model';
 
-/* const ChatService = require('./chat.service'); */
-// TODO: Socket Manager. That will handle all connections and dispatch orders to services.
-
-io.set('transports', ['websocket']);
-
 export class SyncService {
-    subscribers = [];
-    public start() {
-        console.log("starting sync service...");
-        this.subscribers = [];
-        http.listen(3001, () => {
-            console.log("socket service started. Listening on port 3001...");
+    /**
+     * After the client auth themselves, they need to caught up with the others in the box. It means they will ask for the
+     * current video playing and must have an answer.
+     *
+     * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
+     * a webhook. This is only for in-box requests.
+     *
+     * @param {string} boxToken The token of the box
+     * @returns video
+     * @memberof SyncService
+     */
+    public async onStart(boxToken: string) {
+        const response = await this.getCurrentVideo(boxToken);
+        return response;
+    }
+
+    /**
+     * When recieving a video from an user, the service searches for it in the video database
+     * and adds the video to the playlist of the box.
+     *
+     * If the video's not found in the database, it is created.
+     *
+     * Once it's done, it emits a confirmation message to the user.
+     *
+     * @param {any} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     *
+     * {
+     *  'link': The YouTube uID of the video to add
+     *
+     *  'userToken': The document ID of the user who submitted the video
+     *
+     *  'boxToken': The document ID of the box to which the video is added
+     * }
+     *
+     * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
+     * @memberof SyncService
+     */
+    public async onVideo(payload): Promise<{ feedback: any, updatedBox: any }> {
+        // Obtaining video from database. Creating it if needed
+        const video = await this.getVideo(payload.link);
+
+        // Finding the user who submitted the video
+        const user = await User.findById(payload.userToken);
+
+        // Adding it to the playlist of the box
+        const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken);
+
+        let message: string;
+        if (user) {
+            message = user.name + ' has added the video "' + video.name + '" to the playlist.';
+        } else {
+            message = 'The video "' + video.name + '" has been added to the playlist';
+        }
+
+        const feedback = new Message({
+            contents: message,
+            source: 'bot',
         });
 
-        io.on('connection', (socket) => {
-            /**
-             * When an user joins the box, they will have to auth themselves.
-             */
-            socket.on('auth', (message) => {
-                console.log("connection attempt made on socket service...");
-                const client = {
-                    origin: message.origin,
-                    token: message.token,
-                    type: 'sync',
-                    subscriber: message.subscriber,
-                    socket: socket.id
-                };
-
-                if (!message.token) {
-                    // TODO: Do something with this
-                    const message = {
-                        status: "ERROR_NO_TOKEN",
-                        message: "No token has been given to the socket. Access has been denied."
-                    };
-                    socket.emit('denied', message);
-                } else {
-                    console.log("client connected: ", client);
-
-                    this.subscribers.push(client);
-
-                    const welcomeMessage = new Message({
-                        contents: 'You are now connected to the box.',
-                        source: 'system',
-                    });
-
-                    socket.emit('confirm', welcomeMessage);
-                }
-            });
-
-            // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            /**
-             * When recieving a video from an user, the service searches for it in the video database
-             * and adds the video to the playlist of the box.
-             *
-             * If the video's not found in the database, it is created.
-             *
-             * Once it's done, it emits a confirmation message to the user.
-             */
-            socket.on('video', async (payload) => {
-                console.log("got video from client.", payload);
-                // TODO: Check that the client is correctly auth (in the list of subscribers)
-
-                // Obtaining video from database. Creating it if needed
-                const video = await this.getVideo(payload);
-
-                // Adding it to the playlist of the box
-                await this.postToBox(video, payload.token);
-
-                // Emitting feedback to the chat
-                const recipients = _.filter(this.subscribers,
-                    { token: payload.token, type: 'chat' });
-
-                const feedback = new Message({
-                    contents: 'A video has been added to the playlist.',
-                    source: 'system',
-                });
-
-                _.each(recipients, (recipient) => {
-                    io.to(recipient.socket).emit('chat', feedback);
-                });
-            });
-
-            /**
-             * After the client auth themselves, they need to caught up with the others in the box. It means they will ask for the
-             * current video playing and must have an answer.
-             *
-             * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
-             * a webhook. This is only for in-box requests.
-             */
-            socket.on('start', async (request) => {
-                console.log("recieved query to start sync in the box", request);
-                // TODO: Check the user is auth
-
-                // Get the currently played video for the request box
-                const boxDetails = await Box.findOne({ _id: request.token }); // TODO: Send only the playlist maybe?
-                const currentVideo = _.filter(boxDetails.playlist, (video) => {
-                    return video.startTime !== null;
-                }); // FIXME: Don't return an array of object, it's just one object.
-                const videoDetails = await Video.findOne({ _id: currentVideo[0].video });
-
-                const response = {
-                    link: videoDetails.link,
-                    name: videoDetails.name,
-                    submissionTime: currentVideo[0].timestart, // TODO: Rename this field as submissionTime in the playlist of the box
-                    startTime: currentVideo[0].startTime,
-                };
-
-                console.log("constructed response for the client: ", response);
-
-                // Get the recipient from the list of subscribers
-                const recipient = _.filter(this.subscribers, { subscriber: request.subscriber, type: 'sync' });
-
-                // Emit the response back to the client
-                io.to(recipient[0].socket).emit('sync', response);
-            })
-
-            /**
-             * Every in-box communication regarding video sync between clients will go through this event.
-             */
-            socket.on('sync', (sync) => {
-                // TODO: The whole sync process needs to be redone in here, since it has to leave Logos.
-                console.log(sync);
-            });
-
-            /**
-             * When an user leaves the box
-             */
-            socket.on('disconnect', () => {
-                console.log("user disconnecting. Deleting from list of subscribers...");
-                const socketIndex = _.findIndex(this.subscribers, { socketId: socket.id });
-                this.subscribers.splice(socketIndex, 1);
-            });
-        });
+        return {
+            feedback: feedback,
+            updatedBox: updatedBox
+        };
     }
 
     /**
      * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
      *
-     * @param {any} payload
+     * @param {string} link the unique YouTube ID of the video
      * @returns
      * @memberof SyncService
      */
-    async getVideo(payload) {
-        let video = await Video.findOne({ link: payload.link });
+    private async getVideo(link: string) {
+        let video = await Video.findOne({ link: link });
 
         if (!video) {
-            // TODO: Get info from YouTube
-            video = await Video.create({ link: payload.link, name: 'Dummy' });
+            const youtubeDetails = await axios.get('http://youtube.com/get_video_info?video_id=' + link);
+            const parsedData = querystring.parse(youtubeDetails.data);
+
+            video = await Video.create({ link: link, name: parsedData.title });
         }
 
         return video;
@@ -165,40 +98,149 @@ export class SyncService {
     /**
      * Adds the obtained video to the playlist of the box
      *
-     * @param {any} video
-     * @param {any} token
+     * @param {any} video The video to add to the playlist
+     * @param {string} boxToken The doucment ID of the box
+     * @param {string} userToken The document ID of the user who submitted the video
      * @returns
      * @memberof SyncService
      */
-    async postToBox(video, token) {
-        console.log("got video to add to playlist: ", video);
-        return Box.findOne({ _id: token }).exec(async (err, document) => {
-            if (err) {
-                console.log(err); // No box found
+    public async postToBox(video, boxToken: string, userToken: string) {
+        let box = await Box.findOne({ _id: boxToken });
+
+        const submissionTime = moment().format('x');
+
+        const submission = {
+            video: video._id,
+            startTime: null,
+            endTime: null,
+            ignored: false,
+            submitted_at: submissionTime,
+            submitted_by: userToken
+        };
+
+        box.playlist.unshift(submission);
+
+        let updatedBox = await Box
+            .findOneAndUpdate(
+                { _id: boxToken },
+                { $set: { playlist: box.playlist } },
+                { new: true }
+            ).populate('playlist.video')
+            .populate('playlist.submitted_by', '_id name');
+
+        return updatedBox;
+    }
+
+    /**
+     * Gets the currently playing video of the box and returns it
+     *
+     * @param {string} boxToken The document id of the box
+     * @returns the video. The structure is the same as a playlist entry
+     * @memberof SyncService
+     */
+    public async getCurrentVideo(boxToken: string) {
+        const box = await Box.findById(boxToken);
+
+        let currentVideo = _.find(box.playlist, (video) => {
+            return video.startTime !== null && video.endTime === null;
+        });
+
+        if (currentVideo) { // TODO: Refactor this to filter and populate the initial query
+            // Find and "manually populate" the video details
+            const videoDetails = await Video.findById(currentVideo.video).select('_id link name');
+
+            currentVideo.video = videoDetails;
+
+            // Find and "manually populate" the user details
+            const userDetails = await User.findById(currentVideo.submitted_by).select('_id name');
+
+            currentVideo.submitted_by = userDetails;
+
+            return currentVideo;
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the next video from the playlist to play. Will
+     * update the playlist of the box, and send JSON containing all the info for subscribers
+     * in the box
+     *
+     * @param {string} boxToken The document ID of the box
+     * @returns JSON of the nextVideo and the updatedBox, or null
+     * @memberof SyncService
+     */
+    public async getNextVideo(boxToken: string) {
+        const transitionTime = moment().format('x');
+        let response = null;
+
+        const box = await Box.findById(boxToken);
+
+        // TODO: Find last index to skip ignored videos
+        const currentVideoIndex = _.findIndex(box.playlist, (video) => {
+            return video.startTime !== null && video.endTime === null;
+        });
+
+        // A video was playing and just ended
+        if (currentVideoIndex !== -1) {
+            // Ends the current video, the one that just ended
+            box.playlist[currentVideoIndex].endTime = transitionTime;
+
+            // Searches for a new one
+            if (currentVideoIndex !== 0) {
+                box.playlist[currentVideoIndex - 1].startTime = transitionTime;
             }
 
-            const submission = {
-                timestart: moment(),
-                video: video._id,
-                startTime: null,
-                endTime: null,
+            // Updates the box
+            let updatedBox = await Box
+                .findOneAndUpdate(
+                    { _id: boxToken },
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                )
+                .populate('playlist.video')
+                .populate('playlist.submitted_by', '_id name');
+
+            let nextVideo = null;
+            if (currentVideoIndex !== 0) {
+                nextVideo = updatedBox.playlist[currentVideoIndex - 1];
+            }
+
+            return {
+                nextVideo: nextVideo,
+                updatedBox: updatedBox
             };
+        } else {
+            // No video was playing before, the playlist was over (which means the service already entered the if condition once but found nothing)
+            const nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
+                return video.startTime === null;
+            });
 
-            document.playlist.push(submission);
+            if (nextVideoIndex !== -1) {
+                box.playlist[nextVideoIndex].startTime = transitionTime;
 
-            return Box.findOneAndUpdate(
-                { _id: token },
-                { $set: { playlist: document.playlist } },
-                (err, document) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    return;
-                });
-        });
+                let updatedBox = await Box
+                    .findOneAndUpdate(
+                        { _id: boxToken },
+                        { $set: { playlist: box.playlist } },
+                        { new: true }
+                    )
+                    .populate('playlist.video')
+                    .populate('playlist.submitted_by', '_id name');
+
+                const nextVideo = updatedBox.playlist[nextVideoIndex];
+
+                return {
+                    nextVideo,
+                    updatedBox: updatedBox
+                };
+            }
+        }
+
+        return null;
     }
 }
 
 const syncService = new SyncService();
-syncService.start();
 export default syncService;
