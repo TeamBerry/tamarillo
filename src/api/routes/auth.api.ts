@@ -51,7 +51,7 @@ export class AuthApi {
     public signup(req: Request, res: Response) {
         const mail = req.body.mail;
         const password = req.body.password;
-        const name = req.body.name;
+        const name = req.body.username;
 
         User.findOne({ mail: mail }, (err, user) => {
             if (err) {
