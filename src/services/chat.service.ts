@@ -11,7 +11,7 @@ class ChatService {
      * @memberof ChatService
      */
     async onChat(message) {
-        console.log("Recieved a message.");
+        console.log("Recieved a message.", message);
         if (message.scope) {
             console.log("Dispatching to all subscribers...");
             return true;

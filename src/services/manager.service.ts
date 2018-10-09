@@ -172,24 +172,34 @@ class ManagerService {
                     // We get the author of the message
                     let author = await User.findById(message.author);
 
-                    const dispatchedMessage = new Message({
-                        author: {
-                            _id: author._id,
-                            name: author.name
-                        },
-                        contents: message.contents,
-                        source: message.source,
-                        scope: message.scope,
-                        time: message.time
-                    });
+                    if (!author) {
+                        const errorMessage = new Message({
+                            source: 'system',
+                            contents: 'An error occurred, your message could not be sent.'
+                        });
 
-                    // We find all subscribers to the box (token of the message) for the chat type
-                    const recipients = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
+                        const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                        io.to(recipient.socket).emit('chat', errorMessage);
+                    } else {
+                        const dispatchedMessage = new Message({
+                            author: {
+                                _id: author._id,
+                                name: author.name
+                            },
+                            contents: message.contents,
+                            source: message.source,
+                            scope: message.scope,
+                            time: message.time
+                        });
 
-                    // To all of them, we send the message
-                    _.each(recipients, (recipient) => {
-                        io.to(recipient.socket).emit('chat', dispatchedMessage);
-                    });
+                        // We find all subscribers to the box (token of the message) for the chat type
+                        const recipients = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
+
+                        // To all of them, we send the message
+                        _.each(recipients, (recipient) => {
+                            io.to(recipient.socket).emit('chat', dispatchedMessage);
+                        });
+                    }
                 } else {
                     const response = new Message({
                         contents: 'Your message has been rejected by the server',
