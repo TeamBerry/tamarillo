@@ -3,17 +3,17 @@ import * as _ from 'lodash';
 import * as moment from 'moment';
 
 // MongoDB & Sockets
-const mongoose = require('./../config/connection');
+const mongoose = require('./../../config/connection');
 const express = require('express')();
 const http = require('http').Server(express);
 const io = require('socket.io')(http);
 io.set('transports', ['websocket']);
 
 // Models
-const Video = require('./../models/video.model');
-const Box = require('./../models/box.model');
-const User = require('./../models/user.model');
-import { Message } from './../models/message.model';
+const Video = require('./../../models/video.model');
+const Box = require('./../../models/box.model');
+const User = require('./../../models/user.model');
+import { Message } from './../../models/message.model';
 
 // Import services that need to be managed
 import syncService from './sync.service';
@@ -23,7 +23,7 @@ import chatService from './chat.service';
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
 */
-class ManagerService {
+class BoxService {
     subscribers = [];
 
     public init() {
@@ -233,7 +233,7 @@ class ManagerService {
      *
      * @private
      * @param {string} boxToken
-     * @memberof ManagerService
+     * @memberof BoxService
      */
     private async transitionToNextVideo(boxToken: string) {
         let response = await syncService.getNextVideo(boxToken);
@@ -267,13 +267,13 @@ class ManagerService {
      * Each time the socket recieves data, he has to check if the request can go through
      *
      * @private
-     * @memberof ManagerService
+     * @memberof BoxService
      */
     private checkAuth() {
 
     }
 }
 
-const managerService = new ManagerService();
-managerService.init();
-export default managerService;
+const boxService = new BoxService();
+boxService.init();
+export default boxService;

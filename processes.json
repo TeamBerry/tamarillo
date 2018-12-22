@@ -9,8 +9,8 @@
         "min_uptime": 3000
     },
     {
-        "script": "dist/services/manager.service.js",
-        "name": "manager.service",
+        "script": "dist/services/BoxService/box.service.js",
+        "name": "box.service",
         "watch": true,
         "exec_mode": "cluster",
         "instances": 1,

@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
 const axios = require("axios");
-const mongoose = require('./../config/connection');
+const mongoose = require('./../../config/connection');
 const querystring = require("querystring");
 
-const Video = require("./../models/video.model");
-const Box = require("./../models/box.model");
-const User = require("./../models/user.model");
-import { Message } from './../models/message.model';
+const Video = require("./../../models/video.model");
+const Box = require("./../../models/box.model");
+const User = require("./../../models/user.model");
+import { Message } from './../../models/message.model';
 
 export class SyncService {
     /**
