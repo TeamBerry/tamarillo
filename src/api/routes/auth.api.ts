@@ -7,7 +7,7 @@ const User = require("./../../models/user.model");
 const fs = require('fs');
 import * as jwt from 'jsonwebtoken';
 
-const RSA_PRIVATE_KEY = fs.readFileSync('src/private_key.pem');
+const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem');
 
 export class AuthApi {
     public router: Router;
