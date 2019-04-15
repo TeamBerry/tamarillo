@@ -1,7 +1,7 @@
 [{
         "script": "dist/api/index.js",
         "args": ["-p", "3000"],
-        "name": "api",
+        "name": "athena",
         "exec_mode": "cluster",
         "watch": true,
         "instances": 1,
@@ -10,7 +10,7 @@
     },
     {
         "script": "dist/services/BoxService/box.service.js",
-        "name": "box.service",
+        "name": "hermes",
         "watch": true,
         "exec_mode": "cluster",
         "instances": 1,
