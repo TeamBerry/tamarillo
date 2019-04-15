@@ -18,7 +18,7 @@ export class AuthApi {
     }
 
     public init() {
-        this.testBull();
+        // this.testBull();
         this.router.post("/login", this.login);
         this.router.post("/signup", this.signup);
     }
