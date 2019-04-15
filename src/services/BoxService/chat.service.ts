@@ -1,16 +1,17 @@
 import * as _ from 'lodash';
 
+import { Message } from '../../models/message.model';
+
 class ChatService {
     /**
      * When recieving a message by users to be dispatched.
      *
      * TODO: Checks for spam.
      *
-     * @param {any} message
-     * @returns
+     * @param {Message} message
      * @memberof ChatService
      */
-    async onChat(message) {
+    async onChat(message: Message) {
         console.log("Recieved a message.", message);
         if (message.scope) {
             console.log("Dispatching to all subscribers...");

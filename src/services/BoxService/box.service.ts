@@ -14,6 +14,7 @@ const Video = require('./../../models/video.model');
 const Box = require('./../../models/box.model');
 const User = require('./../../models/user.model');
 import { Message } from './../../models/message.model';
+import { Subscriber } from './../../models/subscriber.model';
 
 // Import services that need to be managed
 import syncService from './sync.service';
@@ -24,7 +25,7 @@ import chatService from './chat.service';
  * communication is possible between them. It will create mainly start them, and send data from one to the other
 */
 class BoxService {
-    subscribers = [];
+    subscribers: Array<Subscriber> = [];
 
     public init() {
         this.subscribers = [];
@@ -38,7 +39,7 @@ class BoxService {
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on('auth', (message) => {
-                const client = {
+                const client: Subscriber = {
                     origin: message.origin,
                     boxToken: message.boxToken,
                     userToken: message.userToken,
@@ -193,10 +194,10 @@ class BoxService {
                         });
 
                         // We find all subscribers to the box (token of the message) for the chat type
-                        const recipients = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
+                        const recipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
 
                         // To all of them, we send the message
-                        _.each(recipients, (recipient) => {
+                        _.each(recipients, (recipient: Subscriber) => {
                             io.to(recipient.socket).emit('chat', dispatchedMessage);
                         });
                     }
@@ -220,8 +221,10 @@ class BoxService {
             })
 
             socket.on('disconnect', () => {
-                const socketIndex = _.findIndex(this.subscribers, { socketId: socket.id });
-                this.subscribers.splice(socketIndex, 1);
+                const socketIndex = _.findIndex(this.subscribers, { socket: socket.id });
+                if (socketIndex !== -1) {
+                    this.subscribers.splice(socketIndex, 1);
+                }
             });
         })
     }
