@@ -3,17 +3,19 @@ import * as _ from 'lodash';
 import * as moment from 'moment';
 
 // MongoDB & Sockets
-const mongoose = require('./../config/connection');
+const mongoose = require('./../../config/connection');
 const express = require('express')();
 const http = require('http').Server(express);
 const io = require('socket.io')(http);
 io.set('transports', ['websocket']);
 
 // Models
-const Video = require('./../models/video.model');
-const Box = require('./../models/box.model');
-const User = require('./../models/user.model');
-import { Message } from './../models/message.model';
+const Video = require('./../../models/video.model');
+const Box = require('./../../models/box.model');
+const User = require('./../../models/user.model');
+import { Message } from './../../models/message.model';
+import { Subscriber } from './../../models/subscriber.model';
+import { VideoPayload } from './../../models/video-payload.model';
 
 // Import services that need to be managed
 import syncService from './sync.service';
@@ -23,8 +25,8 @@ import chatService from './chat.service';
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
 */
-class ManagerService {
-    subscribers = [];
+class BoxService {
+    subscribers: Array<Subscriber> = [];
 
     public init() {
         this.subscribers = [];
@@ -37,17 +39,17 @@ class ManagerService {
             /**
              * When an user joins the box, they will have to auth themselves.
              */
-            socket.on('auth', (message) => {
-                const client = {
-                    origin: message.origin,
-                    boxToken: message.boxToken,
-                    userToken: message.userToken,
+            socket.on('auth', (request) => {
+                const client: Subscriber = {
+                    origin: request.origin,
+                    boxToken: request.boxToken,
+                    userToken: request.userToken,
                     socket: socket.id,
-                    type: message.type
+                    type: request.type
                 };
 
                 // Connection check. If the user is not valid, he's refused
-                if (!message.boxToken) {
+                if (!request.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied."
@@ -68,29 +70,22 @@ class ManagerService {
             /**
              * What to do when you've got a video.
              *
-             * playload structure :
-             * {
-             *  'link': The YouTube uID of the video to add
-             *
-             *  'userToken': The document ID of the user who submitted the video
-             *
-             *  'boxToken': The document ID of the box to which the video is added
-             * }
+             * @param {VideoPayload} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on('video', async (payload) => {
+            socket.on('video', async (payload: VideoPayload) => {
                 // Dispatching request to the Sync Service
                 const response = await syncService.onVideo(payload);
 
                 // Emitting feedback to the chat
-                const recipients = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
+                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
 
-                _.each(recipients, (recipient) => {
+                _.each(recipients, (recipient: Subscriber) => {
                     io.to(recipient.socket).emit('chat', response.feedback);
                 });
 
                 // Emit box refresh to all the subscribers
-                _.each(this.subscribers, (recipient) => {
+                _.each(this.subscribers, (recipient: Subscriber) => {
                     io.to(recipient.socket).emit('box', response.updatedBox);
                 });
 
@@ -167,8 +162,8 @@ class ManagerService {
              *  'time': the timestamp of the message
              * }
              */
-            socket.on('chat', async (message) => {
-                if (await chatService.onChat(message)) {
+            socket.on('chat', async (message: Message) => {
+                if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
                     let author = await User.findById(message.author);
 
@@ -178,7 +173,7 @@ class ManagerService {
                             contents: 'An error occurred, your message could not be sent.'
                         });
 
-                        const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
                         io.to(recipient.socket).emit('chat', errorMessage);
                     } else {
                         const dispatchedMessage = new Message({
@@ -193,10 +188,10 @@ class ManagerService {
                         });
 
                         // We find all subscribers to the box (token of the message) for the chat type
-                        const recipients = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
+                        const recipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
 
                         // To all of them, we send the message
-                        _.each(recipients, (recipient) => {
+                        _.each(recipients, (recipient: Subscriber) => {
                             io.to(recipient.socket).emit('chat', dispatchedMessage);
                         });
                     }
@@ -220,8 +215,10 @@ class ManagerService {
             })
 
             socket.on('disconnect', () => {
-                const socketIndex = _.findIndex(this.subscribers, { socketId: socket.id });
-                this.subscribers.splice(socketIndex, 1);
+                const socketIndex = _.findIndex(this.subscribers, { socket: socket.id });
+                if (socketIndex !== -1) {
+                    this.subscribers.splice(socketIndex, 1);
+                }
             });
         })
     }
@@ -233,7 +230,7 @@ class ManagerService {
      *
      * @private
      * @param {string} boxToken
-     * @memberof ManagerService
+     * @memberof BoxService
      */
     private async transitionToNextVideo(boxToken: string) {
         let response = await syncService.getNextVideo(boxToken);
@@ -267,13 +264,13 @@ class ManagerService {
      * Each time the socket recieves data, he has to check if the request can go through
      *
      * @private
-     * @memberof ManagerService
+     * @memberof BoxService
      */
     private checkAuth() {
 
     }
 }
 
-const managerService = new ManagerService();
-managerService.init();
-export default managerService;
+const boxService = new BoxService();
+boxService.init();
+export default boxService;
