@@ -39,7 +39,7 @@ export class SyncService {
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof SyncService
      */
-    public async onVideo(payload: VideoPayload): Promise<{ feedback: any, updatedBox: any }> {
+    public async onVideo(payload: VideoPayload): Promise<{ feedback: Message, updatedBox: any }> {
         // Obtaining video from database. Creating it if needed
         const video = await this.getVideo(payload.link);
 
