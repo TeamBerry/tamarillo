@@ -15,6 +15,7 @@ const Box = require('./../../models/box.model');
 const User = require('./../../models/user.model');
 import { Message } from './../../models/message.model';
 import { Subscriber } from './../../models/subscriber.model';
+import { VideoPayload } from './../../models/video-payload.model';
 
 // Import services that need to be managed
 import syncService from './sync.service';
@@ -38,17 +39,17 @@ class BoxService {
             /**
              * When an user joins the box, they will have to auth themselves.
              */
-            socket.on('auth', (message) => {
+            socket.on('auth', (request) => {
                 const client: Subscriber = {
-                    origin: message.origin,
-                    boxToken: message.boxToken,
-                    userToken: message.userToken,
+                    origin: request.origin,
+                    boxToken: request.boxToken,
+                    userToken: request.userToken,
                     socket: socket.id,
-                    type: message.type
+                    type: request.type
                 };
 
                 // Connection check. If the user is not valid, he's refused
-                if (!message.boxToken) {
+                if (!request.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied."
@@ -69,29 +70,22 @@ class BoxService {
             /**
              * What to do when you've got a video.
              *
-             * playload structure :
-             * {
-             *  'link': The YouTube uID of the video to add
-             *
-             *  'userToken': The document ID of the user who submitted the video
-             *
-             *  'boxToken': The document ID of the box to which the video is added
-             * }
+             * @param {VideoPayload} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on('video', async (payload) => {
+            socket.on('video', async (payload: VideoPayload) => {
                 // Dispatching request to the Sync Service
                 const response = await syncService.onVideo(payload);
 
                 // Emitting feedback to the chat
-                const recipients = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
+                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
 
-                _.each(recipients, (recipient) => {
+                _.each(recipients, (recipient: Subscriber) => {
                     io.to(recipient.socket).emit('chat', response.feedback);
                 });
 
                 // Emit box refresh to all the subscribers
-                _.each(this.subscribers, (recipient) => {
+                _.each(this.subscribers, (recipient: Subscriber) => {
                     io.to(recipient.socket).emit('box', response.updatedBox);
                 });
 

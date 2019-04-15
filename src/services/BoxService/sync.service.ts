@@ -8,6 +8,7 @@ const Video = require("./../../models/video.model");
 const Box = require("./../../models/box.model");
 const User = require("./../../models/user.model");
 import { Message } from './../../models/message.model';
+import { VideoPayload } from '../../models/video-payload.model';
 
 export class SyncService {
     /**
@@ -22,8 +23,8 @@ export class SyncService {
      * @memberof SyncService
      */
     public async onStart(boxToken: string) {
-        const response = await this.getCurrentVideo(boxToken);
-        return response;
+        const video = await this.getCurrentVideo(boxToken);
+        return video;
     }
 
     /**
@@ -34,20 +35,11 @@ export class SyncService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {any} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
-     *
-     * {
-     *  'link': The YouTube uID of the video to add
-     *
-     *  'userToken': The document ID of the user who submitted the video
-     *
-     *  'boxToken': The document ID of the box to which the video is added
-     * }
-     *
+     * @param {VideoPayload} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof SyncService
      */
-    public async onVideo(payload): Promise<{ feedback: any, updatedBox: any }> {
+    public async onVideo(payload: VideoPayload): Promise<{ feedback: any, updatedBox: any }> {
         // Obtaining video from database. Creating it if needed
         const video = await this.getVideo(payload.link);
 
@@ -79,7 +71,7 @@ export class SyncService {
      * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
      *
      * @param {string} link the unique YouTube ID of the video
-     * @returns
+     * @returns {any} The video
      * @memberof SyncService
      */
     private async getVideo(link: string) {
