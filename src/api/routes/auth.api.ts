@@ -6,6 +6,7 @@ var mailQueue = new Queue('mail');
 const User = require("./../../models/user.model");
 const fs = require('fs');
 import * as jwt from 'jsonwebtoken';
+import { Session } from '../../models/session.model';
 
 const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem');
 
@@ -91,10 +92,10 @@ export class AuthApi {
      * @private
      * @param {*} user The user for whom the session is created
      * @param {number} [tokenExpiration=1296000] The duration of the session token (defaults to 1296000 seconds or 15 days)
-     * @returns The JSON Web Token
+     * @returns {Session} The JSON Web Token
      * @memberof AuthApi
      */
-    private createSession(user, tokenExpiration = 1296000) {
+    private createSession(user, tokenExpiration = 1296000): Session {
         // If password is correct, Create & Sign Bearer token and send it back to client
         const jwtBearerToken = jwt.sign({}, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
             algorithm: 'RS256',

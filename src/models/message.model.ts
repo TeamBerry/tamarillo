@@ -1,7 +1,7 @@
 import * as moment from 'moment';
 
 export class Message {
-    author: string;
+    author: string | { _id: string, name: string };
     contents: string;
     source: string;
     scope: string;

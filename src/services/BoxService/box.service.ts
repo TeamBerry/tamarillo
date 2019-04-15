@@ -162,7 +162,7 @@ class BoxService {
              *  'time': the timestamp of the message
              * }
              */
-            socket.on('chat', async (message) => {
+            socket.on('chat', async (message: Message) => {
                 if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
                     let author = await User.findById(message.author);
@@ -173,7 +173,7 @@ class BoxService {
                             contents: 'An error occurred, your message could not be sent.'
                         });
 
-                        const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
                         io.to(recipient.socket).emit('chat', errorMessage);
                     } else {
                         const dispatchedMessage = new Message({
