@@ -163,7 +163,7 @@ class BoxService {
              * }
              */
             socket.on('chat', async (message) => {
-                if (await chatService.onChat(message)) {
+                if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
                     let author = await User.findById(message.author);
 

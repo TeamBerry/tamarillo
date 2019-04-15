@@ -4,14 +4,15 @@ import { Message } from '../../models/message.model';
 
 class ChatService {
     /**
-     * When recieving a message by users to be dispatched.
+     * Checks the message for validity
      *
      * TODO: Checks for spam.
      *
      * @param {Message} message
+     * @returns {Promise<boolean>} Whether or not the message is valid
      * @memberof ChatService
      */
-    async onChat(message: Message) {
+    async isMessageValid(message: Message): Promise<boolean> {
         console.log("Recieved a message.", message);
         if (message.scope) {
             console.log("Dispatching to all subscribers...");
