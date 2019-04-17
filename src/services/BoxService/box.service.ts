@@ -36,10 +36,12 @@ class BoxService {
         });
 
         io.on('connection', (socket) => {
+            console.log('Connection attempt.');
             /**
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on('auth', (request) => {
+                console.log('AUTH request', request);
                 const client: Subscriber = {
                     origin: request.origin,
                     boxToken: request.boxToken,
@@ -47,6 +49,7 @@ class BoxService {
                     socket: socket.id,
                     type: request.type
                 };
+                console.log('Client: ', client);
 
                 // Connection check. If the user is not valid, he's refused
                 if (!request.boxToken) {
@@ -54,6 +57,7 @@ class BoxService {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied."
                     };
+                    console.log('Request denied');
                     socket.emit('denied', message);
                 } else {
                     this.subscribers.push(client);
@@ -62,6 +66,8 @@ class BoxService {
                         contents: 'You are now connected to the box!',
                         source: 'system'
                     });
+
+                    console.log('Request granted');
 
                     socket.emit('confirm', message);
                 }
