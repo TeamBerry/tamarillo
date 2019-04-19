@@ -1,19 +1,9 @@
-import mongoose = require("mongoose");
-var Schema = mongoose.Schema;
+import { PlaylistItem } from "./playlist-item.model";
 
-var boxSchema = new Schema({
-    creator: { type: Schema.Types.ObjectId, ref: 'User' },
-    description: String,
-    lang: String,
-    name: String,
-    playlist: [{
-        submitted_at: Number,
-        video: { type: Schema.Types.ObjectId, ref: 'Video' },
-        submitted_by: { type: Schema.Types.ObjectId, ref: 'User' },
-        startTime: Number,
-        endTime: Number,
-        ignored: Boolean // Indicates if the video has to be ignored by the autoplay. False by deafult
-    }],
-});
-
-module.exports = mongoose.model('Box', boxSchema);
+export class Box {
+    creator: string;
+    description: string;
+    lang: string;
+    name: string;
+    playlist: Array<PlaylistItem>
+}

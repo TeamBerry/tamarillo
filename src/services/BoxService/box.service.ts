@@ -11,7 +11,7 @@ io.set('transports', ['websocket']);
 
 // Models
 const Video = require('./../../models/video.model');
-const Box = require('./../../models/box.model');
+const Box = require('./../../models/box.schema');
 const User = require('./../../models/user.model');
 import { Message } from './../../models/message.model';
 import { Subscriber } from './../../models/subscriber.model';
@@ -20,6 +20,7 @@ import { VideoPayload } from './../../models/video-payload.model';
 // Import services that need to be managed
 import syncService from './sync.service';
 import chatService from './chat.service';
+import { SyncPacket } from '../../models/sync-packet.model';
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
@@ -244,12 +245,21 @@ class BoxService {
     private async transitionToNextVideo(boxToken: string) {
         let response = await syncService.getNextVideo(boxToken);
         let message: Message = new Message();
+        message.scope = boxToken;
 
         if (response) {
+            const syncRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'sync'});
+            const chatRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
+
             // Emit box refresh to all the subscribers
-            _.each(this.subscribers, (recipient) => {
+            _.each(syncRecipients, (recipient: Subscriber) => {
                 if (response.nextVideo) {
-                    io.to(recipient.socket).emit('sync', response.nextVideo);
+                    const syncPacket: SyncPacket = {
+                        box: boxToken,
+                        item: response.nextVideo
+                    };
+                    console.log('SYNC packet for next video:', syncPacket);
+                    io.to(recipient.socket).emit('sync', syncPacket);
                 }
                 io.to(recipient.socket).emit('box', response.updatedBox);
             });
@@ -262,7 +272,6 @@ class BoxService {
                 message.contents = 'The playlist has no upcoming videos.';
                 message.source = 'system';
             }
-            const chatRecipients = _.filter(this.subscribers, { type: 'chat' });
             _.each(chatRecipients, (recipient) => {
                 io.to(recipient.socket).emit('chat', message);
             });
