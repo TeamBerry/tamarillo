@@ -5,10 +5,13 @@ const mongoose = require('./../../config/connection');
 const querystring = require("querystring");
 
 const Video = require("./../../models/video.model");
-const Box = require("./../../models/box.model");
+const BoxSchema = require("./../../models/box.schema");
 const User = require("./../../models/user.model");
 import { Message } from './../../models/message.model';
 import { VideoPayload } from '../../models/video-payload.model';
+import { SyncPacket } from '../../models/sync-packet.model';
+import { Box } from '../../models/box.model';
+import { PlaylistItem } from '../../models/playlist-item.model';
 
 export class SyncService {
     /**
@@ -19,11 +22,11 @@ export class SyncService {
      * a webhook. This is only for in-box requests.
      *
      * @param {string} boxToken The token of the box
-     * @returns video
+     * @returns {Promise<SyncPacket>} The packet for sync
      * @memberof SyncService
      */
-    public async onStart(boxToken: string) {
-        let response: { item: any, box: string } = { item: null, box: boxToken };
+    public async onStart(boxToken: string): Promise<SyncPacket> {
+        let response: SyncPacket = { item: null, box: boxToken };
 
         response.item = await this.getCurrentVideo(boxToken);
 
@@ -101,7 +104,7 @@ export class SyncService {
      * @memberof SyncService
      */
     public async postToBox(video, boxToken: string, userToken: string) {
-        let box = await Box.findOne({ _id: boxToken });
+        let box = await BoxSchema.findOne({ _id: boxToken });
 
         const submissionTime = moment().format('x');
 
@@ -116,7 +119,7 @@ export class SyncService {
 
         box.playlist.unshift(submission);
 
-        let updatedBox = await Box
+        let updatedBox = await BoxSchema
             .findOneAndUpdate(
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
@@ -135,7 +138,7 @@ export class SyncService {
      * @memberof SyncService
      */
     public async getCurrentVideo(boxToken: string) {
-        const box = await Box.findById(boxToken);
+        const box = await BoxSchema.findById(boxToken);
 
         let currentVideo = _.find(box.playlist, (video) => {
             return video.startTime !== null && video.endTime === null;
@@ -167,14 +170,14 @@ export class SyncService {
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof SyncService
      */
-    public async getNextVideo(boxToken: string) {
+    public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
         const transitionTime = moment().format('x');
         let response = null;
 
-        const box = await Box.findById(boxToken);
+        const box: Box = await BoxSchema.findById(boxToken);
 
         // TODO: Find last index to skip ignored videos
-        const currentVideoIndex = _.findIndex(box.playlist, (video) => {
+        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => {
             return video.startTime !== null && video.endTime === null;
         });
 
@@ -189,7 +192,7 @@ export class SyncService {
             }
 
             // Updates the box
-            let updatedBox = await Box
+            let updatedBox: Box = await BoxSchema
                 .findOneAndUpdate(
                     { _id: boxToken },
                     { $set: { playlist: box.playlist } },
@@ -216,7 +219,7 @@ export class SyncService {
             if (nextVideoIndex !== -1) {
                 box.playlist[nextVideoIndex].startTime = transitionTime;
 
-                let updatedBox = await Box
+                let updatedBox = await BoxSchema
                     .findOneAndUpdate(
                         { _id: boxToken },
                         { $set: { playlist: box.playlist } },

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express';
 
-const Box = require("./../../models/box.model");
+const Box = require("./../../models/box.schema");
 
 export class BoxApi {
     public router: Router;
