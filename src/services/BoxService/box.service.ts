@@ -55,7 +55,8 @@ class BoxService {
                 if (!request.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
-                        message: "No token has been given to the socket. Access has been denied."
+                        message: "No token has been given to the socket. Access has been denied.",
+                        scope: request.boxToken
                     };
                     console.log('Request denied');
                     socket.emit('denied', message);
@@ -64,7 +65,8 @@ class BoxService {
 
                     const message = new Message({
                         contents: 'You are now connected to the box!',
-                        source: 'system'
+                        source: 'system',
+                        scope: request.boxToken
                     });
 
                     console.log('Request granted');
@@ -120,9 +122,10 @@ class BoxService {
             socket.on('start', async (request) => {
                 const response = await syncService.onStart(request.boxToken);
                 let message: Message = new Message();
+                message.scope = request.boxToken;
 
                 if (response) {
-                    message.contents = 'Currently playing: "' + response.video.name + '"';
+                    message.contents = 'Currently playing: "' + response.item.video.name + '"';
                     message.source = 'bot';
 
                     // Get the recipient from the list of subscribers
@@ -176,7 +179,8 @@ class BoxService {
                     if (!author) {
                         const errorMessage = new Message({
                             source: 'system',
-                            contents: 'An error occurred, your message could not be sent.'
+                            contents: 'An error occurred, your message could not be sent.',
+                            scope: message.scope
                         });
 
                         const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
@@ -204,7 +208,8 @@ class BoxService {
                 } else {
                     const response = new Message({
                         contents: 'Your message has been rejected by the server',
-                        source: 'system'
+                        source: 'system',
+                        scope: message.scope
                     });
 
                     const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });

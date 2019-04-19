@@ -23,8 +23,11 @@ export class SyncService {
      * @memberof SyncService
      */
     public async onStart(boxToken: string) {
-        const video = await this.getCurrentVideo(boxToken);
-        return video;
+        let response: { item: any, box: string } = { item: null, box: boxToken };
+
+        response.item = await this.getCurrentVideo(boxToken);
+
+        return response;
     }
 
     /**
