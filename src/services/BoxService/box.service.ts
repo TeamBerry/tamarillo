@@ -86,7 +86,7 @@ class BoxService {
                 const response = await syncService.onVideo(payload);
 
                 // Emitting feedback to the chat
-                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
+                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' });
 
                 _.each(recipients, (recipient: Subscriber) => {
                     io.to(recipient.socket).emit('chat', response.feedback);
@@ -119,7 +119,7 @@ class BoxService {
              *  "userToken": the document ID of the user
              * }
              */
-            socket.on('start', async (request) => {
+            socket.on('start', async (request: { boxToken: string, userToken: string }) => {
                 const response = await syncService.onStart(request.boxToken);
                 let message: Message = new Message();
                 message.scope = request.boxToken;
@@ -129,7 +129,7 @@ class BoxService {
                     message.source = 'bot';
 
                     // Get the recipient from the list of subscribers
-                    let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'sync' });
+                    let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
 
                     // Emit the response back to the client
                     io.to(recipient.socket).emit('sync', response);
@@ -138,7 +138,7 @@ class BoxService {
                     message.source = 'system';
                 }
 
-                let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'chat' });
+                let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
                 if (recipient) {
                     io.to(recipient.socket).emit('chat', message);
                 }
@@ -183,7 +183,7 @@ class BoxService {
                             scope: message.scope
                         });
 
-                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, boxToken: message.scope, type: 'chat' });
                         io.to(recipient.socket).emit('chat', errorMessage);
                     } else {
                         const dispatchedMessage = new Message({
@@ -212,7 +212,7 @@ class BoxService {
                         scope: message.scope
                     });
 
-                    const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                    const recipient = _.find(this.subscribers, { userToken: message.author, boxToken: message.scope, type: 'chat' });
                     io.to(recipient.socket).emit('chat', response);
                 }
             });
