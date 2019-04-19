@@ -36,6 +36,7 @@ class BoxService {
         });
 
         io.on('connection', (socket) => {
+            console.log('Connection attempt.');
             /**
              * When an user joins the box, they will have to auth themselves.
              */
@@ -52,16 +53,21 @@ class BoxService {
                 if (!request.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
-                        message: "No token has been given to the socket. Access has been denied."
+                        message: "No token has been given to the socket. Access has been denied.",
+                        scope: request.boxToken
                     };
+                    console.log('Request denied');
                     socket.emit('denied', message);
                 } else {
                     this.subscribers.push(client);
 
                     const message = new Message({
                         contents: 'You are now connected to the box!',
-                        source: 'system'
+                        source: 'system',
+                        scope: request.boxToken
                     });
+
+                    console.log('Request granted');
 
                     socket.emit('confirm', message);
                 }
@@ -78,7 +84,7 @@ class BoxService {
                 const response = await syncService.onVideo(payload);
 
                 // Emitting feedback to the chat
-                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, type: 'chat' });
+                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' });
 
                 _.each(recipients, (recipient: Subscriber) => {
                     io.to(recipient.socket).emit('chat', response.feedback);
@@ -111,16 +117,17 @@ class BoxService {
              *  "userToken": the document ID of the user
              * }
              */
-            socket.on('start', async (request) => {
+            socket.on('start', async (request: { boxToken: string, userToken: string }) => {
                 const response = await syncService.onStart(request.boxToken);
                 let message: Message = new Message();
+                message.scope = request.boxToken;
 
                 if (response) {
-                    message.contents = 'Currently playing: "' + response.video.name + '"';
+                    message.contents = 'Currently playing: "' + response.item.video.name + '"';
                     message.source = 'bot';
 
                     // Get the recipient from the list of subscribers
-                    let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'sync' });
+                    let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
 
                     // Emit the response back to the client
                     io.to(recipient.socket).emit('sync', response);
@@ -129,7 +136,7 @@ class BoxService {
                     message.source = 'system';
                 }
 
-                let recipient = _.find(this.subscribers, { userToken: request.userToken, type: 'chat' });
+                let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
                 if (recipient) {
                     io.to(recipient.socket).emit('chat', message);
                 }
@@ -170,10 +177,11 @@ class BoxService {
                     if (!author) {
                         const errorMessage = new Message({
                             source: 'system',
-                            contents: 'An error occurred, your message could not be sent.'
+                            contents: 'An error occurred, your message could not be sent.',
+                            scope: message.scope
                         });
 
-                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, boxToken: message.scope, type: 'chat' });
                         io.to(recipient.socket).emit('chat', errorMessage);
                     } else {
                         const dispatchedMessage = new Message({
@@ -198,10 +206,11 @@ class BoxService {
                 } else {
                     const response = new Message({
                         contents: 'Your message has been rejected by the server',
-                        source: 'system'
+                        source: 'system',
+                        scope: message.scope
                     });
 
-                    const recipient = _.find(this.subscribers, { userToken: message.author, type: 'chat' });
+                    const recipient = _.find(this.subscribers, { userToken: message.author, boxToken: message.scope, type: 'chat' });
                     io.to(recipient.socket).emit('chat', response);
                 }
             });
