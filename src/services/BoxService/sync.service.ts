@@ -62,6 +62,7 @@ export class SyncService {
         const feedback = new Message({
             contents: message,
             source: 'bot',
+            scope: payload.boxToken
         });
 
         return {

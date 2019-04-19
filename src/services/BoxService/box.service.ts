@@ -41,7 +41,6 @@ class BoxService {
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on('auth', (request) => {
-                console.log('AUTH request', request);
                 const client: Subscriber = {
                     origin: request.origin,
                     boxToken: request.boxToken,
@@ -49,7 +48,6 @@ class BoxService {
                     socket: socket.id,
                     type: request.type
                 };
-                console.log('Client: ', client);
 
                 // Connection check. If the user is not valid, he's refused
                 if (!request.boxToken) {
