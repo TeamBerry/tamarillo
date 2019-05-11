@@ -20,7 +20,7 @@ let userSchema = new Schema(
             color: String,
         },
         badges: [],
-        favorites: [{ type: String, ref: 'Video' }],
+        favorites: [{ type: Schema.Types.ObjectId, ref: 'Video' }],
     },
     {
         timestamps: true // Will automatically insert createdAt & updatedAt fields
