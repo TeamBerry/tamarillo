@@ -10,7 +10,7 @@ import AuthApi from "./routes/auth.api";
 class App {
     public app: express.Application;
 
-    constructor(){
+    constructor() {
         this.app = express();
 
         this.app.use(cors());
@@ -20,7 +20,10 @@ class App {
     }
 
     private middlewares(): void {
-        this.app.use(bodyParser.json());
+        this.app.use(bodyParser.json({
+            limit: '15mb',
+            type: 'application/json'
+        }));
     }
 
     private routes(): void {
