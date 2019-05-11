@@ -63,19 +63,12 @@ describe("Box API", () => {
                 .then((response) => {
                     const box = response.body;
 
-                    expect(box).to.eql({
-                        _id: '9cb763b6e72611381ef043e4',
-                        description: null,
-                        lang: 'English',
-                        name: 'Test box',
-                        playlist: [],
-                        creator: {
-                            _id: '9ca0df5f86abeb66da97ba5d',
-                            name: 'Ash Ketchum'
-                        },
-                        __v: 0
-                    })
-                })
+                    expect(box._id).to.equal('9cb763b6e72611381ef043e4');
+                    expect(box.creator).to.eql({
+                        _id: '9ca0df5f86abeb66da97ba5d',
+                        name: 'Ash Ketchum'
+                    });
+                });
         });
     });
 });
