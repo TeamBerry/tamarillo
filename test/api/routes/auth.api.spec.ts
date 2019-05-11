@@ -5,7 +5,7 @@ import * as supertest from "supertest";
 import AuthApi from './../../../src/api/routes/auth.api';
 const User = require('./../../../src/models/user.model');
 
-describe.only("Auth API", () => {
+describe("Auth API", () => {
 
     const expressApp = express();
 
