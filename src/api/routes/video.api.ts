@@ -14,7 +14,6 @@ export class VideoApi {
         this.router.get("/", this.index);
         this.router.get("/id", this.show);
         this.router.post("/", this.store);
-        console.log("Video APIs initialised");
     }
 
     public index(req: Request, res: Response) {

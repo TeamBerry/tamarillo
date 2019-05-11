@@ -1,0 +1,81 @@
+import * as express from "express";
+import * as bodyParser from 'body-parser';
+import * as supertest from "supertest";
+import * as chai from "chai";
+const expect = chai.expect;
+
+import BoxApi from './../../../src/api/routes/box.api';
+const Box = require('./../../../src/models/box.schema');
+const User = require('./../../../src/models/user.model');
+
+describe("Box API", () => {
+
+    const expressApp = express();
+
+    before(async () => {
+        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }));
+        expressApp.use('/', BoxApi);
+
+        await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
+
+        await User.create({
+            _id: '9ca0df5f86abeb66da97ba5d',
+            name: 'Ash Ketchum',
+            mail: 'ash@pokemon.com',
+            password: 'Pikachu'
+        });
+
+        await Box.create({
+            _id: '9cb763b6e72611381ef043e4',
+            description: null,
+            lang: 'English',
+            name: 'Test box',
+            playlist: [],
+            creator: '9ca0df5f86abeb66da97ba5d'
+        });
+    });
+
+    after(async () => {
+        await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
+
+        await Box.deleteMany(
+            { _id: { $in: ['9cb763b6e72611381ef043e4'] } }
+        )
+    });
+
+    it("Gets all boxes", () => {
+        return supertest(expressApp)
+            .get('/')
+            .expect(200);
+    });
+
+    describe("Gets a single box", () => {
+        it("Sends a 404 back if no box matches the id given", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef044e4')
+                .expect(404, 'BOX_NOT_FOUND');
+        });
+
+        it("Sends a 200 with the proper box if the id matches", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef043e4')
+                .expect(200)
+                .then((response) => {
+                    const box = response.body;
+
+                    expect(box).to.eql({
+                        _id: '9cb763b6e72611381ef043e4',
+                        description: null,
+                        lang: 'English',
+                        name: 'Test box',
+                        playlist: [],
+                        creator: {
+                            _id: '9ca0df5f86abeb66da97ba5d',
+                            name: 'Ash Ketchum'
+                        },
+                        __v: 0
+                    })
+                })
+        });
+    });
+});
