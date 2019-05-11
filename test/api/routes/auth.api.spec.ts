@@ -16,9 +16,7 @@ describe.only("Auth API", () => {
 
     describe("Login", () => {
         before(async () => {
-            console.log("Cleaning test users");
-            await User.deleteMany({ _id: '9ca0df5f86abeb66da97ba5d' });
-
+            await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
 
             await User.create({
                 _id: '9ca0df5f86abeb66da97ba5d',
@@ -29,7 +27,7 @@ describe.only("Auth API", () => {
         });
 
         after(async () => {
-            await User.deleteMany({ _id: '9ca0df5f86abeb66da97ba5d' });
+            await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
         })
 
         it("Rejects the login if no credentials are given", () => {
