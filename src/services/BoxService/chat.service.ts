@@ -13,14 +13,7 @@ class ChatService {
      * @memberof ChatService
      */
     async isMessageValid(message: Message): Promise<boolean> {
-        console.log("Recieved a message.", message);
-        if (message.scope) {
-            console.log("Dispatching to all subscribers...");
-            return true;
-        } else {
-            console.log("message doesn't have a token. Message ignored.");
-            return false;
-        }
+        return message.scope ? true : false;
     }
 }
 
