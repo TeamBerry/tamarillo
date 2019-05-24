@@ -79,9 +79,28 @@ describe("Box API", () => {
                 .expect(412, 'MISSING_PARAMETERS');
         });
 
+        it("Sends a 412 back if the request parameter and the _id given in the request body mismatch", () => {
+            const updateBody = {
+                _id: '9cb763b6e72611381ef044e4',
+                description: 'Test box edited',
+                lang: 'English',
+                name: 'Test box',
+                playlist: [],
+                creator: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ash Ketchum'
+                }
+            };
+
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e4')
+                .send(updateBody)
+                .expect(412, 'IDENTIFIER_MISMATCH');
+        });
+
         it("Sends a 404 back if no box matches the id given", () => {
             const updateBody = {
-                _id: '9cb763b6e72611381ef043e4',
+                _id: '9cb763b6e72611381ef044e4',
                 description: 'Test box edited',
                 lang: 'English',
                 name: 'Test box',
@@ -96,6 +115,30 @@ describe("Box API", () => {
                 .put('/9cb763b6e72611381ef044e4')
                 .send(updateBody)
                 .expect(404, 'BOX_NOT_FOUND');
+        });
+
+        it("Sends a 200 back with the updated box", () => {
+            const updateBody = {
+                _id: '9cb763b6e72611381ef043e4',
+                description: 'Test box edited',
+                lang: 'English',
+                name: 'Test box',
+                playlist: [],
+                creator: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ash Ketchum'
+                }
+            };
+
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e4')
+                .send(updateBody)
+                .expect(200)
+                .then((response) => {
+                    const updatedBox = response.body;
+
+                    expect(updatedBox.description).to.equal('Test box edited');
+                });
         });
     })
 });

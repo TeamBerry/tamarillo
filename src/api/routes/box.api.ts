@@ -96,15 +96,39 @@ export class BoxApi {
      * - 500 Server Error if something else happens
      * @memberof BoxApi
      */
-    public update(request: Request, response: Response): Promise<Response> {
+    public async update(request: Request, response: Response): Promise<Response> {
         try {
             if (_.isEmpty(request.body)) {
                 return response.status(412).send('MISSING_PARAMETERS');
             }
 
-            const updateBody = request.body;
+            const targetId = request.params.box;
 
-            return response.status(200).send();
+            const { _id, description, lang, name } = request.body;
+
+            if (targetId !== _id) {
+                return response.status(412).send('IDENTIFIER_MISMATCH');
+            }
+
+            const updatedBox = await Box.findByIdAndUpdate(
+                _id,
+                {
+                    $set: {
+                        description,
+                        lang,
+                        name
+                    }
+                },
+                {
+                    new: true
+                }
+            );
+
+            if (!updatedBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            return response.status(200).send(updatedBox);
         } catch (error) {
             return response.status(500).send(error);
         }
