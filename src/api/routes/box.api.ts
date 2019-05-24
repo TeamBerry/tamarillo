@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
+import * as _ from 'lodash';
 
 const Box = require("./../../models/box.schema");
 
@@ -14,6 +15,7 @@ export class BoxApi {
         this.router.get("/", this.index);
         this.router.get("/:box", this.show);
         this.router.post("/", this.store);
+        this.router.put("/:box", this.update);
     }
 
     /**
@@ -27,8 +29,7 @@ export class BoxApi {
         try {
             const boxes = await Box.find({})
                 .populate('creator', '_id name')
-                .populate('playlist.video')
-                .populate('playlist.submitted_by', '_id name');
+                .populate('playlist.video');
 
             return response.status(200).send(boxes);
         } catch (error) {
@@ -83,8 +84,30 @@ export class BoxApi {
         }
     }
 
-    public update() {
+    /**
+     * Updates a box from the collection
+     *
+     * @param {Request} request Body contains the box to update
+     * @param {Response} response
+     * @returns {Promise<Response>} The updated box is sent back as confirmation with a 200.
+     * If something goes wrong, one of the following error codes will be sent:
+     * - 412 'MISSING_PARAMETERS' if no request body is given
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public update(request: Request, response: Response): Promise<Response> {
+        try {
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send('MISSING_PARAMETERS');
+            }
 
+            const updateBody = request.body;
+
+            return response.status(200).send();
+        } catch (error) {
+            return response.status(500).send(error);
+        }
     }
 
     public destroy() {

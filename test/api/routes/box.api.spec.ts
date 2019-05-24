@@ -71,4 +71,31 @@ describe("Box API", () => {
                 });
         });
     });
+
+    describe.only("Updates a box", () => {
+        it("Sends a 412 back if no request body is given", () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e4')
+                .expect(412, 'MISSING_PARAMETERS');
+        });
+
+        it("Sends a 404 back if no box matches the id given", () => {
+            const updateBody = {
+                _id: '9cb763b6e72611381ef043e4',
+                description: 'Test box edited',
+                lang: 'English',
+                name: 'Test box',
+                playlist: [],
+                creator: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ash Ketchum'
+                }
+            };
+
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef044e4')
+                .send(updateBody)
+                .expect(404, 'BOX_NOT_FOUND');
+        });
+    })
 });
