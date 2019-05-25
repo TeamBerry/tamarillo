@@ -72,7 +72,7 @@ describe("Box API", () => {
         });
     });
 
-    describe.only("Updates a box", () => {
+    describe("Updates a box", () => {
         it("Sends a 412 back if no request body is given", () => {
             return supertest(expressApp)
                 .put('/9cb763b6e72611381ef043e4')
@@ -140,5 +140,25 @@ describe("Box API", () => {
                     expect(updatedBox.description).to.equal('Test box edited');
                 });
         });
-    })
+    });
+
+    describe.only("Closes a box", () => {
+        it("Sends a 404 back if no box matches the id given", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef044e4/close')
+                .expect(404, 'BOX_NOT_FOUND');
+        });
+
+        it("Sends a 200 with the closed box", () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef043e4/close')
+                .expect(200)
+                .then((response) => {
+                    const box = response.body;
+
+                    expect(box._id).to.equal('9cb763b6e72611381ef043e4');
+                    expect(box.active).to.be.false;
+                })
+        });
+    });
 });

@@ -5,5 +5,6 @@ export class Box {
     description: string;
     lang: string;
     name: string;
-    playlist: Array<PlaylistItem>
+    playlist: Array<PlaylistItem>;
+    open: boolean;
 }

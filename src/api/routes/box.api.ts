@@ -16,6 +16,7 @@ export class BoxApi {
         this.router.get("/:box", this.show);
         this.router.post("/", this.store);
         this.router.put("/:box", this.update);
+        this.router.post("/:box/close", this.close);
     }
 
     /**
@@ -136,6 +137,10 @@ export class BoxApi {
 
     public destroy() {
 
+    }
+
+    public async close(request: Request, response: Response): Promise<Response> {
+        return response.status(200).send(request.box);
     }
 }
 

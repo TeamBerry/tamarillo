@@ -17,6 +17,7 @@ var boxSchema = new Schema(
             endTime: Number,
             ignored: Boolean // Indicates if the video has to be ignored by the autoplay. False by deafult
         }],
+        open: Boolean
     },
     {
         timestamps: true
