@@ -31,3 +31,4 @@ Thumbs.db
 # Logs and Test outputs
 *.log
 .nyc_output
+coverage
