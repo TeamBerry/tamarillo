@@ -28,7 +28,7 @@ export class BoxApi {
      */
     public async index(request: Request, response: Response): Promise<Response> {
         try {
-            const boxes = await Box.find({})
+            const boxes = await Box.find({ open: true })
                 .populate('creator', '_id name')
                 .populate('playlist.video');
 

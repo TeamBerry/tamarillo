@@ -18,6 +18,10 @@ describe("Box API", () => {
 
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
 
+        await Box.deleteMany(
+            { _id: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5'] } }
+        );
+
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
@@ -31,7 +35,18 @@ describe("Box API", () => {
             lang: 'English',
             name: 'Test box',
             playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5d'
+            creator: '9ca0df5f86abeb66da97ba5d',
+            open: true
+        });
+
+        await Box.create({
+            _id: '9cb763b6e72611381ef043e5',
+            description: 'Closed box',
+            lang: 'English',
+            name: 'Closed box',
+            playlist: [],
+            creator: '9ca0df5f86abeb66da97ba5d',
+            open: false
         });
     });
 
@@ -39,14 +54,19 @@ describe("Box API", () => {
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
 
         await Box.deleteMany(
-            { _id: { $in: ['9cb763b6e72611381ef043e4'] } }
-        )
+            { _id: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5'] } }
+        );
     });
 
     it("Gets all boxes", () => {
         return supertest(expressApp)
             .get('/')
-            .expect(200);
+            .expect(200)
+            .then((response) => {
+                const boxes = response.body;
+
+                expect(boxes.length).to.equal(1);
+            });
     });
 
     describe("Gets a single box", () => {
@@ -142,7 +162,7 @@ describe("Box API", () => {
         });
     });
 
-    describe.only("Closes a box", () => {
+    describe("Closes a box", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
                 .get('/9cb763b6e72611381ef044e4/close')
