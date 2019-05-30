@@ -53,25 +53,27 @@ export class SyncService {
         const user = await User.findById(payload.userToken);
 
         // Adding it to the playlist of the box
-        const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken);
+        try {
+            const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken);
+            let message: string;
 
-        let message: string;
-        if (user) {
-            message = user.name + ' has added the video "' + video.name + '" to the playlist.';
-        } else {
-            message = 'The video "' + video.name + '" has been added to the playlist';
+            if (user) {
+                message = user.name + ' has added the video "' + video.name + '" to the playlist.';
+            } else {
+                message = 'The video "' + video.name + '" has been added to the playlist';
+            }
+
+            const feedback = new Message({
+                contents: message,
+                source: 'bot',
+                scope: payload.boxToken
+            });
+
+            return { feedback, updatedBox };
+        } catch (error) {
+            // If the box is closed, the error is sent back to the socket method.
+            throw Error(error);
         }
-
-        const feedback = new Message({
-            contents: message,
-            source: 'bot',
-            scope: payload.boxToken
-        });
-
-        return {
-            feedback: feedback,
-            updatedBox: updatedBox
-        };
     }
 
     /**
@@ -105,6 +107,10 @@ export class SyncService {
      */
     public async postToBox(video, boxToken: string, userToken: string) {
         let box = await BoxSchema.findOne({ _id: boxToken });
+
+        if (box.open === false) {
+            throw new Error('This box is closed. Submission is disallowed.');
+        }
 
         const submissionTime = moment().format('x');
 
