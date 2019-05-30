@@ -139,8 +139,40 @@ export class BoxApi {
 
     }
 
+    /**
+     * Closes a box
+     *
+     * @param {Request} request Body contains the box to close
+     * @param {Response} response
+     * @returns {Promise<Response>} The closed box is sent back as confirmation with a 200
+     * If something goes wrong, one of the following error codes will be sent instead:
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
     public async close(request: Request, response: Response): Promise<Response> {
-        return response.status(200).send(request.box);
+        try {
+            const targetId = request.params.box;
+
+            const closedBox = await Box.findByIdAndUpdate(
+                targetId,
+                {
+                    $set: { open: false }
+                },
+                {
+                    new: true
+                }
+            );
+
+            if (!closedBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            return response.status(200).send(closedBox);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
+
     }
 }
 

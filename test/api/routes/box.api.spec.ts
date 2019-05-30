@@ -165,7 +165,7 @@ describe("Box API", () => {
     describe("Closes a box", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
-                .get('/9cb763b6e72611381ef044e4/close')
+                .post('/9cb763b6e72611381ef044e4/close')
                 .expect(404, 'BOX_NOT_FOUND');
         });
 
@@ -174,10 +174,10 @@ describe("Box API", () => {
                 .post('/9cb763b6e72611381ef043e4/close')
                 .expect(200)
                 .then((response) => {
-                    const box = response.body;
+                    const closedBox = response.body;
 
-                    expect(box._id).to.equal('9cb763b6e72611381ef043e4');
-                    expect(box.active).to.be.false;
+                    expect(closedBox._id).to.equal('9cb763b6e72611381ef043e4');
+                    expect(closedBox.open).to.be.false;
                 })
         });
     });
