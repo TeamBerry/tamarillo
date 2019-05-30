@@ -63,7 +63,7 @@ describe("Sync Service", () => {
         await Video.findByIdAndDelete('9cb81150594b2e75f06ba8fe');
     });
 
-    describe.only("Submit video to box", () => {
+    describe("Submit video to box", () => {
         const video = {
             _id: '9cb81150594b2e75f06ba8fe',
             link: 'Ivi1e-yCPcI',
@@ -71,17 +71,12 @@ describe("Sync Service", () => {
         };
 
         it("Refuses video if the box is closed", async () => {
-            const call = await syncService.postToBox(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
-
-            console.log(call);
-
-            expect(call).to.eventually.be.rejectedWith('This box is closed. Submission is disallowed.');
+            expect(syncService.postToBox(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')).to.eventually.throw('This box is closed. Submission is disallowed.');
         });
 
         it("Accepts the video and sends back the updated box", async () => {
             const updatedBox = await syncService.postToBox(video, '9cb763b6e72611381ef043e4', '9ca0df5f86abeb66da97ba5d');
 
-            console.log(updatedBox.playlist);
             expect(updatedBox.playlist.length).to.eql(1);
         });
     })
