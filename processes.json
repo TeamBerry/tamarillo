@@ -1,22 +1,4 @@
-[{
-        "script": "dist/api/index.js",
-        "args": ["-p", "3000"],
-        "name": "athena",
-        "exec_mode": "cluster",
-        "watch": false,
-        "instances": 1,
-        "max_restarts": 5,
-        "min_uptime": 3000
-    },
-    {
-        "script": "dist/services/BoxService/box.service.js",
-        "name": "hermes",
-        "watch": false,
-        "exec_mode": "cluster",
-        "instances": 1,
-        "max_restarts": 5,
-        "min_uptime": 3000
-    },
+[
     {
         "script": "dist/services/MailService/mail.watcher.js",
         "name": "mailWatcher",
@@ -29,6 +11,28 @@
     {
         "script": "dist/services/BoxService/box.watcher.js",
         "name": "boxWatcher",
+        "watch": false,
+        "exec_mode": "cluster",
+        "instances": 1,
+        "max_restarts": 5,
+        "min_uptime": 3000
+    },
+    {
+        "script": "dist/api/index.js",
+        "args": [
+            "-p",
+            "3000"
+        ],
+        "name": "athena",
+        "exec_mode": "cluster",
+        "watch": false,
+        "instances": 1,
+        "max_restarts": 5,
+        "min_uptime": 3000
+    },
+    {
+        "script": "dist/services/BoxService/box.service.js",
+        "name": "hermes",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,

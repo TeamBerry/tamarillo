@@ -155,7 +155,6 @@ class BoxService {
                     }
                 } catch (error) {
                     // Emit the box closed message to the recipient
-                    console.log('BOX CLOSED. DISPATCHING ERROR MESSAGE.');
                     message.contents = 'This box is closed. Video play is disabled.';
                     message.source = 'system';
                     if (chatRecipient) {
@@ -254,6 +253,25 @@ class BoxService {
         })
     }
 
+    /**
+     * Handles the closing of a box by sending a message to all subscribers in the chat channel
+     *
+     * @public
+     * @param {string} boxToken The ObjectId of the box
+     * @memberof BoxService
+     */
+    public alertClosedBox(boxToken: string) {
+        const recipients = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
+
+        const message: Message = new Message({
+            author: 'system',
+            contents: 'This box has just been closed. Video play and submission have been disabled. Please exit this box.',
+            source: 'bot',
+            scope: boxToken
+        });
+
+        this.emitToSocket(recipients, 'chat', message);
+    }
 
     /**
      * Method called when the video ends; gets the next video in the playlist and sends it
@@ -297,25 +315,6 @@ class BoxService {
                 io.to(recipient.socket).emit('chat', message);
             });
         }
-    }
-
-    /**
-     * Handles the closing of a box by sending a message to all subscribers in the chat channel
-     *
-     * @public
-     * @param {string} boxToken The ObjectId of the box
-     * @memberof BoxService
-     */
-    public alertClosedBox(boxToken: string){
-        const recipients = _.find(this.subscribers, { boxToken: boxToken, type: 'chat' });
-
-        const message: Message = new Message({
-            contents: 'This box has just been closed. Video play and submission have been disabled. Please exit this box.',
-            source: 'bot',
-            scope: boxToken
-        });
-
-        this.emitToSocket(recipients, 'chat', message);
     }
 
     /**
