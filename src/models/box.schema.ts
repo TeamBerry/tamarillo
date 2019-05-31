@@ -10,6 +10,7 @@ var boxSchema = new Schema(
         lang: String,
         name: String,
         playlist: [{
+            _id: false,
             submitted_at: Number,
             video: { type: Schema.Types.ObjectId, ref: 'Video' },
             submitted_by: { type: Schema.Types.ObjectId, ref: 'User' },

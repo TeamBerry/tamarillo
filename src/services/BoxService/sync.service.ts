@@ -144,27 +144,21 @@ export class SyncService {
      * @memberof SyncService
      */
     public async getCurrentVideo(boxToken: string) {
-        const box = await BoxSchema.findById(boxToken);
+        const box = await BoxSchema
+            .findById(boxToken)
+            .populate('playlist.video', '_id link name')
+            .populate('playlist.submitted_by', '_id name')
+            .lean();
+
+        if (box.open === false) {
+            throw new Error('This box is closed. Video play is disabled.');
+        }
 
         let currentVideo = _.find(box.playlist, (video) => {
             return video.startTime !== null && video.endTime === null;
         });
 
-        if (currentVideo) { // TODO: Refactor this to filter and populate the initial query
-            // Find and "manually populate" the video details
-            const videoDetails = await Video.findById(currentVideo.video).select('_id link name');
-
-            currentVideo.video = videoDetails;
-
-            // Find and "manually populate" the user details
-            const userDetails = await User.findById(currentVideo.submitted_by).select('_id name');
-
-            currentVideo.submitted_by = userDetails;
-
-            return currentVideo;
-        }
-
-        return null;
+        return currentVideo ? currentVideo : null;
     }
 
     /**

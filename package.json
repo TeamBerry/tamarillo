@@ -36,6 +36,7 @@
     "socket.io": "^2.0.4"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.6",
     "@types/mongoose": "^5.5.0",
     "@types/node": "^9.6.34",

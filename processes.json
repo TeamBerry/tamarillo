@@ -3,7 +3,7 @@
         "args": ["-p", "3000"],
         "name": "athena",
         "exec_mode": "cluster",
-        "watch": true,
+        "watch": false,
         "instances": 1,
         "max_restarts": 5,
         "min_uptime": 3000
@@ -11,7 +11,7 @@
     {
         "script": "dist/services/BoxService/box.service.js",
         "name": "hermes",
-        "watch": true,
+        "watch": false,
         "exec_mode": "cluster",
         "instances": 1,
         "max_restarts": 5,
