@@ -28,9 +28,12 @@ export class SyncService {
     public async onStart(boxToken: string): Promise<SyncPacket> {
         let response: SyncPacket = { item: null, box: boxToken };
 
-        response.item = await this.getCurrentVideo(boxToken);
-
-        return response;
+        try {
+            response.item = await this.getCurrentVideo(boxToken);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**

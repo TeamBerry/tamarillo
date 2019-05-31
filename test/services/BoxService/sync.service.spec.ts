@@ -10,7 +10,7 @@ const Box = require('../../../src/models/box.schema');
 const User = require('../../../src/models/user.model');
 const Video = require('../../../src/models/video.model');
 
-describe.only("Sync Service", () => {
+describe("Sync Service", () => {
 
     before(async () => {
         await Box.deleteMany(

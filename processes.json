@@ -25,5 +25,14 @@
         "instances": 1,
         "max_restarts": 5,
         "min_uptime": 3000
+    },
+    {
+        "script": "dist/services/BoxService/box.watcher.js",
+        "name": "boxWatcher",
+        "watch": false,
+        "exec_mode": "cluster",
+        "instances": 1,
+        "max_restarts": 5,
+        "min_uptime": 3000
     }
 ]

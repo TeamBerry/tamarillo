@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import * as _ from 'lodash';
+const Queue = require('bull');
+const boxQueue = new Queue('box');
 
 const Box = require("./../../models/box.schema");
 
@@ -167,6 +169,13 @@ export class BoxApi {
             if (!closedBox) {
                 return response.status(404).send('BOX_NOT_FOUND');
             }
+
+            // Create job to alert people in the box
+            const alertJob = {
+                boxToken: targetId,
+                subject: 'close'
+            }
+            boxQueue.add(alertJob);
 
             return response.status(200).send(closedBox);
         } catch (error) {
