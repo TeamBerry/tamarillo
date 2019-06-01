@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import * as _ from 'lodash';
 const Queue = require('bull');
 const boxQueue = new Queue('box');
