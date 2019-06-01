@@ -1,7 +1,6 @@
 const Queue = require('bull');
 const boxQueue = new Queue('box');
 
-import syncService from './sync.service';
 import boxService from './box.service';
 
 export class BoxWatcher {
@@ -19,6 +18,8 @@ export class BoxWatcher {
                 default:
                     break;
             };
+
+            done();
         });
     }
 }
