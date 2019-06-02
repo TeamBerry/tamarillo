@@ -2,19 +2,40 @@ const Queue = require('bull');
 const boxQueue = new Queue('box');
 
 import boxService from './box.service';
+import { Message } from '../../models/message.model';
 
 export class BoxWatcher {
     listen() {
         boxQueue.process((job, done) => {
-            const payload = job.data;
+            const { boxToken, subject } = job.data;
 
             // Do things depending on the subject
-            switch (payload.subject) {
+            let message: Message;
+            switch (subject) {
                 case 'close':
+                    // Build message
+                    message = new Message({
+                        author: 'system',
+                        contents: 'This box has just been closed. Video play and submission have been disabled. Please exit this box.',
+                        source: 'bot',
+                        scope: boxToken
+                    });
+
                     // Alert subscribers
-                    boxService.alertClosedBox(payload.boxToken);
+                    boxService.alertSubscribers(boxToken, message);
                     break;
 
+                case 'open':
+                    // Build message
+                    message = new Message({
+                        author: 'system',
+                        contents: 'This box has been reopened. Video play and submissions have been reenabled.',
+                        source: 'bot',
+                        scope: boxToken
+                    });
+
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message);
                 default:
                     break;
             };

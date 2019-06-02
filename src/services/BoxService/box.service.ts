@@ -254,26 +254,6 @@ class BoxService {
     }
 
     /**
-     * Handles the closing of a box by sending a message to all subscribers in the chat channel
-     *
-     * @public
-     * @param {string} boxToken The ObjectId of the box
-     * @memberof BoxService
-     */
-    public alertClosedBox(boxToken: string) {
-        const recipients = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
-
-        const message: Message = new Message({
-            author: 'system',
-            contents: 'This box has just been closed. Video play and submission have been disabled. Please exit this box.',
-            source: 'bot',
-            scope: boxToken
-        });
-
-        this.emitToSocket(recipients, 'chat', message);
-    }
-
-    /**
      * Method called when the video ends; gets the next video in the playlist and sends it
      * to all subscribers in the box
      *
@@ -325,6 +305,19 @@ class BoxService {
      */
     private checkAuth() {
 
+    }
+
+    /**
+     * Alerts all the chat subscribers of a box
+     *
+     * @param {string} boxToken
+     * @param {Message} message
+     * @memberof BoxService
+     */
+    public alertSubscribers(boxToken: string, message: Message){
+        const recipients = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
+
+        this.emitToSocket(recipients, 'chat', message);
     }
 
     /**
