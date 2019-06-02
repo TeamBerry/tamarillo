@@ -191,7 +191,7 @@ describe("Box API", () => {
 
         it('Sends a 200 with the opened box', () => {
             return supertest(expressApp)
-                .post()
+                .post('/9cb763b6e72611381ef043e4/open')
                 .expect(200)
                 .then((response) => {
                     const openedBox = response.body;

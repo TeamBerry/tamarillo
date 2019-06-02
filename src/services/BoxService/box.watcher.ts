@@ -3,11 +3,12 @@ const boxQueue = new Queue('box');
 
 import boxService from './box.service';
 import { Message } from '../../models/message.model';
+import { BoxJob } from '../../models/box.job';
 
 export class BoxWatcher {
     listen() {
         boxQueue.process((job, done) => {
-            const { boxToken, subject } = job.data;
+            const { boxToken, subject }: BoxJob = job.data;
 
             // Do things depending on the subject
             let message: Message;

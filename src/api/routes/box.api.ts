@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
 import * as _ from 'lodash';
+import { BoxJob } from '../../models/box.job';
 const Queue = require('bull');
 const boxQueue = new Queue('box');
 
@@ -19,6 +20,7 @@ export class BoxApi {
         this.router.post("/", this.store);
         this.router.put("/:box", this.update);
         this.router.post("/:box/close", this.close);
+        this.router.post('/:box/open', this.open);
     }
 
     /**
@@ -146,7 +148,9 @@ export class BoxApi {
      *
      * @param {Request} request Body contains the box to close
      * @param {Response} response
-     * @returns {Promise<Response>} The closed box is sent back as confirmation with a 200
+     * @returns {Promise<Response>} The closed box is sent back as confirmation with a 200.
+     * Subscribers of the chat channel in the box are also alerted via a redis job that the box has been closed.
+     *
      * If something goes wrong, one of the following error codes will be sent instead:
      * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
      * - 500 Server Error if something else happens
@@ -171,7 +175,7 @@ export class BoxApi {
             }
 
             // Create job to alert people in the box
-            const alertJob = {
+            const alertJob: BoxJob = {
                 boxToken: targetId,
                 subject: 'close'
             }
@@ -181,7 +185,49 @@ export class BoxApi {
         } catch (error) {
             return response.status(500).send(error);
         }
+    }
 
+    /**
+     * Opens a box.
+     *
+     * @param {Request} request Body contains the box to open
+     * @param {Response} response
+     * @returns {Promise<Response>} The opened box is sent back as confirmation with a 200.
+     * Subscribers of the chat channel in the box are also alerted via a redis job that the box has been (re)opened.
+     *
+     * If something goes wrong, one of the following error codes will be sent instead:
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public async open(request: Request, response: Response): Promise<Response> {
+        try {
+            const targetId = request.params.box;
+
+            const openedBox = await Box.findByIdAndUpdate(
+                targetId,
+                {
+                    $set: { open: true }
+                },
+                {
+                    new: true
+                }
+            );
+
+            if (!openedBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            const alertJob: BoxJob = {
+                boxToken: targetId,
+                subject: 'open'
+            };
+            boxQueue.add(alertJob);
+
+            return response.status(200).send(openedBox);
+        } catch (error) {
+
+        }
     }
 }
 
