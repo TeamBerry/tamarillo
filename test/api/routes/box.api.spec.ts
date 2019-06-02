@@ -181,4 +181,24 @@ describe("Box API", () => {
                 })
         });
     });
+
+    describe("Opens a box", () => {
+        it("Sends a 404 back if no box matches the id given", () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef044e4/open')
+                .expect(404, 'BOX_NOT_FOUND');
+        });
+
+        it('Sends a 200 with the opened box', () => {
+            return supertest(expressApp)
+                .post()
+                .expect(200)
+                .then((response) => {
+                    const openedBox = response.body;
+
+                    expect(openedBox._id).to.equal('9cb763b6e72611381ef043e4');
+                    expect(openedBox.open).to.be.true;
+                })
+        });
+    });
 });
