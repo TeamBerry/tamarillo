@@ -1,0 +1,19 @@
+version: 2
+jobs:
+    build:
+        working_directory: ~/chronos
+        docker:
+            - image: circle/node:4.8.2
+            - image: mongo
+            - image: redis
+            - image: djfarrelly/maildev
+        steps:
+            - run:
+                name: update-npm
+                command: 'sudo npm install -g npm@latest'
+            - run:
+                name: install-dependencies
+                command: npm install
+            - run:
+                name: test
+                command: npm test
