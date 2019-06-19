@@ -3,7 +3,7 @@ jobs:
     build:
         working_directory: ~/chronos
         docker:
-            - image: circleci/node:4.8.2
+            - image: circleci/node
             - image: mongo
             - image: redis
             - image: djfarrelly/maildev
