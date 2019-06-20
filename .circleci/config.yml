@@ -1,7 +1,7 @@
 version: 2.1
 jobs:
     build:
-        working_directory: ~/Chronos/
+        working_directory: ~/Chronos/src
         docker:
             - image: circleci/node
             - image: mongo
