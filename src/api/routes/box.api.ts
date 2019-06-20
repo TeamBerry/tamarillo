@@ -1,4 +1,8 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
+import * as _ from 'lodash';
+import { BoxJob } from '../../models/box.job';
+const Queue = require('bull');
+const boxQueue = new Queue('box');
 
 const Box = require("./../../models/box.schema");
 
@@ -14,61 +18,216 @@ export class BoxApi {
         this.router.get("/", this.index);
         this.router.get("/:box", this.show);
         this.router.post("/", this.store);
-        console.log("Box APIs initialised.");
+        this.router.put("/:box", this.update);
+        this.router.post("/:box/close", this.close);
+        this.router.post('/:box/open', this.open);
     }
 
-    public index(req: Request, res: Response) {
-        console.log("INDEX OF BOXES");
-        Box.find({})
-            .populate('creator', '_id name')
-            .populate('playlist.video')
-            .populate('playlist.submitted_by', '_id name')
-            .exec((err, collection) => {
-                if (err) {
-                    res.status(500).send(err);
-                }
+    /**
+     * Gets all boxes from the collection
+     *
+     * @param {Response} response
+     * @returns {Promise<Response>} The list of boxes
+     * @memberof BoxApi
+     */
+    public async index(request: Request, response: Response): Promise<Response> {
+        try {
+            const boxes = await Box.find({ open: { $ne: false } })
+                .populate('creator', '_id name')
+                .populate('playlist.video');
 
-                if (collection) {
-                    res.status(200).send(collection);
-                }
-
-                res.status(204);
-            });
+            return response.status(200).send(boxes);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
     }
 
-    public show(req: Request, res: Response) {
-        Box.findById(req.params.box)
-            .populate('creator', '_id name')
-            .populate('playlist.video')
-            .populate('playlist.submitted_by', '_id name')
-            .exec((err, document) => {
-                if (err) {
-                    res.status(500).send(err);
-                }
+    /**
+     * Gets a single box from the collection of boxes from its ObjectId
+     *
+     * @param {Request} request Contains the ObjectId if the box as a request parameter
+     * @param {Response} response
+     * @returns {Promise<Response>} The box if it exists or one of the following error codes:
+     * - 404 'BOX_NOT_FOUND': No box matches the ObjectId given
+     * - 500 Server Error: Something wrong occurred
+     * @memberof BoxApi
+     */
+    public async show(request: Request, response: Response): Promise<Response> {
+        const boxId = request.params.box;
 
-                if (document) {
-                    res.status(200).send(document);
-                }
+        try {
+            const box = await Box.findById(boxId)
+                .populate('creator', '_id name')
+                .populate('playlist.video')
+                .populate('playlist.submitted_by', '_id name');
 
-                res.status(204);
-            });
-    }
-
-    public store(req: Request, res: Response, next: NextFunction) {
-        Box.create(req.body, (err, document) => {
-            if (err) {
-                res.status(500).send(err);
+            if (!box) {
+                return response.status(404).send('BOX_NOT_FOUND');
             }
-            res.status(201).send(document);
-        });
+
+            return response.status(200).send(box);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
     }
 
-    public update() {
+    /**
+     * Stores a document as a box in the collection
+     *
+     * @param {Request} request Body contains the box to store
+     * @param {Response} response
+     * @returns {Promise<Response>} The created box is sent back as confirmation with a 201.
+     * @memberof BoxApi
+     */
+    public async store(request: Request, response: Response): Promise<Response> {
+        try {
+            const createdBox = await Box.create(request.body);
 
+            return response.status(201).send(createdBox);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
+    }
+
+    /**
+     * Updates a box from the collection
+     *
+     * @param {Request} request Body contains the box to update
+     * @param {Response} response
+     * @returns {Promise<Response>} The updated box is sent back as confirmation with a 200.
+     * If something goes wrong, one of the following error codes will be sent:
+     * - 412 'MISSING_PARAMETERS' if no request body is given
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public async update(request: Request, response: Response): Promise<Response> {
+        try {
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send('MISSING_PARAMETERS');
+            }
+
+            const targetId = request.params.box;
+
+            const { _id, description, lang, name } = request.body;
+
+            if (targetId !== _id) {
+                return response.status(412).send('IDENTIFIER_MISMATCH');
+            }
+
+            const updatedBox = await Box.findByIdAndUpdate(
+                _id,
+                {
+                    $set: {
+                        description,
+                        lang,
+                        name
+                    }
+                },
+                {
+                    new: true
+                }
+            );
+
+            if (!updatedBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            return response.status(200).send(updatedBox);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
     }
 
     public destroy() {
 
+    }
+
+    /**
+     * Closes a box
+     *
+     * @param {Request} request Body contains the box to close
+     * @param {Response} response
+     * @returns {Promise<Response>} The closed box is sent back as confirmation with a 200.
+     * Subscribers of the chat channel in the box are also alerted via a redis job that the box has been closed.
+     *
+     * If something goes wrong, one of the following error codes will be sent instead:
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public async close(request: Request, response: Response): Promise<Response> {
+        try {
+            const targetId = request.params.box;
+
+            const closedBox = await Box.findByIdAndUpdate(
+                targetId,
+                {
+                    $set: { open: false }
+                },
+                {
+                    new: true
+                }
+            );
+
+            if (!closedBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            // Create job to alert people in the box
+            const alertJob: BoxJob = {
+                boxToken: targetId,
+                subject: 'close'
+            }
+            boxQueue.add(alertJob);
+
+            return response.status(200).send(closedBox);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
+    }
+
+    /**
+     * Opens a box.
+     *
+     * @param {Request} request Body contains the box to open
+     * @param {Response} response
+     * @returns {Promise<Response>} The opened box is sent back as confirmation with a 200.
+     * Subscribers of the chat channel in the box are also alerted via a redis job that the box has been (re)opened.
+     *
+     * If something goes wrong, one of the following error codes will be sent instead:
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public async open(request: Request, response: Response): Promise<Response> {
+        try {
+            const targetId = request.params.box;
+
+            const openedBox = await Box.findByIdAndUpdate(
+                targetId,
+                {
+                    $set: { open: true }
+                },
+                {
+                    new: true
+                }
+            );
+
+            if (!openedBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            const alertJob: BoxJob = {
+                boxToken: targetId,
+                subject: 'open'
+            };
+            boxQueue.add(alertJob);
+
+            return response.status(200).send(openedBox);
+        } catch (error) {
+
+        }
     }
 }
 

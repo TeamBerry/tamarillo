@@ -1,6 +1,6 @@
 import mongoose = require("mongoose");
 
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
+mongoose.connect("mongodb://127.0.0.1:27017/berrybox", { useNewUrlParser: true, useFindAndModify: true });
 
 var db = mongoose.connection;
 
