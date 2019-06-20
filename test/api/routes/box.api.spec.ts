@@ -65,7 +65,7 @@ describe("Box API", () => {
             .then((response) => {
                 const boxes = response.body;
 
-                expect(boxes.length).to.be.greaterThan(1);
+                expect(boxes.length).to.be.greaterThan(0);
             });
     });
 
