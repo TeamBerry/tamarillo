@@ -3,9 +3,9 @@ jobs:
     build:
         docker:
             - image: circleci/node
-            - image: mongo
-            - image: redis
-            - image: djfarrelly/maildev
+            #- image: mongo
+            #- image: redis
+            #- image: djfarrelly/maildev
         steps:
             - run: npm install
             - run: npm test
