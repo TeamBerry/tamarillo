@@ -1,0 +1,12 @@
+version: 2.1
+jobs:
+    build:
+        docker:
+            - image: circleci/node
+            - image: mongo
+            - image: redis
+            - image: djfarrelly/maildev
+        steps:
+            - checkout
+            - run: npm install
+            - run: npm test
