@@ -59,6 +59,13 @@ class BoxService {
                     };
                     console.log('Request denied');
                     socket.emit('denied', message);
+                } else if (_.findIndex(this.subscribers, client) !== -1) {
+                    const message = {
+                        status: "ERROR_ALREADY_CONNECTED",
+                        message: "You are already subscribed to that socket and that type.",
+                        scope: request.boxToken
+                    };
+                    console.log('Request denied because it has already been granted.');
                 } else {
                     this.subscribers.push(client);
 
@@ -81,27 +88,36 @@ class BoxService {
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on('video', async (payload: VideoPayload) => {
-                // Dispatching request to the Sync Service
-                const response = await syncService.onVideo(payload);
-
                 // Emitting feedback to the chat
+                // TODO: Only one user is the target in all cases, whereas all users in the box should be alerted when a video is submitted.
                 const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' });
 
-                _.each(recipients, (recipient: Subscriber) => {
-                    io.to(recipient.socket).emit('chat', response.feedback);
-                });
+                try {
+                    // Dispatching request to the Sync Service
+                    const response = await syncService.onVideo(payload);
 
-                // Emit box refresh to all the subscribers
-                _.each(this.subscribers, (recipient: Subscriber) => {
-                    io.to(recipient.socket).emit('box', response.updatedBox);
-                });
+                    // Emit feedback to user
+                    this.emitToSocket(recipients, 'chat', response.feedback);
 
-                // If the playlist was over before the submission of the new video, the manager service relaunches the play
-                const currentVideoIndex = _.findIndex(response.updatedBox.playlist, (video) => {
-                    return video.startTime !== null && video.endTime === null;
-                });
-                if (currentVideoIndex === -1) {
-                    this.transitionToNextVideo(payload.boxToken);
+                    // Emit box refresh to all the subscribers
+                    this.emitToSocket(this.subscribers, 'box', response.updatedBox);
+
+                    // If the playlist was over before the submission of the new video, the manager service relaunches the play
+                    const currentVideoIndex = _.findIndex(response.updatedBox.playlist, (video) => {
+                        return video.startTime !== null && video.endTime === null;
+                    });
+                    if (currentVideoIndex === -1) {
+                        this.transitionToNextVideo(payload.boxToken);
+                    }
+                } catch (error) {
+                    let message: Message = new Message({
+                        author: 'system',
+                        // TODO: Extract from the error
+                        contents: 'This box is closed. Submission is disallowed.',
+                        source: 'bot',
+                        scope: payload.boxToken
+                    })
+                    this.emitToSocket(recipients, 'chat', message);
                 }
             });
 
@@ -119,27 +135,38 @@ class BoxService {
              * }
              */
             socket.on('start', async (request: { boxToken: string, userToken: string }) => {
-                const response = await syncService.onStart(request.boxToken);
                 let message: Message = new Message();
                 message.scope = request.boxToken;
 
-                if (response) {
-                    message.contents = 'Currently playing: "' + response.item.video.name + '"';
-                    message.source = 'bot';
+                let chatRecipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
 
-                    // Get the recipient from the list of subscribers
-                    let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
+                try {
+                    const response = await syncService.onStart(request.boxToken);
 
-                    // Emit the response back to the client
-                    io.to(recipient.socket).emit('sync', response);
-                } else {
-                    message.contents = 'No video is currently playing in the box.';
+                    if (response) {
+                        message.contents = 'Currently playing: "' + response.item.video.name + '"';
+                        message.source = 'bot';
+
+                        // Get the recipient from the list of subscribers
+                        let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
+
+                        // Emit the response back to the client
+                        io.to(recipient.socket).emit('sync', response);
+                    } else {
+                        message.contents = 'No video is currently playing in the box.';
+                        message.source = 'system';
+                    }
+
+                    if (chatRecipient) {
+                        io.to(chatRecipient.socket).emit('chat', message);
+                    }
+                } catch (error) {
+                    // Emit the box closed message to the recipient
+                    message.contents = 'This box is closed. Video play is disabled.';
                     message.source = 'system';
-                }
-
-                let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
-                if (recipient) {
-                    io.to(recipient.socket).emit('chat', message);
+                    if (chatRecipient) {
+                        io.to(chatRecipient.socket).emit('chat', message);
+                    }
                 }
             });
 
@@ -233,7 +260,6 @@ class BoxService {
         })
     }
 
-
     /**
      * Method called when the video ends; gets the next video in the playlist and sends it
      * to all subscribers in the box
@@ -248,7 +274,7 @@ class BoxService {
         message.scope = boxToken;
 
         if (response) {
-            const syncRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'sync'});
+            const syncRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'sync' });
             const chatRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
 
             // Emit box refresh to all the subscribers
@@ -286,6 +312,34 @@ class BoxService {
      */
     private checkAuth() {
 
+    }
+
+    /**
+     * Alerts all the chat subscribers of a box
+     *
+     * @param {string} boxToken
+     * @param {Message} message
+     * @memberof BoxService
+     */
+    public alertSubscribers(boxToken: string, message: Message){
+        const recipients = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
+
+        this.emitToSocket(recipients, 'chat', message);
+    }
+
+    /**
+     * Emits a message to a list of recipients
+     *
+     * @private
+     * @param {Array<Subscriber>} recipients The list of subscribers
+     * @param {string} channel The channel to emit on
+     * @param {Message} message The message to send
+     * @memberof BoxService
+     */
+    private emitToSocket(recipients: Array<Subscriber>, channel: string, message: Message) {
+        recipients.forEach((recipient: Subscriber) => {
+            io.to(recipient.socket).emit(channel, message);
+        })
     }
 }
 

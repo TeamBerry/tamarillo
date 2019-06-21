@@ -1,5 +1,4 @@
 import * as moment from 'moment';
-
 export class Message {
     author: string | { _id: string, name: string };
     contents: string;

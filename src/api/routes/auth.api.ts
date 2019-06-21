@@ -24,29 +24,41 @@ export class AuthApi {
         this.router.post("/signup", this.signup);
     }
 
-    public login(req: Request, res: Response) {
+    /**
+     * Logs the user in and creates his session
+     *
+     * @param {Request} req The request, which body must contain the mail and password parameters
+     * @param {Response} res The response
+     * @returns {Promise<Response>} A valid session or of one the following errors:
+     * - 412 'MISSING_CREDENTIALS' if the request body is incompolete
+     * - 401 'INVALID_CREDENTIALS' if the credentials do not match any user
+     * - 500 Server Error if anything else happens
+     * @memberof AuthApi
+     */
+    public async login(req: Request, res: Response): Promise<Response> {
         const mail = req.body.mail;
         const password = req.body.password;
 
-        // Find user in database
-        User
-            .findOne({ mail: mail, password: password })
-            .populate('favorites')
-            .exec((err, user) => {
-                if (err) {
-                    res.status(500).send(err);
-                }
+        if (!mail || !password) {
+            return res.status(412).send('MISSING_CREDENTIALS');
+        }
 
-                // If password is not correct, send back 401 HTTP error
-                if (!user) {
-                    res.status(401); // Unauthorized
-                }
+        try {
+            // Find user in database
+            const user = await User.findOne({ mail: mail, password: password });
 
-                const authResult = authApi.createSession(user);
+            // If password is not correct, send back 401 HTTP error
+            if (!user) {
+                return res.status(401).send('INVALID_CREDENTIALS'); // Unauthorized
+            }
 
-                // Sending bearer token
-                res.status(200).json(authResult);
-            });
+            const authResult = authApi.createSession(user);
+
+            // Sending bearer token
+            return res.status(200).json(authResult);
+        } catch (error) {
+            return res.status(500).send(error);
+        }
     }
 
     public signup(req: Request, res: Response) {

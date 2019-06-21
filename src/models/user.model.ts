@@ -1,9 +1,10 @@
 import mongoose = require("mongoose");
+mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
 const Video = require('./video.model');
 
-var Schema = mongoose.Schema;
+let Schema = mongoose.Schema;
 
-var userSchema = new Schema(
+let userSchema = new Schema(
     {
         name: String,
         token: String,
@@ -19,7 +20,7 @@ var userSchema = new Schema(
             color: String,
         },
         badges: [],
-        favorites: [{ type: String, ref: 'Video' }],
+        favorites: [{ type: Schema.Types.ObjectId, ref: 'Video' }],
     },
     {
         timestamps: true // Will automatically insert createdAt & updatedAt fields

@@ -28,9 +28,12 @@ export class SyncService {
     public async onStart(boxToken: string): Promise<SyncPacket> {
         let response: SyncPacket = { item: null, box: boxToken };
 
-        response.item = await this.getCurrentVideo(boxToken);
-
-        return response;
+        try {
+            response.item = await this.getCurrentVideo(boxToken);
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -53,25 +56,27 @@ export class SyncService {
         const user = await User.findById(payload.userToken);
 
         // Adding it to the playlist of the box
-        const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken);
+        try {
+            const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken);
+            let message: string;
 
-        let message: string;
-        if (user) {
-            message = user.name + ' has added the video "' + video.name + '" to the playlist.';
-        } else {
-            message = 'The video "' + video.name + '" has been added to the playlist';
+            if (user) {
+                message = user.name + ' has added the video "' + video.name + '" to the playlist.';
+            } else {
+                message = 'The video "' + video.name + '" has been added to the playlist';
+            }
+
+            const feedback = new Message({
+                contents: message,
+                source: 'bot',
+                scope: payload.boxToken
+            });
+
+            return { feedback, updatedBox };
+        } catch (error) {
+            // If the box is closed, the error is sent back to the socket method.
+            throw Error(error);
         }
-
-        const feedback = new Message({
-            contents: message,
-            source: 'bot',
-            scope: payload.boxToken
-        });
-
-        return {
-            feedback: feedback,
-            updatedBox: updatedBox
-        };
     }
 
     /**
@@ -106,6 +111,10 @@ export class SyncService {
     public async postToBox(video, boxToken: string, userToken: string) {
         let box = await BoxSchema.findOne({ _id: boxToken });
 
+        if (box.open === false) {
+            throw new Error('This box is closed. Submission is disallowed.');
+        }
+
         const submissionTime = moment().format('x');
 
         const submission = {
@@ -138,27 +147,21 @@ export class SyncService {
      * @memberof SyncService
      */
     public async getCurrentVideo(boxToken: string) {
-        const box = await BoxSchema.findById(boxToken);
+        const box = await BoxSchema
+            .findById(boxToken)
+            .populate('playlist.video', '_id link name')
+            .populate('playlist.submitted_by', '_id name')
+            .lean();
+
+        if (box.open === false) {
+            throw new Error('This box is closed. Video play is disabled.');
+        }
 
         let currentVideo = _.find(box.playlist, (video) => {
             return video.startTime !== null && video.endTime === null;
         });
 
-        if (currentVideo) { // TODO: Refactor this to filter and populate the initial query
-            // Find and "manually populate" the video details
-            const videoDetails = await Video.findById(currentVideo.video).select('_id link name');
-
-            currentVideo.video = videoDetails;
-
-            // Find and "manually populate" the user details
-            const userDetails = await User.findById(currentVideo.submitted_by).select('_id name');
-
-            currentVideo.submitted_by = userDetails;
-
-            return currentVideo;
-        }
-
-        return null;
+        return currentVideo ? currentVideo : null;
     }
 
     /**

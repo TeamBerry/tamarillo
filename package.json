@@ -1,46 +1,53 @@
 {
-  "name": "Chronos",
-  "version": "0.9.1",
-  "description": "Node server for berrybox - Handles sync, chat",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha -r ts-node/register $(find -name *.spec.ts)",
-    "tsc": "./node_modules/.bin/tsc",
-    "start": "./node_modules/.bin/tsc && pm2 start processes.json",
-    "restart": "tsc && pm2 restart processes.json"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AngelZatch/Berrybox-Chronos.git"
-  },
-  "author": "AngelZatch",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/AngelZatch/Berrybox-Chronos/issues"
-  },
-  "homepage": "https://github.com/AngelZatch/Berrybox-Chronos#readme",
-  "dependencies": {
-    "axios": "^0.18.0",
-    "body-parser": "^1.18.2",
-    "bull": "^3.4.8",
-    "cors": "^2.8.4",
-    "express": "^4.16.2",
-    "ioredis": "^4.0.0",
-    "jsonwebtoken": "^8.2.2",
-    "lodash": "^4.17.4",
-    "moment": "^2.20.1",
-    "mongodb": "^3.0.2",
-    "mongoose": "^5.3.1",
-    "nodemailer": "^4.6.8",
-    "socket.io": "^2.0.4"
-  },
-  "devDependencies": {
-    "@types/node": "^9.6.34",
-    "chai": "^4.2.0",
-    "mocha": "^5.2.0",
-    "sinon": "^6.3.5",
-    "ts-node": "^4.0.1",
-    "tslint": "^5.8.0",
-    "typescript": "^2.6.2"
-  }
+    "name": "Chronos",
+    "version": "0.9.1",
+    "description": "Node server for berrybox - Handles sync, chat",
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha --exit -r ts-node/register $(find -name *.spec.ts)",
+        "coverage": "nyc --reporter=lcov npm run test",
+        "tsc": "./node_modules/.bin/tsc",
+        "start": "./node_modules/.bin/tsc && pm2 start processes.json",
+        "restart": "tsc && pm2 restart processes.json"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/AngelZatch/Berrybox-Chronos.git"
+    },
+    "author": "AngelZatch",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/AngelZatch/Berrybox-Chronos/issues"
+    },
+    "homepage": "https://github.com/AngelZatch/Berrybox-Chronos#readme",
+    "dependencies": {
+        "axios": "^0.18.0",
+        "body-parser": "^1.19.0",
+        "bull": "^3.9.1",
+        "cors": "^2.8.4",
+        "express": "^4.16.2",
+        "ioredis": "^4.9.3",
+        "jsonwebtoken": "^8.2.2",
+        "lodash": "^4.17.4",
+        "moment": "^2.20.1",
+        "mongodb": "^3.0.2",
+        "mongoose": "^5.5.6",
+        "nodemailer": "^4.6.8",
+        "socket.io": "^2.0.4"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/mocha": "^5.2.6",
+        "@types/mongoose": "^5.5.0",
+        "@types/node": "^9.6.34",
+        "chai": "^4.2.0",
+        "chai-as-promised": "^7.1.1",
+        "mocha": "^5.2.0",
+        "nyc": "^14.1.1",
+        "sinon": "^6.3.5",
+        "supertest": "^4.0.2",
+        "ts-node": "^4.0.1",
+        "tslint": "^5.8.0",
+        "typescript": "^2.6.2"
+    }
 }
