@@ -59,13 +59,13 @@ class BoxService {
                     };
                     console.log('Request denied');
                     socket.emit('denied', message);
-                    // } else if (_.findIndex(this.subscribers, client) !== -1) {
-                    //     const message = {
-                    //         status: "ERROR_ALREADY_CONNECTED",
-                    //         message: "You are already subscribed to that socket and that type.",
-                    //         scope: request.boxToken
-                    //     };
-                    //     console.log('Request denied because it has already been granted.');
+                } else if (_.findIndex(this.subscribers, client) !== -1) {
+                    const message = {
+                        status: "ERROR_ALREADY_CONNECTED",
+                        message: "You are already subscribed to that socket and that type.",
+                        scope: request.boxToken
+                    };
+                    console.log('Request denied because it has already been granted.');
                 } else {
                     this.subscribers.push(client);
 
@@ -230,9 +230,7 @@ class BoxService {
                         const recipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
 
                         // To all of them, we send the message
-                        _.each(recipients, (recipient: Subscriber) => {
-                            io.to(recipient.socket).emit('chat', dispatchedMessage);
-                        });
+                        this.emitToSocket(recipients, 'chat', dispatchedMessage);
                     }
                 } else {
                     const response = new Message({
@@ -287,7 +285,7 @@ class BoxService {
                         box: boxToken,
                         item: response.nextVideo
                     };
-                    console.log('SYNC packet for next video:', syncPacket);
+                    console.log('Sync packet for next video.');
                     io.to(recipient.socket).emit('sync', syncPacket);
                 }
                 io.to(recipient.socket).emit('box', response.updatedBox);
@@ -302,8 +300,7 @@ class BoxService {
                 message.source = 'system';
             }
 
-            console.log('ALERTING CHAT RECIPIENTS ', message);
-
+            console.log('Alerting users of the next video.');
             this.emitToSocket(chatRecipients, 'chat', message);
         }
     }
@@ -341,6 +338,7 @@ class BoxService {
      * @memberof BoxService
      */
     private emitToSocket(recipients: Array<Subscriber>, channel: string, message: Message) {
+        console.log(`Send message on ${channel} for subscribers`, message);
         recipients.forEach((recipient: Subscriber) => {
             io.to(recipient.socket).emit(channel, message);
         })
