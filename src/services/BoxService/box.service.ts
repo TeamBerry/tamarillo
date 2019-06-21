@@ -59,13 +59,13 @@ class BoxService {
                     };
                     console.log('Request denied');
                     socket.emit('denied', message);
-                } else if (_.findIndex(this.subscribers, client) !== -1) {
-                    const message = {
-                        status: "ERROR_ALREADY_CONNECTED",
-                        message: "You are already subscribed to that socket and that type.",
-                        scope: request.boxToken
-                    };
-                    console.log('Request denied because it has already been granted.');
+                    // } else if (_.findIndex(this.subscribers, client) !== -1) {
+                    //     const message = {
+                    //         status: "ERROR_ALREADY_CONNECTED",
+                    //         message: "You are already subscribed to that socket and that type.",
+                    //         scope: request.boxToken
+                    //     };
+                    //     console.log('Request denied because it has already been granted.');
                 } else {
                     this.subscribers.push(client);
 
@@ -89,15 +89,15 @@ class BoxService {
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on('video', async (payload: VideoPayload) => {
                 // Emitting feedback to the chat
-                // TODO: Only one user is the target in all cases, whereas all users in the box should be alerted when a video is submitted.
-                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' });
+                const chatRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: payload.boxToken, type: 'chat' });
+                // const syncRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: payload.boxToken, type: 'sync' });
 
                 try {
                     // Dispatching request to the Sync Service
                     const response = await syncService.onVideo(payload);
 
-                    // Emit feedback to user
-                    this.emitToSocket(recipients, 'chat', response.feedback);
+                    // Emit notification to all chat users that a video has been added by someone
+                    this.emitToSocket(chatRecipients, 'chat', response.feedback);
 
                     // Emit box refresh to all the subscribers
                     this.emitToSocket(this.subscribers, 'box', response.updatedBox);
@@ -110,6 +110,9 @@ class BoxService {
                         this.transitionToNextVideo(payload.boxToken);
                     }
                 } catch (error) {
+                    // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
+                    const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' });
+
                     let message: Message = new Message({
                         author: 'system',
                         // TODO: Extract from the error
@@ -138,7 +141,7 @@ class BoxService {
                 let message: Message = new Message();
                 message.scope = request.boxToken;
 
-                let chatRecipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
+                let chatRecipient: Subscriber = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
 
                 try {
                     const response = await syncService.onStart(request.boxToken);
@@ -148,10 +151,10 @@ class BoxService {
                         message.source = 'bot';
 
                         // Get the recipient from the list of subscribers
-                        let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
+                        let syncRecipient: Subscriber = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
 
                         // Emit the response back to the client
-                        io.to(recipient.socket).emit('sync', response);
+                        io.to(syncRecipient.socket).emit('sync', response);
                     } else {
                         message.contents = 'No video is currently playing in the box.';
                         message.source = 'system';
@@ -298,9 +301,10 @@ class BoxService {
                 message.contents = 'The playlist has no upcoming videos.';
                 message.source = 'system';
             }
-            _.each(chatRecipients, (recipient) => {
-                io.to(recipient.socket).emit('chat', message);
-            });
+
+            console.log('ALERTING CHAT RECIPIENTS ', message);
+
+            this.emitToSocket(chatRecipients, 'chat', message);
         }
     }
 
@@ -321,7 +325,7 @@ class BoxService {
      * @param {Message} message
      * @memberof BoxService
      */
-    public alertSubscribers(boxToken: string, message: Message){
+    public alertSubscribers(boxToken: string, message: Message) {
         const recipients = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
 
         this.emitToSocket(recipients, 'chat', message);
