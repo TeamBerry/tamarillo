@@ -59,6 +59,13 @@ class BoxService {
                     };
                     console.log('Request denied');
                     socket.emit('denied', message);
+                } else if (_.findIndex(this.subscribers, client) !== -1) {
+                    const message = {
+                        status: "ERROR_ALREADY_CONNECTED",
+                        message: "You are already subscribed to that socket and that type.",
+                        scope: request.boxToken
+                    };
+                    console.log('Request denied because it has already been granted.');
                 } else {
                     this.subscribers.push(client);
 
