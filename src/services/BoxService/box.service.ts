@@ -141,7 +141,7 @@ class BoxService {
                 let message: Message = new Message();
                 message.scope = request.boxToken;
 
-                let chatRecipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
+                let chatRecipient: Subscriber = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
 
                 try {
                     const response = await syncService.onStart(request.boxToken);
@@ -151,10 +151,10 @@ class BoxService {
                         message.source = 'bot';
 
                         // Get the recipient from the list of subscribers
-                        let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
+                        let syncRecipient: Subscriber = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
 
                         // Emit the response back to the client
-                        io.to(recipient.socket).emit('sync', response);
+                        io.to(syncRecipient.socket).emit('sync', response);
                     } else {
                         message.contents = 'No video is currently playing in the box.';
                         message.source = 'system';
