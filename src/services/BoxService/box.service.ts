@@ -301,9 +301,10 @@ class BoxService {
                 message.contents = 'The playlist has no upcoming videos.';
                 message.source = 'system';
             }
-            _.each(chatRecipients, (recipient) => {
-                io.to(recipient.socket).emit('chat', message);
-            });
+
+            console.log('ALERTING CHAT RECIPIENTS ', message);
+
+            this.emitToSocket(chatRecipients, 'chat', message);
         }
     }
 
