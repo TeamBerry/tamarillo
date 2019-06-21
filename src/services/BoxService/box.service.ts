@@ -1,17 +1,13 @@
 // Utils imports
 import * as _ from 'lodash';
-import * as moment from 'moment';
 
 // MongoDB & Sockets
-const mongoose = require('./../../config/connection');
 const express = require('express')();
 const http = require('http').Server(express);
 const io = require('socket.io')(http);
 io.set('transports', ['websocket']);
 
 // Models
-const Video = require('./../../models/video.model');
-const Box = require('./../../models/box.schema');
 const User = require('./../../models/user.model');
 import { Message } from './../../models/message.model';
 import { Subscriber } from './../../models/subscriber.model';
