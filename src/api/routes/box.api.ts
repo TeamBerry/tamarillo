@@ -140,8 +140,39 @@ export class BoxApi {
         }
     }
 
-    public destroy() {
+    /**
+     * Deletes a box from the collection
+     *
+     * @param {Request} request Parameters contain the box ID
+     * @param {Response} response
+     * @returns {Promise<Response>} The deleted box is sent back as confirmation with a 200.
+     * If something goes wrong, one of the following error codes will be sent:
+     * - 403 Forbidden if the user attempting to delete the box is not the creator (NOT YET)
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 412 'BOX_IS_OPEN' if the box is still open when attempting to delete it
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public async destroy(request: Request, response: Response): Promise<Response> {
+        try {
+            const targetId = request.params.box;
 
+            const targetBox = await Box.findById(targetId);
+
+            if (!targetBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            if (targetBox.open) {
+                return response.status(412).send('BOX_IS_OPEN');
+            }
+
+            const deletedBox = await Box.findOneAndRemove({ _id: targetId });
+
+            return response.status(200).send(deletedBox);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
     }
 
     /**
