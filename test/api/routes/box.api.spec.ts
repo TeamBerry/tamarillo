@@ -19,7 +19,12 @@ describe("Box API", () => {
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
 
         await Box.deleteMany(
-            { _id: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5'] } }
+            {
+                _id: {
+                    $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5',
+                        '9cb763b6e72611381ef043e6', '9cb763b6e72611381ef043e7']
+                }
+            }
         );
 
         await User.create({
@@ -48,13 +53,38 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             open: false
         });
+
+        await Box.create({
+            _id: '9cb763b6e72611381ef043e6',
+            description: 'Open box to delete',
+            lang: 'English',
+            name: 'Open box to delete',
+            playlist: [],
+            creator: '9ca0df5f86abeb66da97ba5d',
+            open: true
+        });
+
+        await Box.create({
+            _id: '9cb763b6e72611381ef043e7',
+            description: 'Closed box to delete',
+            lang: 'English',
+            name: 'Closed box to delete',
+            playlist: [],
+            creator: '9ca0df5f86abeb66da97ba5d',
+            open: false
+        });
     });
 
     after(async () => {
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d');
 
         await Box.deleteMany(
-            { _id: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5'] } }
+            {
+                _id: {
+                    $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5',
+                        '9cb763b6e72611381ef043e6', '9cb763b6e72611381ef043e7']
+                }
+            }
         );
     });
 
@@ -161,6 +191,38 @@ describe("Box API", () => {
                 });
         });
     });
+
+    describe("Deletes a box", () => {
+        it("Sends a 404 back if no box matches the id given", () => {
+            return supertest(expressApp)
+                .delete('/9cb763b6e72611381ef044e4')
+                .expect(404, 'BOX_NOT_FOUND');
+        });
+
+        it("Sends a 403 Unauthorized error if the user attempting to close the box is not the author", () => {
+            return supertest(expressApp)
+                .delete('/9cb763b6e72611381ef044e4')
+                .expect(403, 'UNAUTHORIZED');
+        });
+
+        it("Sends a 412 BOX_IS_OPEN Error if the box is still open when attempting to close it", () => {
+            return supertest(expressApp)
+                .delete('9cb763b6e72611381ef043e6')
+                .expect(412, 'BOX_IS_OPEN');
+        });
+
+        it("Sends a 200 with the closed box", () => {
+            return supertest(expressApp)
+                .delete('9cb763b6e72611381ef043e7')
+                .expect(200)
+                .then((response) => {
+                    const deletedBox = response.body;
+
+                    expect(deletedBox._id).to.equal('9cb763b6e72611381ef043e7');
+                    expect(deletedBox.open).to.be.false;
+                })
+        })
+    })
 
     describe("Closes a box", () => {
         it("Sends a 404 back if no box matches the id given", () => {

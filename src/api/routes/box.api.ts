@@ -19,6 +19,7 @@ export class BoxApi {
         this.router.get("/:box", this.show);
         this.router.post("/", this.store);
         this.router.put("/:box", this.update);
+        this.router.delete('/:box', this.destroy);
         this.router.post("/:box/close", this.close);
         this.router.post('/:box/open', this.open);
     }
