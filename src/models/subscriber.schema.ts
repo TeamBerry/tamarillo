@@ -6,8 +6,7 @@ const subscriberSchema = new Schema(
         origin: String,
         boxToken: String,
         userToken: String,
-        socket: String,
-        type: String
+        socket: String
     }
 );
 

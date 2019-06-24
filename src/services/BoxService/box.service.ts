@@ -45,8 +45,7 @@ class BoxService {
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
-                    socket: socket.id,
-                    type: request.type
+                    socket: socket.id
                 };
 
                 // Connection check. If the user is not valid, he's refused
@@ -75,7 +74,7 @@ class BoxService {
                         scope: request.boxToken
                     });
 
-                    console.log(`Request granted for user ${client.userToken} for box ${client.boxToken} with type ${client.type}`);
+                    console.log(`Request granted for user ${client.userToken} for box ${client.boxToken}`);
 
                     socket.emit('confirm', message);
                 }
@@ -89,19 +88,17 @@ class BoxService {
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on('video', async (payload: VideoPayload) => {
                 // Emitting feedback to the chat
-                const chatRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken, type: 'chat' });
-                // Commented out because unused.
-                const syncRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken, type: 'sync' });
+                const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken });
 
                 try {
                     // Dispatching request to the Sync Service
                     const response = await syncService.onVideo(payload);
 
                     // Emit notification to all chat users that a video has been added by someone
-                    this.emitToSocket(chatRecipients, 'chat', response.feedback);
+                    this.emitToSocket(recipients, 'chat', response.feedback);
 
                     // Emit box refresh to all the subscribers
-                    this.emitToSocket(syncRecipients, 'box', response.updatedBox);
+                    this.emitToSocket(recipients, 'box', response.updatedBox);
 
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
                     const currentVideoIndex = _.findIndex(response.updatedBox.playlist, (video) => {
@@ -112,7 +109,7 @@ class BoxService {
                     }
                 } catch (error) {
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
-                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' })
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
 
                     let message: Message = new Message({
                         author: 'system',
@@ -144,8 +141,7 @@ class BoxService {
 
                 const chatRecipient: Subscriber = await SubscriberSchema.findOne({
                     userToken: request.userToken,
-                    boxToken: request.boxToken,
-                    type: 'chat'
+                    boxToken: request.boxToken
                 });
 
                 console.log('CHAT RECIPIENT ON START: ', chatRecipient);
@@ -160,8 +156,7 @@ class BoxService {
                         // Get the recipient from the list of subscribers
                         const syncRecipient: Subscriber = await SubscriberSchema.findOne({
                             userToken: request.userToken,
-                            boxToken: request.boxToken,
-                            type: 'sync'
+                            boxToken: request.boxToken
                         });
 
                         // Emit the response back to the client
@@ -172,6 +167,7 @@ class BoxService {
                     }
 
                     if (chatRecipient) {
+                        console.log('Emit to socket');
                         io.to(chatRecipient.socket).emit('chat', message);
                     }
                 } catch (error) {
@@ -213,7 +209,7 @@ class BoxService {
              */
             socket.on('chat', async (message: Message) => {
                 // Get author full subscriber details
-                const chatRecipient: Subscriber = await SubscriberSchema.findOne({ userToken: message.author, boxToken: message.scope, type: 'chat' });
+                const chatRecipient: Subscriber = await SubscriberSchema.findOne({ userToken: message.author, boxToken: message.scope });
 
                 if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
@@ -241,8 +237,7 @@ class BoxService {
 
                         // We find all subscribers to the box (token of the message) for the chat type
                         const chatRecipients: Array<Subscriber> = await SubscriberSchema.find({
-                            boxToken: message.scope,
-                            type: 'chat'
+                            boxToken: message.scope
                         });
 
                         // To all of them, we send the message
@@ -291,8 +286,8 @@ class BoxService {
         message.scope = boxToken;
 
         if (response) {
-            const syncRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken, type: 'sync' });
-            const chatRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken, type: 'chat' });
+            const syncRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken });
+            const chatRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken });
 
             // Emit box refresh to all the subscribers
             _.each(syncRecipients, (recipient: Subscriber) => {
@@ -339,7 +334,7 @@ class BoxService {
      * @memberof BoxService
      */
     public async alertSubscribers(boxToken: string, message: Message) {
-        const recipients = await SubscriberSchema.find({ boxToken, type: 'chat' });
+        const recipients = await SubscriberSchema.find({ boxToken });
 
         this.emitToSocket(recipients, 'chat', message);
     }
@@ -354,10 +349,10 @@ class BoxService {
      * @memberof BoxService
      */
     private emitToSocket(recipients: Array<Subscriber>, channel: string, message: Message) {
-        console.log(`Send message on ${channel} for subscribers`, message);
         recipients.forEach((recipient: Subscriber) => {
+            console.log(`Send message on socket ${recipient.socket}, channel ${channel} for subscribers`);
             io.to(recipient.socket).emit(channel, message);
-        })
+        });
     }
 }
 
