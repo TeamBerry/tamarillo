@@ -286,11 +286,10 @@ class BoxService {
         message.scope = boxToken;
 
         if (response) {
-            const syncRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken });
-            const chatRecipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken });
+            const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken });
 
             // Emit box refresh to all the subscribers
-            _.each(syncRecipients, (recipient: Subscriber) => {
+            _.each(recipients, (recipient: Subscriber) => {
                 if (response.nextVideo) {
                     const syncPacket: SyncPacket = {
                         box: boxToken,
@@ -312,7 +311,7 @@ class BoxService {
             }
 
             console.log('Alerting users of the next video.');
-            this.emitToSocket(chatRecipients, 'chat', message);
+            this.emitToSocket(recipients, 'chat', message);
         }
     }
 
