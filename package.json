@@ -1,6 +1,6 @@
 {
     "name": "Chronos",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "description": "Node server for berrybox - Handles sync, chat",
     "main": "index.js",
     "scripts": {

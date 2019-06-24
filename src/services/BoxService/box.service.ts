@@ -1,38 +1,37 @@
 // Utils imports
 import * as _ from 'lodash';
-import * as moment from 'moment';
 
 // MongoDB & Sockets
-const mongoose = require('./../../config/connection');
 const express = require('express')();
 const http = require('http').Server(express);
 const io = require('socket.io')(http);
 io.set('transports', ['websocket']);
 
 // Models
-const Video = require('./../../models/video.model');
-const Box = require('./../../models/box.schema');
 const User = require('./../../models/user.model');
+const SubscriberSchema = require('./../../models/subscriber.schema');
 import { Message } from './../../models/message.model';
 import { Subscriber } from './../../models/subscriber.model';
 import { VideoPayload } from './../../models/video-payload.model';
+import { SyncPacket } from '../../models/sync-packet.model';
 
 // Import services that need to be managed
 import syncService from './sync.service';
 import chatService from './chat.service';
-import { SyncPacket } from '../../models/sync-packet.model';
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
 */
 class BoxService {
-    subscribers: Array<Subscriber> = [];
-
     public init() {
-        this.subscribers = [];
         console.log("Manager service initialisation...");
-        http.listen(8008, () => {
+
+        // Start listening on port 8008.
+        http.listen(8008, async () => {
+            // Empty subscribers collection
+            await SubscriberSchema.deleteMany({});
+
             console.log("Socket started; Listening on port boob...");
         });
 
@@ -46,8 +45,7 @@ class BoxService {
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
-                    socket: socket.id,
-                    type: request.type
+                    socket: socket.id
                 };
 
                 // Connection check. If the user is not valid, he's refused
@@ -59,15 +57,16 @@ class BoxService {
                     };
                     console.log('Request denied');
                     socket.emit('denied', message);
-                } else if (_.findIndex(this.subscribers, client) !== -1) {
-                    const message = {
-                        status: "ERROR_ALREADY_CONNECTED",
-                        message: "You are already subscribed to that socket and that type.",
-                        scope: request.boxToken
-                    };
-                    console.log('Request denied because it has already been granted.');
+                    // TODO: scan collection
+                    // } else if (_.findIndex(this.subscribers, client) !== -1) {
+                    //     const message = {
+                    //         status: "ERROR_ALREADY_CONNECTED",
+                    //         message: "You are already subscribed to that socket and that type.",
+                    //         scope: request.boxToken
+                    //     };
+                    //     console.log('Request denied because it has already been granted.');
                 } else {
-                    this.subscribers.push(client);
+                    SubscriberSchema.create(client);
 
                     const message = new Message({
                         contents: 'You are now connected to the box!',
@@ -75,7 +74,7 @@ class BoxService {
                         scope: request.boxToken
                     });
 
-                    console.log('Request granted');
+                    console.log(`Request granted for user ${client.userToken} for box ${client.boxToken}`);
 
                     socket.emit('confirm', message);
                 }
@@ -89,18 +88,17 @@ class BoxService {
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on('video', async (payload: VideoPayload) => {
                 // Emitting feedback to the chat
-                // TODO: Only one user is the target in all cases, whereas all users in the box should be alerted when a video is submitted.
-                const recipients: Array<Subscriber> = _.filter(this.subscribers, { userToken: payload.userToken, boxToken: payload.boxToken, type: 'chat' });
+                const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken });
 
                 try {
                     // Dispatching request to the Sync Service
                     const response = await syncService.onVideo(payload);
 
-                    // Emit feedback to user
+                    // Emit notification to all chat users that a video has been added by someone
                     this.emitToSocket(recipients, 'chat', response.feedback);
 
                     // Emit box refresh to all the subscribers
-                    this.emitToSocket(this.subscribers, 'box', response.updatedBox);
+                    this.emitToSocket(recipients, 'box', response.updatedBox);
 
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
                     const currentVideoIndex = _.findIndex(response.updatedBox.playlist, (video) => {
@@ -110,6 +108,9 @@ class BoxService {
                         this.transitionToNextVideo(payload.boxToken);
                     }
                 } catch (error) {
+                    // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+
                     let message: Message = new Message({
                         author: 'system',
                         // TODO: Extract from the error
@@ -138,7 +139,12 @@ class BoxService {
                 let message: Message = new Message();
                 message.scope = request.boxToken;
 
-                let chatRecipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'chat' });
+                const chatRecipient: Subscriber = await SubscriberSchema.findOne({
+                    userToken: request.userToken,
+                    boxToken: request.boxToken
+                });
+
+                console.log('CHAT RECIPIENT ON START: ', chatRecipient);
 
                 try {
                     const response = await syncService.onStart(request.boxToken);
@@ -148,16 +154,20 @@ class BoxService {
                         message.source = 'bot';
 
                         // Get the recipient from the list of subscribers
-                        let recipient = _.find(this.subscribers, { userToken: request.userToken, boxToken: request.boxToken, type: 'sync' });
+                        const syncRecipient: Subscriber = await SubscriberSchema.findOne({
+                            userToken: request.userToken,
+                            boxToken: request.boxToken
+                        });
 
                         // Emit the response back to the client
-                        io.to(recipient.socket).emit('sync', response);
+                        io.to(syncRecipient.socket).emit('sync', response);
                     } else {
                         message.contents = 'No video is currently playing in the box.';
                         message.source = 'system';
                     }
 
                     if (chatRecipient) {
+                        console.log('Emit to socket');
                         io.to(chatRecipient.socket).emit('chat', message);
                     }
                 } catch (error) {
@@ -198,6 +208,9 @@ class BoxService {
              * }
              */
             socket.on('chat', async (message: Message) => {
+                // Get author full subscriber details
+                const chatRecipient: Subscriber = await SubscriberSchema.findOne({ userToken: message.author, boxToken: message.scope });
+
                 if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
                     let author = await User.findById(message.author);
@@ -209,8 +222,7 @@ class BoxService {
                             scope: message.scope
                         });
 
-                        const recipient: Subscriber = _.find(this.subscribers, { userToken: message.author, boxToken: message.scope, type: 'chat' });
-                        io.to(recipient.socket).emit('chat', errorMessage);
+                        io.to(chatRecipient.socket).emit('chat', errorMessage);
                     } else {
                         const dispatchedMessage = new Message({
                             author: {
@@ -224,12 +236,12 @@ class BoxService {
                         });
 
                         // We find all subscribers to the box (token of the message) for the chat type
-                        const recipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: message.scope, type: 'chat' });
+                        const chatRecipients: Array<Subscriber> = await SubscriberSchema.find({
+                            boxToken: message.scope
+                        });
 
                         // To all of them, we send the message
-                        _.each(recipients, (recipient: Subscriber) => {
-                            io.to(recipient.socket).emit('chat', dispatchedMessage);
-                        });
+                        this.emitToSocket(chatRecipients, 'chat', dispatchedMessage);
                     }
                 } else {
                     const response = new Message({
@@ -238,8 +250,7 @@ class BoxService {
                         scope: message.scope
                     });
 
-                    const recipient = _.find(this.subscribers, { userToken: message.author, boxToken: message.scope, type: 'chat' });
-                    io.to(recipient.socket).emit('chat', response);
+                    io.to(chatRecipient.socket).emit('chat', response);
                 }
             });
 
@@ -251,10 +262,11 @@ class BoxService {
 
             })
 
-            socket.on('disconnect', () => {
-                const socketIndex = _.findIndex(this.subscribers, { socket: socket.id });
-                if (socketIndex !== -1) {
-                    this.subscribers.splice(socketIndex, 1);
+            socket.on('disconnect', async () => {
+                try {
+                    await SubscriberSchema.deleteOne({ socket: socket.id });
+                } catch (error) {
+                    // Graceful catch (silent)
                 }
             });
         })
@@ -274,17 +286,16 @@ class BoxService {
         message.scope = boxToken;
 
         if (response) {
-            const syncRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'sync' });
-            const chatRecipients: Array<Subscriber> = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
+            const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken });
 
             // Emit box refresh to all the subscribers
-            _.each(syncRecipients, (recipient: Subscriber) => {
+            _.each(recipients, (recipient: Subscriber) => {
                 if (response.nextVideo) {
                     const syncPacket: SyncPacket = {
                         box: boxToken,
                         item: response.nextVideo
                     };
-                    console.log('SYNC packet for next video:', syncPacket);
+                    console.log('Sync packet for next video.');
                     io.to(recipient.socket).emit('sync', syncPacket);
                 }
                 io.to(recipient.socket).emit('box', response.updatedBox);
@@ -298,9 +309,9 @@ class BoxService {
                 message.contents = 'The playlist has no upcoming videos.';
                 message.source = 'system';
             }
-            _.each(chatRecipients, (recipient) => {
-                io.to(recipient.socket).emit('chat', message);
-            });
+
+            console.log('Alerting users of the next video.');
+            this.emitToSocket(recipients, 'chat', message);
         }
     }
 
@@ -321,8 +332,8 @@ class BoxService {
      * @param {Message} message
      * @memberof BoxService
      */
-    public alertSubscribers(boxToken: string, message: Message){
-        const recipients = _.filter(this.subscribers, { boxToken: boxToken, type: 'chat' });
+    public async alertSubscribers(boxToken: string, message: Message) {
+        const recipients = await SubscriberSchema.find({ boxToken });
 
         this.emitToSocket(recipients, 'chat', message);
     }
@@ -338,8 +349,9 @@ class BoxService {
      */
     private emitToSocket(recipients: Array<Subscriber>, channel: string, message: Message) {
         recipients.forEach((recipient: Subscriber) => {
+            console.log(`Send message on socket ${recipient.socket}, channel ${channel} for subscribers`);
             io.to(recipient.socket).emit(channel, message);
-        })
+        });
     }
 }
 
