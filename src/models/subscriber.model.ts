@@ -3,5 +3,4 @@ export class Subscriber {
     boxToken: string;
     userToken: string;
     socket: string;
-    type: string;
 }
