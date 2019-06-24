@@ -13,11 +13,11 @@ const SubscriberSchema = require('./../../models/subscriber.schema');
 import { Message } from './../../models/message.model';
 import { Subscriber } from './../../models/subscriber.model';
 import { VideoPayload } from './../../models/video-payload.model';
+import { SyncPacket } from '../../models/sync-packet.model';
 
 // Import services that need to be managed
 import syncService from './sync.service';
 import chatService from './chat.service';
-import { SyncPacket } from '../../models/sync-packet.model';
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
