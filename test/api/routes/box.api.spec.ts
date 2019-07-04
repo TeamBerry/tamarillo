@@ -221,8 +221,8 @@ describe("Box API", () => {
                     expect(deletedBox._id).to.equal('9cb763b6e72611381ef043e7');
                     expect(deletedBox.open).to.be.false;
                 })
-        })
-    })
+        });
+    });
 
     describe("Closes a box", () => {
         it("Sends a 404 back if no box matches the id given", () => {

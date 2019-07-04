@@ -37,6 +37,22 @@ export class BoxWatcher {
 
                     // Alert subscribers
                     boxService.alertSubscribers(boxToken, message);
+
+                case 'destroy':
+                    // Build message
+                    message = new Message({
+                        author: 'system',
+                        contents: 'This box is being destroyed following an extended period of inactivity or a direction of its creator. You will be redirected outside in a few seconds...',
+                        source: 'bot',
+                        scope: boxToken
+                    });
+
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message);
+
+                    // Remove subscribers
+                    boxService.removeSubscribers(boxToken);
+
                 default:
                     break;
             };
