@@ -1,3 +1,7 @@
+const Queue = require('bull');
+const boxQueue = new Queue('box');
+
+import { BoxJob } from "../models/box.job";
 const BoxSchema = require('./../models/box.schema');
 const Subscriber = require('./../models/subscriber.schema');
 
@@ -26,17 +30,37 @@ export class BoxDeletionCron {
         }
     }
 
+    /**
+     * Gets all the boxes to delete
+     *
+     * @returns
+     * @memberof BoxDeletionCron
+     */
     public async getBoxesToDelete() {
         const lastWeek = new Date().setDate(new Date().getDate() - 7);
 
         return await BoxSchema.find({ open: false, updatedAt: { $lte: lastWeek } });
     }
 
+    /**
+     * Adds a job to the box queue, that will be handled by the BoxService Microservice
+     *
+     * @param {string} boxToken
+     * @memberof BoxDeletionCron
+     */
     public async deleteSubscribers(boxToken: string) {
+        const alertJob: BoxJob = { boxToken, subject: 'destroy' };
+        boxQueue.add(alertJob);
     }
 
-    public async deleteBox(boxToken) {
-
+    /**
+     * Deletes a box from the collection
+     *
+     * @param {string} boxToken
+     * @memberof BoxDeletionCron
+     */
+    public async deleteBox(boxToken: string) {
+        await BoxSchema.findOneAndRemove({ _id: boxToken });
     }
 
 }

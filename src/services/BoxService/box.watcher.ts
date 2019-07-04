@@ -7,7 +7,7 @@ import { BoxJob } from '../../models/box.job';
 
 export class BoxWatcher {
     listen() {
-        boxQueue.process((job, done) => {
+        boxQueue.process(async (job, done) => {
             const { boxToken, subject }: BoxJob = job.data;
 
             // Do things depending on the subject
@@ -48,7 +48,7 @@ export class BoxWatcher {
                     });
 
                     // Alert subscribers
-                    boxService.alertSubscribers(boxToken, message);
+                    await boxService.alertSubscribers(boxToken, message);
 
                     // Remove subscribers
                     boxService.removeSubscribers(boxToken);
