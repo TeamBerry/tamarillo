@@ -211,7 +211,7 @@ describe("Box API", () => {
                 .expect(412, 'BOX_IS_OPEN');
         });
 
-        it("Sends a 200 with the closed box", () => {
+        it("Sends a 200 with the deleted box", () => {
             return supertest(expressApp)
                 .delete('/9cb763b6e72611381ef043e7')
                 .expect(200)

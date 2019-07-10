@@ -171,10 +171,8 @@ export class BoxApi {
                 return response.status(404).send('BOX_NOT_FOUND');
             }
 
-            console.log('CLOSED BOX: ', closedBox);
-
             // Create job to alert people in the box that the box has been closed
-            this.createJob(targetId, 'close');
+            boxApi.createJob(targetId, 'close');
 
             return response.status(200).send(closedBox);
         } catch (error) {
@@ -213,10 +211,8 @@ export class BoxApi {
                 return response.status(404).send('BOX_NOT_FOUND');
             }
 
-            console.log('OPENED BOX: ', openedBox);
-
             // Create a job to alert subscribers that the box has been opened
-            this.createJob(targetId, 'open');
+            boxApi.createJob(targetId, 'open');
 
             return response.status(200).send(openedBox);
         } catch (error) {
@@ -254,10 +250,8 @@ export class BoxApi {
 
             const deletedBox = await Box.findOneAndRemove({ _id: targetId });
 
-            console.log('DELETED BOX: ', deletedBox);
-
             // Create job to alert people in the box and have them removed
-            this.createJob(targetId, 'destroy');
+            boxApi.createJob(targetId, 'destroy');
 
             return response.status(200).send(deletedBox);
         } catch (error) {
@@ -274,11 +268,8 @@ export class BoxApi {
      * @memberof BoxApi
      */
     public createJob(boxToken: string, subject: string): void {
-        console.log('CREATING JOB FOR BOX QUEUE: ', boxQueue);
         const alertJob: BoxJob = { boxToken, subject };
-        console.log('ALERT JOB: ', alertJob);
         boxQueue.add(alertJob);
-        console.log('Job added');
     }
 }
 
