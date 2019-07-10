@@ -20,6 +20,8 @@ export class BoxDeletionCron {
         // Get boxes to delete
         const boxesToDelete = await this.getBoxesToDelete();
 
+        console.log(`Found ${boxesToDelete.length} boxes to delete.`);
+
         // For each box, delete subscribers, then the box itself
         for (let box of boxesToDelete) {
             // Find and delete subscribers of the box
@@ -60,10 +62,12 @@ export class BoxDeletionCron {
      * @memberof BoxDeletionCron
      */
     public async deleteBox(boxToken: string) {
+        console.log(`Deleting box ${boxToken}`);
         await BoxSchema.findOneAndRemove({ _id: boxToken });
     }
 
 }
 
 const boxDeletionCron = new BoxDeletionCron();
+boxDeletionCron.process();
 export default boxDeletionCron;
