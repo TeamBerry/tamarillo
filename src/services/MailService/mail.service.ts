@@ -1,6 +1,10 @@
 import * as _ from 'lodash';
 
 const nodemailer = require('nodemailer');
+const Email = require('email-templates');
+
+const dotenv = require('dotenv');
+dotenv.config();
 
 /**
  * Service that handles mailing requests.
@@ -11,65 +15,37 @@ class MailService {
     /**
      * Sends mails
      *
-     * @param {*} mailDetails The details given by whoever created the job
-     * Can contain these options:
-     * - mail: The address to send the mail to
-     * - name: The name of the user linked to the mail
-     * - type: The type of mail to send (signup, reset...)
+     * @param {string} type The type of mail
+     * @param {Array<string>} addresses The list of all recipients
      * @returns {Promise<any>}
      * @memberof MailService
      */
-    sendMail(mailDetails): Promise<any> {
-        console.log('Received mail to send: ', mailDetails);
+    sendMail(type: string, addresses: Array<string>): Promise<any> {
 
-        const transporter = nodemailer.createTransport({
-            ignoreTLS: true,
-            host: 'localhost',
-            port: 1025
+        const email = new Email({
+            message: {
+                from: 'system@berrybox.com'
+            }
         });
 
-        let dynamicOptions = this.buildOptions(mailDetails.type);
+        let transport = nodemailer.createTransport({
+            ignoreTLS: true,
+            host: 'localhost',
+            port: process.env.MAILDEV_PORT
+        });
 
-        const mailOptions = {
-            from: 'system@berrybox.com',
-            to: mailDetails.mail,
-            subject: dynamicOptions.subject,
-            text: 'Hey!',
-            html: 'HELLO WORLD' // TODO: Template the mail
-        };
-
-        return transporter.sendMail(mailOptions);
-    }
-
-    /**
-     * Gets the dynamic options for the type of mail
-     *
-     * @private
-     * @param {string} type The type of mail obtained from the job details
-     * @returns {{subject: string, html: string}} A list of options based on said type:
-     * - subject: The subject of the mail
-     * - html: The template of the mail
-     * @memberof MailService
-     */
-    private buildOptions(type: string): {subject: string, html: string} {
-        let options = {
-            subject: '',
-            html: ''
-        };
-
-        switch (type) {
-            case 'signup':
-                options.subject = 'Welcome to Berrybox!';
-                break;
-
-            default:
-                options.subject = 'Welcome to Berrybox!';
-                break;
+        if (process.env.NODE_ENV === 'production') {
+            // TODO: Use real transport
         }
 
-        return options;
+        return email
+            .send({
+                template: type,
+                message: {
+                    to: addresses
+                }
+            });
     }
-
 }
 
 const mailService = new MailService();

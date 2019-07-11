@@ -2,6 +2,7 @@ var Queue = require('bull');
 var mailQueue = new Queue('mail');
 
 import mailService from './mail.service';
+import { MailJob } from '../../models/mail.job';
 
 /**
  * Watches the "mail" Redis queue and sends the
@@ -26,8 +27,10 @@ export class MailWatcher {
     listen() {
         // When I detect a "mail" job, I send it to the service
         mailQueue.process((job, done) => {
+            const { type, addresses }: MailJob = job.data;
+
             mailService
-                .sendMail(job.data)
+                .sendMail(type, addresses)
                 .then((response) => {
                     console.log('mail has been sent.');
                     done(response);
