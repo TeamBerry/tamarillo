@@ -21,13 +21,6 @@ class MailService {
      * @memberof MailService
      */
     sendMail(type: string, addresses: Array<string>): Promise<any> {
-
-        const email = new Email({
-            message: {
-                from: 'system@berrybox.com'
-            }
-        });
-
         let transport = nodemailer.createTransport({
             ignoreTLS: true,
             host: 'localhost',
@@ -37,6 +30,14 @@ class MailService {
         if (process.env.NODE_ENV === 'production') {
             // TODO: Use real transport
         }
+
+        const email = new Email({
+            message: {
+                from: 'system@berrybox.com'
+            },
+            send: true,
+            transport: transport
+        });
 
         return email
             .send({
