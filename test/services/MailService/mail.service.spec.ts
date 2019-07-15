@@ -4,7 +4,7 @@ const path = require('path');
 
 import mailService from './../../../src/services/MailService/mail.service';
 
-describe.only("MailService", () => {
+describe.skip("MailService", () => {
     before(() => {
 
     });
