@@ -29,7 +29,15 @@ class MailService {
         });
 
         if (process.env.NODE_ENV === 'production') {
-            // TODO: Use real transport
+            transport = nodemailer.createTransport({
+                service: 'Gmail',
+                port: 587,
+                secure: true,
+                auth: {
+                    user: process.env.GMAIL_USER,
+                    pass: process.env.GMAIL_PASS
+                }
+            });
         }
 
         return new Email({

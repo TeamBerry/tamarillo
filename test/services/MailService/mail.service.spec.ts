@@ -15,7 +15,7 @@ describe.skip("MailService", () => {
 
     describe("Test mail send", () => {
         it("Sends a signup mail", async () => {
-            await mailService.sendMail('signup', ['angelzatch@gmail.com']);
+            await mailService.sendMail('signup', ['pinbouen.andreas@gmail.com']);
         });
     });
 });
