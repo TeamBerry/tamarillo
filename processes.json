@@ -22,7 +22,7 @@
             "-p",
             "3000"
         ],
-        "name": "athena",
+        "name": "araza",
         "exec_mode": "cluster",
         "watch": false,
         "instances": 1,
