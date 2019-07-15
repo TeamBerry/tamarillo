@@ -1,6 +1,6 @@
 [{
         "script": "dist/services/MailService/mail.watcher.js",
-        "name": "mail.watcher",
+        "name": "cudrang",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,
@@ -9,7 +9,7 @@
     },
     {
         "script": "dist/services/BoxService/box.watcher.js",
-        "name": "hermes.watcher",
+        "name": "boquila.watcher",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,
@@ -22,7 +22,7 @@
             "-p",
             "3000"
         ],
-        "name": "athena",
+        "name": "araza",
         "exec_mode": "cluster",
         "watch": false,
         "instances": 1,
@@ -31,7 +31,7 @@
     },
     {
         "script": "dist/services/BoxService/box.service.js",
-        "name": "hermes",
+        "name": "boquila",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,

@@ -1,5 +1,5 @@
 {
-    "name": "Chronos",
+    "name": "tamarillo",
     "version": "0.11.0",
     "description": "Node server for berrybox - Handles sync, chat",
     "main": "index.js",
