@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 
 const nodemailer = require('nodemailer');
 const Email = require('email-templates');
+const path = require('path');
 
 const dotenv = require('dotenv');
 dotenv.config();
@@ -24,28 +25,25 @@ class MailService {
         let transport = nodemailer.createTransport({
             ignoreTLS: true,
             host: 'localhost',
-            port: process.env.MAILDEV_PORT
+            port: process.env.MAILDEV_PORT || 1025
         });
 
         if (process.env.NODE_ENV === 'production') {
             // TODO: Use real transport
         }
 
-        const email = new Email({
+        return new Email({
             message: {
-                from: 'system@berrybox.com'
+                from: 'system@berrybox.tv'
             },
             send: true,
             transport: transport
+        }).send({
+            template: path.resolve(`dist/services/MailService/emails/${type}`),
+            message: {
+                to: addresses
+            }
         });
-
-        return email
-            .send({
-                template: type,
-                message: {
-                    to: addresses
-                }
-            });
     }
 }
 

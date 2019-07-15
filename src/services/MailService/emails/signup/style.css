@@ -1,0 +1,35 @@
+body {
+    background-color: #F4F4F4 !important;
+}
+
+#brand-banner {
+    background-color: #009AEB;
+    padding: 15px 20px;
+    color: white;
+    font-size: 24px;
+    margin-bottom: 50px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+}
+
+#welcome-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 54px !important;
+    color: #009AEB;
+}
+
+.btn-primary {
+    background-color: #009AEB;
+    border-color: #009AEB;
+    color: white;
+}
+
+.btn-primary:active {
+    background-color: #0062cc;
+    border-color: #005cbf;
+}
+
+.btn-primary:focus {
+    box-shadow: 0 0 0 .2rem rgba(38, 143, 255, .5);
+}

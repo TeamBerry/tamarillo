@@ -4,7 +4,7 @@
     "description": "Node server for berrybox - Handles sync, chat",
     "main": "index.js",
     "scripts": {
-        "test": "mocha --exit -r ts-node/register $(find -name *.spec.ts)",
+        "test": "mocha --exit -r ts-node/register test/**/**/*.spec.ts",
         "coverage": "nyc --reporter=lcov npm run test",
         "tsc": "./node_modules/.bin/tsc",
         "emails": "cp -r ./src/services/MailService/emails ./dist/services/MailService",

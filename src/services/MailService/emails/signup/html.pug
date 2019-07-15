@@ -3,13 +3,17 @@ html(lang='en')
   head
     title Welcome !
     link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=Montserrat&display=swap')
     style
       include style.css
   body
+    #brand-banner Berrybox
     .container
-      .row.justift-content-center
+      .row.justify-content-center
         .col-7
-            .text-center
             .mail-contents
-                h1.text-center Welcome!
-                p Welcome to Berrybox! Your registration is now complete. Join or create boxes and start sharing your favorite YouTube videos!
+                h1#welcome-title Welcome!
+                hr
+                p Welcome to Berrybox! Your registration is now complete.
+                p Join or create boxes and start sharing your favorite YouTube videos!
+                a(href='http://beta.berrybox.tv').btn.btn-primary Access the site
