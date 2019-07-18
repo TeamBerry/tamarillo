@@ -1,14 +1,16 @@
 {
-    "name": "Chronos",
+    "name": "tamarillo",
     "version": "0.11.0",
     "description": "Node server for berrybox - Handles sync, chat",
     "main": "index.js",
     "scripts": {
-        "test": "mocha --exit -r ts-node/register $(find -name *.spec.ts)",
+        "test": "mocha --exit -r ts-node/register test/**/**/*.spec.ts",
         "coverage": "nyc --reporter=lcov npm run test",
         "tsc": "./node_modules/.bin/tsc",
-        "start": "./node_modules/.bin/tsc && pm2 start processes.json",
-        "restart": "tsc && pm2 restart processes.json"
+        "emails": "cp -r ./src/services/MailService/emails ./dist/services/MailService",
+        "start": "tsc && pm2 start processes.json",
+        "restart": "tsc && pm2 restart processes.json",
+        "build": "npm run tsc && npm run emails"
     },
     "repository": {
         "type": "git",
@@ -25,6 +27,8 @@
         "body-parser": "^1.19.0",
         "bull": "^3.9.1",
         "cors": "^2.8.4",
+        "dotenv": "^8.0.0",
+        "email-templates": "^6.0.0",
         "express": "^4.16.2",
         "ioredis": "^4.9.3",
         "jsonwebtoken": "^8.2.2",
@@ -33,6 +37,7 @@
         "mongodb": "^3.0.2",
         "mongoose": "^5.5.6",
         "nodemailer": "^4.6.8",
+        "pug": "^2.0.4",
         "socket.io": "^2.0.4"
     },
     "devDependencies": {

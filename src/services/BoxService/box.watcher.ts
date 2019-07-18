@@ -17,7 +17,8 @@ export class BoxWatcher {
                     // Build message
                     message = new Message({
                         author: 'system',
-                        contents: 'This box has just been closed. Video play and submission have been disabled. Please exit this box.',
+                        contents: `This box has just been closed. Video play and submission have been disabled.
+                        Please exit this box.`,
                         source: 'bot',
                         scope: boxToken
                     });
@@ -37,6 +38,23 @@ export class BoxWatcher {
 
                     // Alert subscribers
                     boxService.alertSubscribers(boxToken, message);
+
+                case 'destroy':
+                    // Build message
+                    message = new Message({
+                        author: 'system',
+                        contents: `This box is being destroyed following an extended period of inactivity or a decision
+                        of its creator. All systems have been deactivated and cannot be restored. Please exit this box.`,
+                        source: 'bot',
+                        scope: boxToken
+                    });
+
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message);
+
+                    // Remove subscribers
+                    boxService.removeSubscribers(boxToken);
+
                 default:
                     break;
             };

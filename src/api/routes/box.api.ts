@@ -19,6 +19,7 @@ export class BoxApi {
         this.router.get("/:box", this.show);
         this.router.post("/", this.store);
         this.router.put("/:box", this.update);
+        this.router.delete('/:box', this.destroy);
         this.router.post("/:box/close", this.close);
         this.router.post('/:box/open', this.open);
     }
@@ -139,10 +140,6 @@ export class BoxApi {
         }
     }
 
-    public destroy() {
-
-    }
-
     /**
      * Closes a box
      *
@@ -174,12 +171,8 @@ export class BoxApi {
                 return response.status(404).send('BOX_NOT_FOUND');
             }
 
-            // Create job to alert people in the box
-            const alertJob: BoxJob = {
-                boxToken: targetId,
-                subject: 'close'
-            }
-            boxQueue.add(alertJob);
+            // Create job to alert people in the box that the box has been closed
+            boxApi.createJob(targetId, 'close');
 
             return response.status(200).send(closedBox);
         } catch (error) {
@@ -218,16 +211,65 @@ export class BoxApi {
                 return response.status(404).send('BOX_NOT_FOUND');
             }
 
-            const alertJob: BoxJob = {
-                boxToken: targetId,
-                subject: 'open'
-            };
-            boxQueue.add(alertJob);
+            // Create a job to alert subscribers that the box has been opened
+            boxApi.createJob(targetId, 'open');
 
             return response.status(200).send(openedBox);
         } catch (error) {
-
+            return response.status(500).send(error);
         }
+    }
+
+    /**
+     * Deletes a box from the collection. Will also create a job for the box microservice to remove subscribers
+     * from the list of subscribers.
+     *
+     * @param {Request} request Parameters contain the box ID
+     * @param {Response} response
+     * @returns {Promise<Response>} The deleted box is sent back as confirmation with a 200.
+     * If something goes wrong, one of the following error codes will be sent:
+     * - 403 Forbidden if the user attempting to delete the box is not the creator (NOT YET)
+     * - 404 'BOX_NOT_FOUND' if the id given does not match any box in the collection
+     * - 412 'BOX_IS_OPEN' if the box is still open when attempting to delete it
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
+    public async destroy(request: Request, response: Response): Promise<Response> {
+        try {
+            const targetId = request.params.box;
+
+            const targetBox = await Box.findById(targetId);
+
+            if (!targetBox) {
+                return response.status(404).send('BOX_NOT_FOUND');
+            }
+
+            if (targetBox.open) {
+                return response.status(412).send('BOX_IS_OPEN');
+            }
+
+            const deletedBox = await Box.findOneAndRemove({ _id: targetId });
+
+            // Create job to alert people in the box and have them removed
+            boxApi.createJob(targetId, 'destroy');
+
+            return response.status(200).send(deletedBox);
+        } catch (error) {
+            return response.status(500).send(error);
+        }
+    }
+
+    /**
+     * Adds a job to the box queue, that will be handled by the BoxService Microservice
+     *
+     * @private
+     * @param {string} boxToken The token of the box
+     * @param {string} subject The subject of the job
+     * @memberof BoxApi
+     */
+    public createJob(boxToken: string, subject: string): void {
+        const alertJob: BoxJob = { boxToken, subject };
+        boxQueue.add(alertJob);
     }
 }
 

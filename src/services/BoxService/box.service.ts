@@ -316,13 +316,13 @@ class BoxService {
     }
 
     /**
-     * Each time the socket recieves data, he has to check if the request can go through
+     * Removes subscribers of a box. Used especially in the context of a box being destroyed.
      *
-     * @private
+     * @param {string} boxToken
      * @memberof BoxService
      */
-    private checkAuth() {
-
+    public async removeSubscribers(boxToken: string) {
+        await SubscriberSchema.deleteMany({ boxToken });
     }
 
     /**
@@ -352,6 +352,16 @@ class BoxService {
             console.log(`Send message on socket ${recipient.socket}, channel ${channel} for subscribers`);
             io.to(recipient.socket).emit(channel, message);
         });
+    }
+
+    /**
+     * Each time the socket recieves data, he has to check if the request can go through
+     *
+     * @private
+     * @memberof BoxService
+     */
+    private checkAuth() {
+
     }
 }
 

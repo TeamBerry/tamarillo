@@ -1,7 +1,6 @@
-[
-    {
+[{
         "script": "dist/services/MailService/mail.watcher.js",
-        "name": "mailWatcher",
+        "name": "cudrang",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,
@@ -10,7 +9,7 @@
     },
     {
         "script": "dist/services/BoxService/box.watcher.js",
-        "name": "boxWatcher",
+        "name": "boquila.watcher",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,
@@ -23,7 +22,7 @@
             "-p",
             "3000"
         ],
-        "name": "athena",
+        "name": "araza",
         "exec_mode": "cluster",
         "watch": false,
         "instances": 1,
@@ -32,11 +31,18 @@
     },
     {
         "script": "dist/services/BoxService/box.service.js",
-        "name": "hermes",
+        "name": "boquila",
         "watch": false,
         "exec_mode": "cluster",
         "instances": 1,
         "max_restarts": 5,
         "min_uptime": 3000
+    },
+    {
+        "name": "box-deletion.cron",
+        "script": "dist/crons/box-deletion.cron.js",
+        "instances": 1,
+        "cron_restart": "0 */1 * * *",
+        "autorestart": false
     }
 ]

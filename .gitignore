@@ -32,3 +32,5 @@ Thumbs.db
 *.log
 .nyc_output
 coverage
+
+\.env
