@@ -19,7 +19,6 @@ export class AuthApi {
     }
 
     public init() {
-        // this.testBull();
         this.router.post("/login", this.login);
         this.router.post("/signup", this.signup);
     }
@@ -120,17 +119,6 @@ export class AuthApi {
             subject: user,
             expiresIn: tokenExpiration
         };
-    }
-
-    private testBull() {
-        console.log('Sending test to mail queue');
-        mailQueue.add(
-            {
-                mail: 'angelzatch@gmail.com',
-                name: 'AngelZatch',
-                type: 'signup'
-            }
-        );
     }
 }
 
