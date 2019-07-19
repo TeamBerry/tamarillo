@@ -1,8 +1,6 @@
-import mongoose = require("mongoose");
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
-const Video = require('./video.model');
+import { Document, Schema, model } from 'mongoose';
 
-let Schema = mongoose.Schema;
+const Video = require('./video.model');
 
 let userSchema = new Schema(
     {
@@ -27,4 +25,4 @@ let userSchema = new Schema(
     }
 );
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = model('User', userSchema);

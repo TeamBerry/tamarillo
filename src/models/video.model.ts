@@ -1,11 +1,8 @@
-import mongoose = require('mongoose');
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
-
-var Schema = mongoose.Schema;
+import { Document, Schema, model } from 'mongoose';
 
 var videoSchema = new Schema({
     link: String,
     name: String,
 });
 
-module.exports = mongoose.model('Video', videoSchema);
+module.exports = model('Video', videoSchema);

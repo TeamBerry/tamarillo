@@ -14,6 +14,7 @@ export class UserApi {
     public init() {
         this.router.get("/:user", this.show);
         this.router.get('/:user/boxes', this.boxes);
+        this.router.get('/:user/playlists', this.playlists);
         this.router.post("/", this.store);
         this.router.put("/:user", this.update);
         this.router.patch('/:user/favorites', this.patchFavorites);
@@ -127,6 +128,10 @@ export class UserApi {
         } catch (error) {
             return response.status(500).send(error);
         }
+    }
+
+    public async playlists(request: Request, response: Response): Promise<Response> {
+        return response.status(200).send();
     }
 }
 
