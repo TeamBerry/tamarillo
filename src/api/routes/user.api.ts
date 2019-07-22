@@ -1,35 +1,42 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express'
 
-const User = require("./../../models/user.model");
-const Box = require("./../../models/box.schema");
+const User = require("./../../models/user.model")
+const Box = require("./../../models/box.schema")
+
+const fs = require('fs')
+import * as jwt from 'jsonwebtoken'
+import { Session } from '../../models/session.model'
+import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
+
+const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem')
 
 export class UserApi {
-    public router: Router;
+    public router: Router
 
     constructor() {
-        this.router = Router();
-        this.init();
+        this.router = Router()
+        this.init()
     }
 
     public init() {
-        this.router.get("/:user", this.show);
-        this.router.get('/:user/boxes', this.boxes);
-        this.router.get('/:user/playlists', this.playlists);
-        this.router.post("/", this.store);
-        this.router.put("/:user", this.update);
-        this.router.patch('/:user/favorites', this.patchFavorites);
-        this.router.delete("/:user", this.destroy);
+        this.router.get("/:user", this.show)
+        this.router.get('/:user/boxes', this.boxes)
+        this.router.get('/:user/playlists', this.playlists)
+        this.router.post("/", this.store)
+        this.router.put("/:user", this.update)
+        this.router.patch('/:user/favorites', this.patchFavorites)
+        this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param('user', async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingUser = await User.findById(request.params.user);
+            const matchingUser = await User.findById(request.params.user)
 
             if (!matchingUser) {
-                return response.status(404).send('USER_NOT_FOUND');
+                return response.status(404).send('USER_NOT_FOUND')
             }
 
-            next();
-        });
+            next()
+        })
     }
 
     /**
@@ -42,15 +49,15 @@ export class UserApi {
      * @memberof UserApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        const userId = request.params.user;
+        const userId = request.params.user
 
         try {
             const user = await User.findById(userId)
-                .populate('favorites');
+                .populate('favorites')
 
-            return response.status(200).send(user);
+            return response.status(200).send(user)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -65,11 +72,11 @@ export class UserApi {
      */
     public async store(request: Request, response: Response): Promise<Response> {
         try {
-            const newUser = await User.create(request.body);
+            const newUser = await User.create(request.body)
 
-            return response.status(201).send(newUser);
+            return response.status(201).send(newUser)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -78,12 +85,12 @@ export class UserApi {
     }
 
     public patchFavorites(req: Request, res: Response) {
-        console.log('PATCHING USER: ' + req.params.user + 'WITH DATA: ', req.body);
+        console.log('PATCHING USER: ' + req.params.user + 'WITH DATA: ', req.body)
 
-        const favoritesList = [];
+        const favoritesList = []
         req.body.forEach(favorite => {
-            favoritesList.push(favorite._id);
-        });
+            favoritesList.push(favorite._id)
+        })
 
         User.findByIdAndUpdate(
             req.params.user,
@@ -92,15 +99,15 @@ export class UserApi {
             .populate('favorites')
             .exec((err, document) => {
                 if (err) {
-                    res.status(500).send(err);
+                    res.status(500).send(err)
                 }
 
                 if (document) {
-                    res.status(200).send(document);
+                    res.status(200).send(document)
                 }
 
-                res.status(204);
-            });
+                res.status(204)
+            })
     }
 
     public destroy(req: Request, res: Response) {
@@ -118,23 +125,38 @@ export class UserApi {
      * @memberof UserApi
      */
     public async boxes(request: Request, response: Response): Promise<Response> {
-        const userId = request.params.user;
+        const userId = request.params.user
 
         try {
             const boxes = await Box.find({ creator: userId })
-                .populate('creator', '_id name');
+                .populate('creator', '_id name')
 
-            return response.status(200).send(boxes);
+            return response.status(200).send(boxes)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
     public async playlists(request: Request, response: Response): Promise<Response> {
-        return response.status(200).send();
+        let filters = {
+            user: request.param.user,
+            private: true
+        }
+
+        if (request.headers.authorization) {
+            console.log('PLAYLISTS. AUTH: ', request.headers.authorization)
+            const token = jwt.verify(request.headers.authorization, RSA_PRIVATE_KEY)
+            console.log(token)
+        }
+
+        const userPlaylists = await UsersPlaylist
+            .find(filters)
+            .populate('videos')
+
+        return response.status(200).send(userPlaylists)
     }
 }
 
 
-const userApi = new UserApi();
-export default userApi.router;
+const userApi = new UserApi()
+export default userApi.router

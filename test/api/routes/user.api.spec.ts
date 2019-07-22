@@ -5,6 +5,10 @@ import * as chai from "chai"
 const axios = require("axios")
 const expect = chai.expect
 
+import * as jwt from 'jsonwebtoken'
+const fs = require('fs')
+const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem')
+
 import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
@@ -32,9 +36,44 @@ describe.only("User API", () => {
             password: 'Pikachu'
         })
 
-        const JWT = await axios.post('http://localhost:8008/login', { mail: 'ash@pokemon.com', password: 'Pikachu' })
-        console.log(JWT)
-        ashJWT = JWT
+        await User.create({
+            _id: '9ca0df5f86abeb66da97ba5e',
+            name: 'Shirona',
+            mail: 'shirona@sinnoh-league.com',
+            password: 'Piano'
+        })
+
+        const ashJWTBearer = jwt.sign({ user: '9ca0df5f86abeb66da97ba5d' }, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
+            algorithm: 'RS256',
+            expiresIn: 1296000,
+            subject: '9ca0df5f86abeb66da97ba5d'
+        })
+
+        const foreignJWTBearer = jwt.sign({ user: '9ca0df5f86abeb66da97ba5e'}, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos'}, {
+            algorithm: 'RS256',
+            expiresIn: 1296000,
+            subject: '9ca0df5f86abeb66da97ba5e'
+        })
+
+        ashJWT = {
+            bearer: ashJWTBearer,
+            subject: {
+                _id: '9ca0df5f86abeb66da97ba5d',
+                name: 'Ash Ketchum',
+                mail: 'ash@pokemon.com'
+            },
+            expiresIn: 1296000
+        }
+
+        foreignJWT = {
+            bearer: foreignJWTBearer,
+            subject: {
+                _id: '9ca0df5f86abeb66da97ba5e',
+                name: 'Shirona',
+                mail: 'shirona@sinnoh-league.com',
+            },
+            expiresIn: 1296000
+        }
 
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
@@ -109,6 +148,7 @@ describe.only("User API", () => {
         it("Sends a 200 with only public playlists if the user requesting is not the author of the playlists", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba5d/playlists')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
                 .expect(200)
                 .then((response) => {
                     const playlists: Array<UserPlaylist> = response.body
