@@ -7,8 +7,9 @@ const fs = require('fs')
 import * as jwt from 'jsonwebtoken'
 import { Session } from '../../models/session.model'
 import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
+const auth = require('./../auth')
 
-const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem')
+const RSA_PUBLIC_KEY = fs.readFileSync('certs/public_key.pem')
 
 export class UserApi {
     public router: Router
@@ -21,7 +22,7 @@ export class UserApi {
     public init() {
         this.router.get("/:user", this.show)
         this.router.get('/:user/boxes', this.boxes)
-        this.router.get('/:user/playlists', this.playlists)
+        this.router.get('/:user/playlists', auth.isAuthorized, this.playlists)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
         this.router.patch('/:user/favorites', this.patchFavorites)
@@ -140,20 +141,24 @@ export class UserApi {
     public async playlists(request: Request, response: Response): Promise<Response> {
         let filters = {
             user: request.param.user,
-            private: true
+            private: false
         }
 
-        if (request.headers.authorization) {
-            console.log('PLAYLISTS. AUTH: ', request.headers.authorization)
-            const token = jwt.verify(request.headers.authorization, RSA_PRIVATE_KEY)
-            console.log(token)
+        try {
+            const decodedToken = jwt.decode(request.headers.authorization, RSA_PUBLIC_KEY)
+            console.log(decodedToken)
+            console.log('filtering with: ', filters)
+
+            const userPlaylists: Array<UserPlaylist> = await UsersPlaylist
+                .find(filters)
+                .populate('videos')
+
+            console.log(userPlaylists);
+
+            return response.status(200).send(userPlaylists)
+        } catch (error) {
+            return response.status(500).send(error)
         }
-
-        const userPlaylists = await UsersPlaylist
-            .find(filters)
-            .populate('videos')
-
-        return response.status(200).send(userPlaylists)
     }
 }
 

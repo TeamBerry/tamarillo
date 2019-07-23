@@ -24,7 +24,10 @@ describe.only("User API", () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
         expressApp.use('/', UserApi)
 
-        await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
+        await User.deleteMany({
+            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] }
+        })
+
         await UsersPlaylist.deleteMany({
             _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] }
         })
@@ -49,7 +52,7 @@ describe.only("User API", () => {
             subject: '9ca0df5f86abeb66da97ba5d'
         })
 
-        const foreignJWTBearer = jwt.sign({ user: '9ca0df5f86abeb66da97ba5e'}, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos'}, {
+        const foreignJWTBearer = jwt.sign({ user: '9ca0df5f86abeb66da97ba5e' }, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
             algorithm: 'RS256',
             expiresIn: 1296000,
             subject: '9ca0df5f86abeb66da97ba5e'
@@ -93,7 +96,10 @@ describe.only("User API", () => {
     })
 
     after(async () => {
-        await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
+        await User.deleteMany({
+            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] }
+        })
+
         await UsersPlaylist.deleteMany({
             _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] }
         })
@@ -102,7 +108,7 @@ describe.only("User API", () => {
     describe("Gets an user", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5e')
+                .get('/9ca0df5f86abeb66da97ba4e')
                 .expect(404, 'USER_NOT_FOUND')
         })
 
@@ -116,7 +122,7 @@ describe.only("User API", () => {
     describe("Gets the boxes of an user", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5e/boxes')
+                .get('/9ca0df5f86abeb66da97ba4e/boxes')
                 .expect(404, 'USER_NOT_FOUND')
         })
 
@@ -130,19 +136,8 @@ describe.only("User API", () => {
     describe("Gets the playlists of an user", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5e/playlists')
+                .get('/9ca0df5f86abeb66da97ba4e/playlists')
                 .expect(404, 'USER_NOT_FOUND')
-        })
-
-        it("Sends a 200 with only public playlists if there's no JWT", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d/playlists')
-                .expect(200)
-                .then((response) => {
-                    const playlists: Array<UserPlaylist> = response.body
-
-                    expect(playlists).to.have.lengthOf(1)
-                })
         })
 
         it("Sends a 200 with only public playlists if the user requesting is not the author of the playlists", () => {
