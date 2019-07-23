@@ -5,10 +5,6 @@ import * as chai from "chai"
 const axios = require("axios")
 const expect = chai.expect
 
-import * as jwt from 'jsonwebtoken'
-const fs = require('fs')
-const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem')
-
 import UserApi from './../../../src/api/routes/user.api'
 import { AuthApi } from './../../../src/api/routes/auth.api'
 const User = require('./../../../src/models/user.model')
@@ -47,8 +43,8 @@ describe.only("User API", () => {
             password: 'Piano'
         })
 
-        const ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d'})
-        const foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e'})
+        ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d'})
+        foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e'})
 
         console.log(ashJWT)
         console.log(foreignJWT)
