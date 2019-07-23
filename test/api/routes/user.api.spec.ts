@@ -10,6 +10,7 @@ const fs = require('fs')
 const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem')
 
 import UserApi from './../../../src/api/routes/user.api'
+import { AuthApi } from './../../../src/api/routes/auth.api'
 const User = require('./../../../src/models/user.model')
 import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Session } from "./../../../src/models/session.model"
@@ -46,37 +47,11 @@ describe.only("User API", () => {
             password: 'Piano'
         })
 
-        const ashJWTBearer = jwt.sign({ user: '9ca0df5f86abeb66da97ba5d' }, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
-            algorithm: 'RS256',
-            expiresIn: 1296000,
-            subject: '9ca0df5f86abeb66da97ba5d'
-        })
+        const ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d'})
+        const foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e'})
 
-        const foreignJWTBearer = jwt.sign({ user: '9ca0df5f86abeb66da97ba5e' }, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
-            algorithm: 'RS256',
-            expiresIn: 1296000,
-            subject: '9ca0df5f86abeb66da97ba5e'
-        })
-
-        ashJWT = {
-            bearer: ashJWTBearer,
-            subject: {
-                _id: '9ca0df5f86abeb66da97ba5d',
-                name: 'Ash Ketchum',
-                mail: 'ash@pokemon.com'
-            },
-            expiresIn: 1296000
-        }
-
-        foreignJWT = {
-            bearer: foreignJWTBearer,
-            subject: {
-                _id: '9ca0df5f86abeb66da97ba5e',
-                name: 'Shirona',
-                mail: 'shirona@sinnoh-league.com',
-            },
-            expiresIn: 1296000
-        }
+        console.log(ashJWT)
+        console.log(foreignJWT)
 
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",

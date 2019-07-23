@@ -147,6 +147,9 @@ export class UserApi {
         try {
             const decodedToken = jwt.decode(request.headers.authorization, RSA_PUBLIC_KEY)
             console.log(decodedToken)
+            if (decodedToken) {
+                filters.private = true
+            }
             console.log('filtering with: ', filters)
 
             const userPlaylists: Array<UserPlaylist> = await UsersPlaylist

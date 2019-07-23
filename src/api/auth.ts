@@ -1,18 +1,24 @@
 import { Request, Response, NextFunction } from 'express'
 
+import * as jwt from 'jsonwebtoken'
+const fs = require('fs')
+const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem')
+
 module.exports.isAuthorized = (request: Request, response: Response, next: NextFunction) => {
-    if (!request.headers.authorization) {
+    console.log('Auth middleware check...')
+    const auth = request.headers.authorization
+    if (auth) {
         // console.log('PLAYLISTS. AUTH: ', request.headers.authorization)
         try {
-            // const token = jwt.verify(request.headers.authorization, RSA_PUBLIC_KEY)
-            // console.log(token)
-            // filters.private = true
-            console.log('ACCESS GRANTED')
+            const token = jwt.verify(auth, RSA_PRIVATE_KEY)
+            console.log('Access granted.')
+            console.log(token)
             return next()
         } catch (error) {
-            console.log(error)
+            console.log('Access refused: ', error)
             return response.status(401).send('UNAUTHORIZED')
         }
     }
+    console.log('Access refused.')
     return response.status(401).send('UNAUTHORIZED')
 }
