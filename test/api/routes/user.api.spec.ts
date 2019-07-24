@@ -11,7 +11,7 @@ const User = require('./../../../src/models/user.model')
 import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Session } from "./../../../src/models/session.model"
 
-describe.only("User API", () => {
+describe("User API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null

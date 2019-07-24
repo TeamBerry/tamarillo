@@ -5,9 +5,8 @@ const Box = require("./../../models/box.schema")
 
 const fs = require('fs')
 import * as jwt from 'jsonwebtoken'
-import { Session } from '../../models/session.model'
-import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
-const auth = require('./../auth')
+import { UserPlaylist, UsersPlaylist } from '../../models/user-playlist.model'
+const auth = require('./../auth.middleware')
 
 const RSA_PUBLIC_KEY = fs.readFileSync('certs/public_key.pem')
 
@@ -22,7 +21,8 @@ export class UserApi {
     public init() {
         this.router.get("/:user", this.show)
         this.router.get('/:user/boxes', this.boxes)
-        this.router.get('/:user/playlists', auth.isAuthorized, this.playlists)
+        // this.router.get('/:user/playlists', auth.isAuthorized, this.playlists)
+        this.router.get('/:user/playlists', this.playlists)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
         this.router.patch('/:user/favorites', this.patchFavorites)
@@ -138,6 +138,16 @@ export class UserApi {
         }
     }
 
+    /**
+     * Gets the playlists of an user. Will serve only public or public and private boxes depending
+     * on who pings the API:
+     * - Only public playlists will be shown if the authentication shows a different user than the creator
+     * - All playlists if the user is requesting his own playlists
+     * @param request The request, containing the user as a parameter
+     * @param response
+     * @returns {Promise<Response>} An array of user playlists or one of the following error codes:
+     * - 404 'USER_NOT_FOUND' if no user matches the given ObjectId in parameter
+     */
     public async playlists(request: Request, response: Response): Promise<Response> {
         let filters = {
             user: request.param.user,
@@ -145,6 +155,7 @@ export class UserApi {
         }
 
         try {
+            console.log(request.headers.authorization)
             const decodedToken = jwt.decode(request.headers.authorization, RSA_PUBLIC_KEY)
             console.log(decodedToken)
             if (decodedToken) {
