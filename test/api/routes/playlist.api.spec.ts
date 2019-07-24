@@ -1,12 +1,12 @@
-import * as express from "express"
 import * as bodyParser from "body-parser"
-import * as supertest from "supertest"
 import * as chai from "chai"
+import * as express from "express"
+import * as supertest from "supertest"
 const axios = require("axios")
 const expect = chai.expect
 
 import PlaylistApi from './../../../src/api/routes/playlist.api'
-import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
+import { UserPlaylist, UserPlaylistDocument, UsersPlaylist } from './../../../src/models/user-playlist.model'
 
 describe("Playlists API", () => {
     const expressApp = express()
@@ -16,7 +16,7 @@ describe("Playlists API", () => {
         expressApp.use('/', PlaylistApi)
 
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] }
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
         })
 
         await UsersPlaylist.create({
@@ -24,7 +24,7 @@ describe("Playlists API", () => {
             name: "My First Playlist",
             private: true,
             user: "9ca0df5f86abeb66da97ba5d",
-            videos: []
+            videos: [],
         })
 
         await UsersPlaylist.create({
@@ -32,13 +32,13 @@ describe("Playlists API", () => {
             name: "WiP Playlist 2",
             private: false,
             user: "9ca0df5f86abeb66da97ba5d",
-            videos: []
+            videos: [],
         })
     })
 
     after(async () => {
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] }
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
         })
     })
 
@@ -83,7 +83,7 @@ describe("Playlists API", () => {
                     name: "My New Playlist",
                     private: true,
                     user: "9ca0df5f86abeb66da97ba5d",
-                    videos: []
+                    videos: [],
                 })
                 .expect(201)
         })
@@ -104,7 +104,7 @@ describe("Playlists API", () => {
                     name: "WiP Playlist 4",
                     private: false,
                     user: "9ca0df5f86abeb66da97ba5d",
-                    videos: []
+                    videos: [],
                 })
                 .expect(412, 'MISSING_PARAMETERS')
         })
@@ -117,7 +117,7 @@ describe("Playlists API", () => {
                     name: "This playlist does not exist",
                     private: false,
                     user: "9ca0df5f86abeb66da97ba5d",
-                    videos: []
+                    videos: [],
                 })
                 .expect(404, 'PLAYLIST_NOT_FOUND')
         })
@@ -130,7 +130,7 @@ describe("Playlists API", () => {
                     name: "WiP Playlist 2 Modified",
                     private: false,
                     user: "9ca0df5f86abeb66da97ba5d",
-                    videos: []
+                    videos: [],
                 })
                 .expect(200)
         })
@@ -143,7 +143,7 @@ describe("Playlists API", () => {
                     name: "WiP Playlist 2 Modified",
                     private: false,
                     user: "9ca0df5f86abeb66da97ba5d",
-                    videos: []
+                    videos: [],
                 })
                 .expect(200)
         })

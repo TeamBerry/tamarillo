@@ -1,15 +1,15 @@
-import * as express from "express"
 import * as bodyParser from "body-parser"
-import * as supertest from "supertest"
 import * as chai from "chai"
+import * as express from "express"
+import * as supertest from "supertest"
 const axios = require("axios")
 const expect = chai.expect
 
-import UserApi from './../../../src/api/routes/user.api'
 import { AuthApi } from './../../../src/api/routes/auth.api'
+import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
-import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Session } from "./../../../src/models/session.model"
+import { UserPlaylist, UserPlaylistDocument, UsersPlaylist } from './../../../src/models/user-playlist.model'
 
 describe("User API", () => {
     const expressApp = express()
@@ -22,29 +22,29 @@ describe("User API", () => {
         expressApp.use('/', UserApi)
 
         await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] }
+            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] },
         })
 
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] }
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
         })
 
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
-            password: 'Pikachu'
+            password: 'Pikachu',
         })
 
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5e',
             name: 'Shirona',
             mail: 'shirona@sinnoh-league.com',
-            password: 'Piano'
+            password: 'Piano',
         })
 
-        ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d'})
-        foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e'})
+        ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com'})
+        foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com'})
 
         console.log(ashJWT)
         console.log(foreignJWT)
@@ -54,7 +54,7 @@ describe("User API", () => {
             name: "My First Playlist",
             private: true,
             user: "9ca0df5f86abeb66da97ba5d",
-            videos: []
+            videos: [],
         })
 
         await UsersPlaylist.create({
@@ -62,17 +62,17 @@ describe("User API", () => {
             name: "WiP Playlist 2",
             private: false,
             user: "9ca0df5f86abeb66da97ba5d",
-            videos: []
+            videos: [],
         })
     })
 
     after(async () => {
         await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] }
+            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] },
         })
 
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] }
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
         })
     })
 
@@ -104,7 +104,7 @@ describe("User API", () => {
         })
     })
 
-    describe("Gets the playlists of an user", () => {
+    describe.only("Gets the playlists of an user", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e/playlists')
@@ -117,7 +117,7 @@ describe("User API", () => {
                 .set('Authorization', 'Bearer ' + foreignJWT.bearer)
                 .expect(200)
                 .then((response) => {
-                    const playlists: Array<UserPlaylist> = response.body
+                    const playlists: UserPlaylist[] = response.body
 
                     expect(playlists).to.have.lengthOf(1)
                 })
@@ -129,7 +129,7 @@ describe("User API", () => {
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
                 .then((response) => {
-                    const playlists: Array<UserPlaylist> = response.body
+                    const playlists: UserPlaylist[] = response.body
 
                     expect(playlists).to.have.lengthOf(2)
                 })

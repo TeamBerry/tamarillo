@@ -155,9 +155,9 @@ export class UserApi {
         }
 
         try {
-            console.log(request.headers.authorization)
+            console.log('headers: ', request.headers.authorization)
             const decodedToken = jwt.decode(request.headers.authorization, RSA_PUBLIC_KEY)
-            console.log(decodedToken)
+            console.log('decoded token: ', decodedToken)
             if (decodedToken) {
                 filters.private = true
             }
