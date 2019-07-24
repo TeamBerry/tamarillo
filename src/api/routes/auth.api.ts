@@ -1,26 +1,26 @@
-import { Request, Response, Router } from 'express';
+import { Request, Response, Router } from "express"
 
-var Queue = require('bull');
-var mailQueue = new Queue('mail');
+const Queue = require("bull")
+const mailQueue = new Queue("mail")
 
-const User = require("./../../models/user.model");
-const fs = require('fs');
-import * as jwt from 'jsonwebtoken';
-import { Session } from '../../models/session.model';
+const User = require("./../../models/user.model")
+const fs = require("fs")
+import * as jwt from "jsonwebtoken"
+import { Session } from "../../models/session.model"
 
-const RSA_PRIVATE_KEY = fs.readFileSync('certs/private_key.pem');
+const RSA_PRIVATE_KEY = fs.readFileSync("certs/private_key.pem")
 
 export class AuthApi {
-    public router: Router;
+    public router: Router
 
     constructor() {
-        this.router = Router();
-        this.init();
+        this.router = Router()
+        this.init()
     }
 
     public init() {
-        this.router.post("/login", this.login);
-        this.router.post("/signup", this.signup);
+        this.router.post("/login", this.login)
+        this.router.post("/signup", this.signup)
     }
 
     /**
@@ -35,66 +35,65 @@ export class AuthApi {
      * @memberof AuthApi
      */
     public async login(req: Request, res: Response): Promise<Response> {
-        const mail = req.body.mail;
-        const password = req.body.password;
+        const mail = req.body.mail
+        const password = req.body.password
 
         if (!mail || !password) {
-            return res.status(412).send('MISSING_CREDENTIALS');
+            return res.status(412).send("MISSING_CREDENTIALS")
         }
 
         try {
             // Find user in database
-            const user = await User.findOne({ mail: mail, password: password });
+            const user = await User.findOne({ mail, password })
 
             // If password is not correct, send back 401 HTTP error
             if (!user) {
-                return res.status(401).send('INVALID_CREDENTIALS'); // Unauthorized
+                return res.status(401).send("INVALID_CREDENTIALS") // Unauthorized
             }
 
-            const authResult = authApi.createSession(user);
+            const authResult = authApi.createSession(user)
 
             // Sending bearer token
-            return res.status(200).json(authResult);
+            return res.status(200).json(authResult)
         } catch (error) {
-            return res.status(500).send(error);
+            return res.status(500).send(error)
         }
     }
 
     public signup(req: Request, res: Response) {
-        const mail = req.body.mail;
-        const password = req.body.password;
-        const name = req.body.username;
+        const mail = req.body.mail
+        const password = req.body.password
+        const name = req.body.username
 
-        User.findOne({ mail: mail }, (err, user) => {
+        User.findOne({ mail }, (err, user) => {
             if (err) {
-                res.status(500).send(err);
+                res.status(500).send(err)
             }
 
             if (user) {
-                res.status(400).send('DUPLICATE_MAIL'); // 400 Bad Request
+                res.status(400).send("DUPLICATE_MAIL") // 400 Bad Request
             } else {
-                User.create({ mail: mail, password: password, name: name }, (err, newUser) => {
+                User.create({ mail, password, name }, (err, newUser) => {
                     if (err) {
-                        res.status(500).send(err);
+                        res.status(500).send(err)
                     }
 
                     // Once the user is crated, we send a mail to the address to welcome him
                     const mailJob = {
-                        mail: mail,
-                        name: name,
-                        type: 'signup'
+                        mail,
+                        name,
+                        type: "signup",
                     }
-                    mailQueue.add(mailJob);
+                    mailQueue.add(mailJob)
 
-                    const authResult = authApi.createSession(newUser);
+                    const authResult = authApi.createSession(newUser)
 
-                    res.status(200).json(authResult);
-                });
+                    res.status(200).json(authResult)
+                })
             }
-        });
+        })
 
     }
-
 
     /**
      *
@@ -107,21 +106,21 @@ export class AuthApi {
      * @memberof AuthApi
      */
     public createSession(user, tokenExpiration = 1296000): Session {
-        console.log('Create session: ', user)
+        console.log("Create session: ", user)
         // If password is correct, Create & Sign Bearer token and send it back to client
-        const jwtBearerToken = jwt.sign({ user: user._id }, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
-            algorithm: 'RS256',
+        const jwtBearerToken = jwt.sign({ user: user._id }, { key: RSA_PRIVATE_KEY, passphrase: "BerryboxChronos" }, {
+            algorithm: "RS256",
             expiresIn: tokenExpiration,
-            subject: String(user._id)
-        });
+            subject: String(user._id),
+        })
 
         return {
             bearer: jwtBearerToken,
             subject: user,
-            expiresIn: tokenExpiration
-        };
+            expiresIn: tokenExpiration,
+        }
     }
 }
 
-const authApi = new AuthApi();
-export default authApi.router;
+const authApi = new AuthApi()
+export default authApi.router

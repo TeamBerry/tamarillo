@@ -1,27 +1,27 @@
-import { Request, Response, Router } from 'express';
-import * as _ from 'lodash';
-import { BoxJob } from '../../models/box.job';
-const Queue = require('bull');
-const boxQueue = new Queue('box');
+import { Request, Response, Router } from "express"
+import * as _ from "lodash"
+import { BoxJob } from "../../models/box.job"
+const Queue = require("bull")
+const boxQueue = new Queue("box")
 
-const Box = require("./../../models/box.schema");
+const Box = require("./../../models/box.schema")
 
 export class BoxApi {
-    public router: Router;
+    public router: Router
 
     constructor() {
-        this.router = Router();
-        this.init();
+        this.router = Router()
+        this.init()
     }
 
     public init() {
-        this.router.get("/", this.index);
-        this.router.get("/:box", this.show);
-        this.router.post("/", this.store);
-        this.router.put("/:box", this.update);
-        this.router.delete('/:box', this.destroy);
-        this.router.post("/:box/close", this.close);
-        this.router.post('/:box/open', this.open);
+        this.router.get("/", this.index)
+        this.router.get("/:box", this.show)
+        this.router.post("/", this.store)
+        this.router.put("/:box", this.update)
+        this.router.delete("/:box", this.destroy)
+        this.router.post("/:box/close", this.close)
+        this.router.post("/:box/open", this.open)
     }
 
     /**
@@ -34,12 +34,12 @@ export class BoxApi {
     public async index(request: Request, response: Response): Promise<Response> {
         try {
             const boxes = await Box.find({ open: { $ne: false } })
-                .populate('creator', '_id name')
-                .populate('playlist.video');
+                .populate("creator", "_id name")
+                .populate("playlist.video")
 
-            return response.status(200).send(boxes);
+            return response.status(200).send(boxes)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -54,21 +54,21 @@ export class BoxApi {
      * @memberof BoxApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        const boxId = request.params.box;
+        const boxId = request.params.box
 
         try {
             const box = await Box.findById(boxId)
-                .populate('creator', '_id name')
-                .populate('playlist.video')
-                .populate('playlist.submitted_by', '_id name');
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
 
             if (!box) {
-                return response.status(404).send('BOX_NOT_FOUND');
+                return response.status(404).send("BOX_NOT_FOUND")
             }
 
-            return response.status(200).send(box);
+            return response.status(200).send(box)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -82,11 +82,11 @@ export class BoxApi {
      */
     public async store(request: Request, response: Response): Promise<Response> {
         try {
-            const createdBox = await Box.create(request.body);
+            const createdBox = await Box.create(request.body)
 
-            return response.status(201).send(createdBox);
+            return response.status(201).send(createdBox)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -105,15 +105,15 @@ export class BoxApi {
     public async update(request: Request, response: Response): Promise<Response> {
         try {
             if (_.isEmpty(request.body)) {
-                return response.status(412).send('MISSING_PARAMETERS');
+                return response.status(412).send("MISSING_PARAMETERS")
             }
 
-            const targetId = request.params.box;
+            const targetId = request.params.box
 
-            const { _id, description, lang, name } = request.body;
+            const { _id, description, lang, name } = request.body
 
             if (targetId !== _id) {
-                return response.status(412).send('IDENTIFIER_MISMATCH');
+                return response.status(412).send("IDENTIFIER_MISMATCH")
             }
 
             const updatedBox = await Box.findByIdAndUpdate(
@@ -122,21 +122,21 @@ export class BoxApi {
                     $set: {
                         description,
                         lang,
-                        name
-                    }
+                        name,
+                    },
                 },
                 {
-                    new: true
-                }
-            );
+                    new: true,
+                },
+            )
 
             if (!updatedBox) {
-                return response.status(404).send('BOX_NOT_FOUND');
+                return response.status(404).send("BOX_NOT_FOUND")
             }
 
-            return response.status(200).send(updatedBox);
+            return response.status(200).send(updatedBox)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -155,28 +155,28 @@ export class BoxApi {
      */
     public async close(request: Request, response: Response): Promise<Response> {
         try {
-            const targetId = request.params.box;
+            const targetId = request.params.box
 
             const closedBox = await Box.findByIdAndUpdate(
                 targetId,
                 {
-                    $set: { open: false }
+                    $set: { open: false },
                 },
                 {
-                    new: true
-                }
-            );
+                    new: true,
+                },
+            )
 
             if (!closedBox) {
-                return response.status(404).send('BOX_NOT_FOUND');
+                return response.status(404).send("BOX_NOT_FOUND")
             }
 
             // Create job to alert people in the box that the box has been closed
-            boxApi.createJob(targetId, 'close');
+            boxApi.createJob(targetId, "close")
 
-            return response.status(200).send(closedBox);
+            return response.status(200).send(closedBox)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -195,28 +195,28 @@ export class BoxApi {
      */
     public async open(request: Request, response: Response): Promise<Response> {
         try {
-            const targetId = request.params.box;
+            const targetId = request.params.box
 
             const openedBox = await Box.findByIdAndUpdate(
                 targetId,
                 {
-                    $set: { open: true }
+                    $set: { open: true },
                 },
                 {
-                    new: true
-                }
-            );
+                    new: true,
+                },
+            )
 
             if (!openedBox) {
-                return response.status(404).send('BOX_NOT_FOUND');
+                return response.status(404).send("BOX_NOT_FOUND")
             }
 
             // Create a job to alert subscribers that the box has been opened
-            boxApi.createJob(targetId, 'open');
+            boxApi.createJob(targetId, "open")
 
-            return response.status(200).send(openedBox);
+            return response.status(200).send(openedBox)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -236,26 +236,26 @@ export class BoxApi {
      */
     public async destroy(request: Request, response: Response): Promise<Response> {
         try {
-            const targetId = request.params.box;
+            const targetId = request.params.box
 
-            const targetBox = await Box.findById(targetId);
+            const targetBox = await Box.findById(targetId)
 
             if (!targetBox) {
-                return response.status(404).send('BOX_NOT_FOUND');
+                return response.status(404).send("BOX_NOT_FOUND")
             }
 
             if (targetBox.open) {
-                return response.status(412).send('BOX_IS_OPEN');
+                return response.status(412).send("BOX_IS_OPEN")
             }
 
-            const deletedBox = await Box.findOneAndRemove({ _id: targetId });
+            const deletedBox = await Box.findOneAndRemove({ _id: targetId })
 
             // Create job to alert people in the box and have them removed
-            boxApi.createJob(targetId, 'destroy');
+            boxApi.createJob(targetId, "destroy")
 
-            return response.status(200).send(deletedBox);
+            return response.status(200).send(deletedBox)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -268,10 +268,10 @@ export class BoxApi {
      * @memberof BoxApi
      */
     public createJob(boxToken: string, subject: string): void {
-        const alertJob: BoxJob = { boxToken, subject };
-        boxQueue.add(alertJob);
+        const alertJob: BoxJob = { boxToken, subject }
+        boxQueue.add(alertJob)
     }
 }
 
-const boxApi = new BoxApi();
-export default boxApi.router;
+const boxApi = new BoxApi()
+export default boxApi.router

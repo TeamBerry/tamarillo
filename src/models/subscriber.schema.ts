@@ -1,12 +1,12 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, model, Schema } from "mongoose"
 
 const subscriberSchema = new Schema(
     {
         origin: String,
         boxToken: String,
         userToken: String,
-        socket: String
-    }
-);
+        socket: String,
+    },
+)
 
-module.exports = model('Subscriber', subscriberSchema);
+module.exports = model("Subscriber", subscriberSchema)

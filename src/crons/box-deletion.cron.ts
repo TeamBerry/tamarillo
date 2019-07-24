@@ -1,9 +1,9 @@
-const Queue = require('bull');
-const boxQueue = new Queue('box');
+const Queue = require("bull")
+const boxQueue = new Queue("box")
 
-import { BoxJob } from "../models/box.job";
-const BoxSchema = require('./../models/box.schema');
-const Subscriber = require('./../models/subscriber.schema');
+import { BoxJob } from "../models/box.job"
+const BoxSchema = require("./../models/box.schema")
+const Subscriber = require("./../models/subscriber.schema")
 
 /**
  * CRON script responsible for the deletion of box that have been closed more than 7 days ago.
@@ -13,23 +13,7 @@ const Subscriber = require('./../models/subscriber.schema');
  */
 export class BoxDeletionCron {
     public async process() {
-        await this.run();
-    }
-
-    private async run() {
-        // Get boxes to delete
-        const boxesToDelete = await this.getBoxesToDelete();
-
-        console.log(`Found ${boxesToDelete.length} boxes to delete.`);
-
-        // For each box, delete subscribers, then the box itself
-        for (let box of boxesToDelete) {
-            // Find and delete subscribers of the box
-            await this.deleteSubscribers(box._id);
-
-            // Delete the box
-            await this.deleteBox(box._id);
-        }
+        await this.run()
     }
 
     /**
@@ -39,9 +23,9 @@ export class BoxDeletionCron {
      * @memberof BoxDeletionCron
      */
     public async getBoxesToDelete() {
-        const lastWeek = new Date().setDate(new Date().getDate() - 7);
+        const lastWeek = new Date().setDate(new Date().getDate() - 7)
 
-        return await BoxSchema.find({ open: false, updatedAt: { $lte: lastWeek } });
+        return await BoxSchema.find({ open: false, updatedAt: { $lte: lastWeek } })
     }
 
     /**
@@ -51,8 +35,8 @@ export class BoxDeletionCron {
      * @memberof BoxDeletionCron
      */
     public async deleteSubscribers(boxToken: string) {
-        const alertJob: BoxJob = { boxToken, subject: 'destroy' };
-        boxQueue.add(alertJob);
+        const alertJob: BoxJob = { boxToken, subject: "destroy" }
+        boxQueue.add(alertJob)
     }
 
     /**
@@ -62,12 +46,28 @@ export class BoxDeletionCron {
      * @memberof BoxDeletionCron
      */
     public async deleteBox(boxToken: string) {
-        console.log(`Deleting box ${boxToken}`);
-        await BoxSchema.findOneAndRemove({ _id: boxToken });
+        console.log(`Deleting box ${boxToken}`)
+        await BoxSchema.findOneAndRemove({ _id: boxToken })
+    }
+
+    private async run() {
+        // Get boxes to delete
+        const boxesToDelete = await this.getBoxesToDelete()
+
+        console.log(`Found ${boxesToDelete.length} boxes to delete.`)
+
+        // For each box, delete subscribers, then the box itself
+        for (const box of boxesToDelete) {
+            // Find and delete subscribers of the box
+            await this.deleteSubscribers(box._id)
+
+            // Delete the box
+            await this.deleteBox(box._id)
+        }
     }
 
 }
 
-const boxDeletionCron = new BoxDeletionCron();
-boxDeletionCron.process();
-export default boxDeletionCron;
+const boxDeletionCron = new BoxDeletionCron()
+boxDeletionCron.process()
+export default boxDeletionCron

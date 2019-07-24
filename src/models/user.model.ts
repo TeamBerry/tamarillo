@@ -1,28 +1,17 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, model, Schema } from "mongoose"
 
-const Video = require('./video.model');
+const Video = require("./video.model")
 
-let userSchema = new Schema(
+const userSchema = new Schema(
     {
         name: String,
-        token: String,
         mail: String,
         password: String,
-        picture: String,
-        bio: String,
-        followers: [],
-        following: [],
-        moderators: [],
-        friends: [],
-        settings: {
-            color: String,
-        },
-        badges: [],
-        favorites: [{ type: Schema.Types.ObjectId, ref: 'Video' }],
+        favorites: [{ type: Schema.Types.ObjectId, ref: "Video" }],
     },
     {
-        timestamps: true // Will automatically insert createdAt & updatedAt fields
-    }
-);
+        timestamps: true, // Will automatically insert createdAt & updatedAt fields
+    },
+)
 
-module.exports = model('User', userSchema);
+module.exports = model("User", userSchema)

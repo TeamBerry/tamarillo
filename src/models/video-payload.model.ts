@@ -5,7 +5,7 @@ export class VideoPayload {
      * @type {string}
      * @memberof VideoPayload
      */
-    link: string;
+    public link: string
 
     /**
      * The document ID of the user who submitted the video
@@ -13,7 +13,7 @@ export class VideoPayload {
      * @type {string}
      * @memberof VideoPayload
      */
-    userToken: string;
+    public userToken: string
 
     /**
      * The document ID of the box to which the video is added
@@ -21,5 +21,5 @@ export class VideoPayload {
      * @type {string}
      * @memberof VideoPayload
      */
-    boxToken: string;
+    public boxToken: string
 }

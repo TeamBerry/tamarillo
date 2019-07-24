@@ -1,19 +1,19 @@
-import { Document, Schema, model } from 'mongoose';
+import { Document, model, Schema } from "mongoose"
 
 export class UserPlaylist {
-    name: string
-    private: boolean
-    user: {
+    public name: string
+    public private: boolean
+    public user: {
         _id: string
-        name: string
+        name: string,
     }
-    videos: Array<{
+    public videos: Array<{
         _id: string
         name: string
-        link: string
+        link: string,
     }>
-    createdAt: Date
-    updatedAt: Date
+    public createdAt: Date
+    public updatedAt: Date
 
     constructor(data: UserPlaylist) {
         this.name = data.name
@@ -24,20 +24,20 @@ export class UserPlaylist {
     }
 }
 
-var userPlaylistSchema = new Schema(
+const userPlaylistSchema = new Schema(
     {
         name: { type: String, required: true },
         private: { type: Boolean, default: false },
-        user: { type: Schema.Types.ObjectId, ref: 'User' },
+        user: { type: Schema.Types.ObjectId, ref: "User" },
         videos: [{
-            type: Schema.Types.ObjectId, ref: 'Video'
-        }]
+            type: Schema.Types.ObjectId, ref: "Video",
+        }],
     },
     {
-        timestamps: true
-    }
+        timestamps: true,
+    },
 )
 
 export interface UserPlaylistDocument extends UserPlaylist, Document { }
 
-export const UsersPlaylist = model<UserPlaylistDocument>('UserPlaylist', userPlaylistSchema);
+export const UsersPlaylist = model<UserPlaylistDocument>("UserPlaylist", userPlaylistSchema)

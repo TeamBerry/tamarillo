@@ -1,14 +1,14 @@
-import { NextFunction, Request, Response, Router } from 'express'
+import { NextFunction, Request, Response, Router } from "express"
 
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.schema")
 
-const fs = require('fs')
-import * as jwt from 'jsonwebtoken'
-import { UserPlaylist, UsersPlaylist } from '../../models/user-playlist.model'
-const auth = require('./../auth.middleware')
+const fs = require("fs")
+import * as jwt from "jsonwebtoken"
+import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
+const auth = require("./../auth.middleware")
 
-const RSA_PUBLIC_KEY = fs.readFileSync('certs/public_key.pem')
+const RSA_PUBLIC_KEY = fs.readFileSync("certs/public_key.pem")
 
 export class UserApi {
     public router: Router
@@ -20,20 +20,20 @@ export class UserApi {
 
     public init() {
         this.router.get("/:user", this.show)
-        this.router.get('/:user/boxes', this.boxes)
+        this.router.get("/:user/boxes", this.boxes)
         // this.router.get('/:user/playlists', auth.isAuthorized, this.playlists)
-        this.router.get('/:user/playlists', this.playlists)
+        this.router.get("/:user/playlists", this.playlists)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
-        this.router.patch('/:user/favorites', this.patchFavorites)
+        this.router.patch("/:user/favorites", this.patchFavorites)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
-        this.router.param('user', async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
+        this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
             const matchingUser = await User.findById(request.params.user)
 
             if (!matchingUser) {
-                return response.status(404).send('USER_NOT_FOUND')
+                return response.status(404).send("USER_NOT_FOUND")
             }
 
             next()
@@ -54,7 +54,7 @@ export class UserApi {
 
         try {
             const user = await User.findById(userId)
-                .populate('favorites')
+                .populate("favorites")
 
             return response.status(200).send(user)
         } catch (error) {
@@ -86,10 +86,10 @@ export class UserApi {
     }
 
     public patchFavorites(req: Request, res: Response) {
-        console.log('PATCHING USER: ' + req.params.user + 'WITH DATA: ', req.body)
+        console.log("PATCHING USER: " + req.params.user + "WITH DATA: ", req.body)
 
         const favoritesList = []
-        req.body.forEach(favorite => {
+        req.body.forEach((favorite) => {
             favoritesList.push(favorite._id)
         })
 
@@ -97,7 +97,7 @@ export class UserApi {
             req.params.user,
             { $set: { favorites: favoritesList } },
             { new: true })
-            .populate('favorites')
+            .populate("favorites")
             .exec((err, document) => {
                 if (err) {
                     res.status(500).send(err)
@@ -130,7 +130,7 @@ export class UserApi {
 
         try {
             const boxes = await Box.find({ creator: userId })
-                .populate('creator', '_id name')
+                .populate("creator", "_id name")
 
             return response.status(200).send(boxes)
         } catch (error) {
@@ -149,9 +149,9 @@ export class UserApi {
      * - 404 'USER_NOT_FOUND' if no user matches the given ObjectId in parameter
      */
     public async playlists(request: Request, response: Response): Promise<Response> {
-        let filters = {
+        const filters = {
             user: request.param.user,
-            private: false
+            private: false,
         }
 
         try {
@@ -161,13 +161,13 @@ export class UserApi {
             if (decodedToken) {
                 filters.private = true
             }
-            console.log('filtering with: ', filters)
+            console.log("filtering with: ", filters)
 
-            const userPlaylists: Array<UserPlaylist> = await UsersPlaylist
+            const userPlaylists: UserPlaylist[] = await UsersPlaylist
                 .find(filters)
-                .populate('videos')
+                .populate("videos")
 
-            console.log(userPlaylists);
+            console.log(userPlaylists)
 
             return response.status(200).send(userPlaylists)
         } catch (error) {
@@ -175,7 +175,6 @@ export class UserApi {
         }
     }
 }
-
 
 const userApi = new UserApi()
 export default userApi.router

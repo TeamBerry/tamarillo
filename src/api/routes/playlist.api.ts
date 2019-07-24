@@ -1,5 +1,5 @@
-import { Router, Request, Response, NextFunction } from 'express'
-import { UserPlaylist, UsersPlaylist } from '../../models/user-playlist.model';
+import { NextFunction, Request, Response, Router } from "express"
+import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
 
 const User = require("./../../models/user.model")
 
@@ -12,17 +12,17 @@ export class PlaylistApi {
     }
 
     public init() {
-        this.router.get('/:playlist', this.show)
-        this.router.post('/', this.store)
-        this.router.put('/:playlist', this.update)
-        this.router.delete('/:playlist', this.destroy)
+        this.router.get("/:playlist", this.show)
+        this.router.post("/", this.store)
+        this.router.put("/:playlist", this.update)
+        this.router.delete("/:playlist", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
-        this.router.param('playlist', async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
+        this.router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
             const matchingPlaylist: UserPlaylist = await UsersPlaylist.findById(request.params.user)
 
             if (!matchingPlaylist) {
-                return response.status(404).send('PLAYLIST_NOT_FOUND')
+                return response.status(404).send("PLAYLIST_NOT_FOUND")
             }
 
             next()
