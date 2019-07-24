@@ -44,7 +44,7 @@ export class AuthApi {
 
         try {
             // Find user in database
-            const user = await User.findOne({ mail, password })
+            const user = await User.findOne({ mail, password }, 'user mail')
 
             // If password is not correct, send back 401 HTTP error
             if (!user) {
