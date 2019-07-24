@@ -107,6 +107,7 @@ export class AuthApi {
      * @memberof AuthApi
      */
     public createSession(user, tokenExpiration = 1296000): Session {
+        console.log('Create session: ', user)
         // If password is correct, Create & Sign Bearer token and send it back to client
         const jwtBearerToken = jwt.sign({ user: user._id }, { key: RSA_PRIVATE_KEY, passphrase: 'BerryboxChronos' }, {
             algorithm: 'RS256',

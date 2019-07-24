@@ -10,7 +10,9 @@
         "emails": "cp -r ./src/services/MailService/emails ./dist/services/MailService",
         "start": "tsc && pm2 start processes.json",
         "restart": "tsc && pm2 restart processes.json",
-        "build": "npm run tsc && npm run emails"
+        "build": "npm run tsc && npm run emails",
+        "lint:check": "./node_modules/.bin/tslint -p tsconfig.json",
+        "lint:fix": "./node_modules/.bin/tslint -p tsconfig.json --fix"
     },
     "repository": {
         "type": "git",
