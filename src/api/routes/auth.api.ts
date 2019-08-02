@@ -9,7 +9,6 @@ import * as jwt from "jsonwebtoken"
 import { Session } from "../../models/session.model"
 
 // const RSA_PRIVATE_KEY = fs.readFileSync("certs/private_key.pem")
-const RSA_PRIVATE_KEY = "tamarillo"
 
 export class AuthApi {
     public router: Router
@@ -113,7 +112,7 @@ export class AuthApi {
             {
                 user: user._id
             },
-            RSA_PRIVATE_KEY,
+            process.env.JWT_PASS,
             {
                 algorithm: "HS256",
                 expiresIn: tokenExpiration

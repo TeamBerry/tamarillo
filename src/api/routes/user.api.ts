@@ -9,7 +9,6 @@ import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
 
 // const RSA_PUBLIC_KEY = fs.readFileSync("certs/public_key.pem")
-const RSA_PRIVATE_KEY = "tamarillo"
 
 export class UserApi {
     public router: Router
@@ -162,7 +161,7 @@ export class UserApi {
 
             console.log('Verifying token: ', tokenArray[1])
 
-            const decodedToken = jwt.verify(tokenArray[1], RSA_PRIVATE_KEY, {
+            const decodedToken = jwt.verify(tokenArray[1], process.env.JWT_PASS, {
                 algorithm: "HS256"
             })
 
