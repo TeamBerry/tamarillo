@@ -104,7 +104,7 @@ describe("User API", () => {
         })
     })
 
-    describe.only("Gets the playlists of an user", () => {
+    describe("Gets the playlists of an user", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e/playlists')

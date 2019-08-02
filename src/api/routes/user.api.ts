@@ -150,35 +150,31 @@ export class UserApi {
      */
     public async playlists(request: Request, response: Response): Promise<Response> {
         const filters = {
-            user: request.param.user,
+            user: request.params.user,
             private: false,
         }
 
         try {
-            console.log('headers: ', request.headers.authorization)
-
+            // Split the token to isolate parts (since it's a Bearer token, some parts like "Bearer " have to be left out)
+            // TODO: Centralize token verification
+            // TODO: Add token integrity check (is "Bearer " present?)
             const tokenArray = request.headers.authorization.split(" ")
-
-            console.log('Verifying token: ', tokenArray[1])
 
             const decodedToken = jwt.verify(tokenArray[1], process.env.JWT_PASS, {
                 algorithm: "HS256"
             })
 
-            console.log('decoded token: ', decodedToken)
-            if (decodedToken) {
-                filters.private = true
+            // If the token is decoded correctly and the user inside matches the request parameters, the privacy filter
+            // is removed so that the API serves private and public playlists.
+            if (decodedToken && decodedToken.user === request.params.user) {
+                delete filters.private
             }
-            console.log("filtering with: ", filters)
 
             const userPlaylists: UserPlaylist[] = await UsersPlaylist
                 .find(filters)
                 .populate("videos")
 
-            console.log(userPlaylists)
-
             return response.status(200).send(userPlaylists)
-
         } catch (error) {
             console.log('ERROR: ', error)
             return response.status(500).send(error)
