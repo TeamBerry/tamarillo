@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
 
-const User = require("./../../models/user.model")
-
 export class PlaylistApi {
     public router: Router
 

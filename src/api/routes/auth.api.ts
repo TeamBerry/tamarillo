@@ -8,7 +8,8 @@ const fs = require("fs")
 import * as jwt from "jsonwebtoken"
 import { Session } from "../../models/session.model"
 
-const RSA_PRIVATE_KEY = fs.readFileSync("certs/private_key.pem")
+// const RSA_PRIVATE_KEY = fs.readFileSync("certs/private_key.pem")
+const RSA_PRIVATE_KEY = "tamarillo"
 
 export class AuthApi {
     public router: Router
@@ -101,18 +102,23 @@ export class AuthApi {
      *
      * @private
      * @param {*} user The user for whom the session is created
-     * @param {number} [tokenExpiration=1296000] The duration of the session token (defaults to 1296000 seconds or 15 days)
+     * @param {string} [tokenExpiration='7d'] The duration of the session token (defaults to 1296000 seconds or 15 days)
      * @returns {Session} The JSON Web Token
      * @memberof AuthApi
      */
-    public createSession(user, tokenExpiration = 1296000): Session {
+    public createSession(user, tokenExpiration = '7d'): Session {
         console.log("Create session: ", user)
         // If password is correct, Create & Sign Bearer token and send it back to client
-        const jwtBearerToken = jwt.sign({ user: user._id }, { key: RSA_PRIVATE_KEY, passphrase: "BerryboxChronos" }, {
-            algorithm: "RS256",
-            expiresIn: tokenExpiration,
-            subject: String(user._id),
-        })
+        const jwtBearerToken = jwt.sign(
+            {
+                user: user._id
+            },
+            RSA_PRIVATE_KEY,
+            {
+                algorithm: "HS256",
+                expiresIn: tokenExpiration
+            }
+        )
 
         return {
             bearer: jwtBearerToken,

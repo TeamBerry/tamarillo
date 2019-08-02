@@ -8,7 +8,8 @@ import * as jwt from "jsonwebtoken"
 import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
 
-const RSA_PUBLIC_KEY = fs.readFileSync("certs/public_key.pem")
+// const RSA_PUBLIC_KEY = fs.readFileSync("certs/public_key.pem")
+const RSA_PRIVATE_KEY = "tamarillo"
 
 export class UserApi {
     public router: Router
@@ -156,7 +157,15 @@ export class UserApi {
 
         try {
             console.log('headers: ', request.headers.authorization)
-            const decodedToken = jwt.decode(request.headers.authorization, RSA_PUBLIC_KEY)
+
+            const tokenArray = request.headers.authorization.split(" ")
+
+            console.log('Verifying token: ', tokenArray[1])
+
+            const decodedToken = jwt.verify(tokenArray[1], RSA_PRIVATE_KEY, {
+                algorithm: "HS256"
+            })
+
             console.log('decoded token: ', decodedToken)
             if (decodedToken) {
                 filters.private = true
@@ -170,7 +179,9 @@ export class UserApi {
             console.log(userPlaylists)
 
             return response.status(200).send(userPlaylists)
+
         } catch (error) {
+            console.log('ERROR: ', error)
             return response.status(500).send(error)
         }
     }

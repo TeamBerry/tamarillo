@@ -2,7 +2,6 @@ import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
-const axios = require("axios")
 const expect = chai.expect
 
 import PlaylistApi from './../../../src/api/routes/playlist.api'
