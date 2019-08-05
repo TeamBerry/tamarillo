@@ -48,7 +48,7 @@ describe("User API", () => {
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
             name: "My First Playlist",
-            private: true,
+            isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
         })
@@ -56,7 +56,7 @@ describe("User API", () => {
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46f",
             name: "WiP Playlist 2",
-            private: false,
+            isPrivate: false,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
         })

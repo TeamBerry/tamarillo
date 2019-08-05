@@ -26,7 +26,7 @@ describe.only("Playlists API", () => {
         })
 
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a'] },
         })
 
         await User.create({
@@ -49,7 +49,7 @@ describe.only("Playlists API", () => {
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
             name: "My First Playlist",
-            private: true,
+            isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
         })
@@ -57,7 +57,7 @@ describe.only("Playlists API", () => {
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46f",
             name: "WiP Playlist 2",
-            private: false,
+            isPrivate: false,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
         })
@@ -65,7 +65,7 @@ describe.only("Playlists API", () => {
 
     after(async () => {
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a'] },
         })
 
         await User.deleteMany({
@@ -123,7 +123,7 @@ describe.only("Playlists API", () => {
                 .send({
                     _id: "8da1e01fda34eb8c1b9db46a",
                     name: "My New Playlist",
-                    private: true,
+                    isPrivate: true,
                     user: "9ca0df5f86abeb66da97ba5d",
                     videos: [],
                 })
@@ -146,7 +146,7 @@ describe.only("Playlists API", () => {
                 .send({
                     _id: "8da1e01fda34eb8c1b9db48f",
                     name: "WiP Playlist 4",
-                    private: false,
+                    isPrivate: false,
                     user: "9ca0df5f86abeb66da97ba5d",
                     videos: [],
                 })
@@ -160,7 +160,7 @@ describe.only("Playlists API", () => {
                 .send({
                     _id: "8da1e01fda34eb8c1b9db47f",
                     name: "This playlist does not exist",
-                    private: false,
+                    isPrivate: false,
                     user: "9ca0df5f86abeb66da97ba5d",
                     videos: [],
                 })
@@ -170,15 +170,15 @@ describe.only("Playlists API", () => {
         it("Sends a 401 if trying to update a playlist without being the owner", () => {
             return supertest(expressApp)
                 .put('/8da1e01fda34eb8c1b9db46f')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
                 .send({
                     _id: "8da1e01fda34eb8c1b9db46f",
                     name: "WiP Playlist 2 Modified",
-                    private: false,
+                    isPrivate: false,
                     user: "9ca0df5f86abeb66da97ba5d",
                     videos: [],
                 })
-                .expect(200)
+                .expect(401, 'UNAUTHORIZED')
         })
 
         it("Sends a 200 with the updated playlist", () => {
@@ -188,7 +188,7 @@ describe.only("Playlists API", () => {
                 .send({
                     _id: "8da1e01fda34eb8c1b9db46f",
                     name: "WiP Playlist 2 Modified",
-                    private: false,
+                    isPrivate: false,
                     user: "9ca0df5f86abeb66da97ba5d",
                     videos: [],
                 })
@@ -197,17 +197,17 @@ describe.only("Playlists API", () => {
     })
 
     describe("Deletes a playlist", () => {
+        it("Sends a 401 if trying to get a private playlist without authorization", () => {
+            return supertest(expressApp)
+                .delete('/8da1e01fda34eb8c1b9db46f')
+                .expect(401, 'UNAUTHORIZED')
+        })
+
         it("Sends a 404 back if no playlist matches the id given", () => {
             return supertest(expressApp)
                 .delete('/8da1e01fda34eb8c1b9db47f')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(404, 'PLAYLIST_NOT_FOUND')
-        })
-
-        it("Sends a 401 if trying to get a private playlist without authorization", () => {
-            return supertest(expressApp)
-                .delete('/8da1e01fda34eb8c1b9db46f')
-                .expect(401)
         })
 
         it("Sends a 200 with the deleted playlist", () => {

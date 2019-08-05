@@ -151,7 +151,7 @@ export class UserApi {
     public async playlists(request: Request, response: Response): Promise<Response> {
         const filters = {
             user: request.params.user,
-            private: false,
+            isPrivate: false,
         }
 
         const decodedToken = response.locals.auth
@@ -160,7 +160,7 @@ export class UserApi {
             // If the token is decoded correctly and the user inside matches the request parameters, the privacy filter
             // is removed so that the API serves private and public playlists.
             if (decodedToken && decodedToken.user === request.params.user) {
-                delete filters.private
+                delete filters.isPrivate
             }
 
             const userPlaylists: UserPlaylist[] = await UsersPlaylist

@@ -2,7 +2,7 @@ import { Document, model, Schema } from "mongoose"
 
 export class UserPlaylist {
     public name: string
-    public private: boolean
+    public isPrivate: boolean
     public user: {
         _id: string
         name: string,
@@ -27,7 +27,7 @@ export class UserPlaylist {
 const userPlaylistSchema = new Schema(
     {
         name: { type: String, required: true },
-        private: { type: Boolean, default: false },
+        isPrivate: { type: Boolean, default: false },
         user: { type: Schema.Types.ObjectId, ref: "User" },
         videos: [{
             type: Schema.Types.ObjectId, ref: "Video",
