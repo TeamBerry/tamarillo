@@ -74,6 +74,12 @@ describe("User API", () => {
     })
 
     describe("Gets an user", () => {
+        it("Sends a 401 back if the API is accessed from an unauthentified source", () => {
+            return supertest(expressApp)
+                .get('/9ca0df5f86abeb66da97ba5d')
+                .expect(401)
+        })
+
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e')
@@ -90,6 +96,12 @@ describe("User API", () => {
     })
 
     describe("Gets the boxes of an user", () => {
+        it("Sends a 401 back if the API is accessed from an unauthentified source", () => {
+            return supertest(expressApp)
+                .get('/9ca0df5f86abeb66da97ba5d/boxes')
+                .expect(401)
+        })
+
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e/boxes')
@@ -106,7 +118,7 @@ describe("User API", () => {
     })
 
     describe("Gets the playlists of an user", () => {
-        it("Sends a 401 back if the API is accessed from an non-authentified source", () => {
+        it("Sends a 401 back if the API is accessed from an unauthentified source", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e/playlists')
                 .expect(401, 'UNAUTHORIZED')
