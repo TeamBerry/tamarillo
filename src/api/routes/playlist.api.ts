@@ -73,7 +73,6 @@ export class PlaylistApi {
 
             return response.status(201).send(createdPlaylist)
         } catch (error) {
-            console.log(error)
             return response.status(500).send(error)
         }
     }
@@ -99,16 +98,17 @@ export class PlaylistApi {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylist = response.locals.playlist
 
-        if (decodedToken.user !== playlist.user._id) {
+        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
-        if (request.body._id !== request.param.playlist) {
+        const { name, isPrivate, _id } = request.body
+
+        if (_id !== request.params.playlist) {
             return response.status(412).send('IDENTIFIER_MISMATCH')
         }
 
         try {
-            const { name, isPrivate } = request.body
 
             const updatedPlaylist: UserPlaylist = await UsersPlaylist.findByIdAndUpdate(
                 request.param.playlist,
@@ -125,16 +125,26 @@ export class PlaylistApi {
 
             return response.status(200).send(updatedPlaylist)
         } catch (error) {
-            console.log(error)
             return response.status(500).send(error)
         }
     }
 
+    /**
+     * Deletes a playlist from the collection
+     *
+     * @param {Request} request Contains the ObjectId of the box as a request parameter
+     * @param {Response} response
+     * @returns {Promise<Response>} The deleted playlist is sent back as confirmation, or one of the following codes:
+     * - 401 'UNAUTHORIZED': No JWT was given to the API
+     * - 404 'PLAYLIST_NOT_FOUND': No playlist matches the given ObjectId
+     * - 500 Server Error: Something wrong occurred
+     * @memberof PlaylistApi
+     */
     public async destroy(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylist = response.locals.playlist
 
-        if (decodedToken.user !== playlist.user._id) {
+        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
