@@ -7,11 +7,17 @@ module.exports.isAuthorized = (request: Request, response: Response, next: NextF
     const auth = request.headers.authorization
     if (auth) {
         try {
+            // Split the token to isolate parts (since it's a Bearer token, some parts like "Bearer " have to be left out)
             const tokenArray = request.headers.authorization.split(" ")
 
-            jwt.verify(tokenArray[1], process.env.JWT_PASS, { algorithm: "HS256" })
+            // TODO: Add token integrity check (is "Bearer " present?)
+
+            const decodedToken = jwt.verify(tokenArray[1], process.env.JWT_PASS, { algorithm: "HS256" })
 
             console.log("Access granted.")
+
+            // Pass token to other methods in the chain
+            response.locals.auth = decodedToken
 
             return next()
         } catch (error) {
@@ -20,6 +26,6 @@ module.exports.isAuthorized = (request: Request, response: Response, next: NextF
             return response.status(401).send("UNAUTHORIZED")
         }
     }
-    console.log("Access refused.")
+    console.log("Access refused. No auth is given")
     return response.status(401).send("UNAUTHORIZED")
 }

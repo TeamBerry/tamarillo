@@ -15,14 +15,14 @@ export class UserApi {
 
     constructor() {
         this.router = Router()
+        this.router.use(auth.isAuthorized)
         this.init()
     }
 
     public init() {
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
-        // this.router.get('/:user/playlists', auth.isAuthorized, this.playlists)
-        this.router.get("/:user/playlists", this.playlists)
+        this.router.get('/:user/playlists', this.playlists)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
         this.router.patch("/:user/favorites", this.patchFavorites)
@@ -154,16 +154,9 @@ export class UserApi {
             private: false,
         }
 
+        const decodedToken = response.locals.auth
+
         try {
-            // Split the token to isolate parts (since it's a Bearer token, some parts like "Bearer " have to be left out)
-            // TODO: Centralize token verification
-            // TODO: Add token integrity check (is "Bearer " present?)
-            const tokenArray = request.headers.authorization.split(" ")
-
-            const decodedToken = jwt.verify(tokenArray[1], process.env.JWT_PASS, {
-                algorithm: "HS256"
-            })
-
             // If the token is decoded correctly and the user inside matches the request parameters, the privacy filter
             // is removed so that the API serves private and public playlists.
             if (decodedToken && decodedToken.user === request.params.user) {

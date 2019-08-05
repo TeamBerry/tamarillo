@@ -46,9 +46,6 @@ describe("User API", () => {
         ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com'})
         foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com'})
 
-        console.log(ashJWT)
-        console.log(foreignJWT)
-
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
             name: "My First Playlist",
@@ -105,9 +102,16 @@ describe("User API", () => {
     })
 
     describe("Gets the playlists of an user", () => {
+        it("Sends a 401 back if the API is accessed from an non-authentified source", () => {
+            return supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba4e/playlists')
+            .expect(401, 'UNAUTHORIZED')
+        })
+
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e/playlists')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
                 .expect(404, 'USER_NOT_FOUND')
         })
 

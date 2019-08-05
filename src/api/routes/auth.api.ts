@@ -106,7 +106,6 @@ export class AuthApi {
      * @memberof AuthApi
      */
     public createSession(user, tokenExpiration = '7d'): Session {
-        console.log("Create session: ", user)
         // If password is correct, Create & Sign Bearer token and send it back to client
         const jwtBearerToken = jwt.sign(
             {
