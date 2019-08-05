@@ -2,14 +2,13 @@ import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
-const axios = require("axios")
 const expect = chai.expect
 
 import { AuthApi } from './../../../src/api/routes/auth.api'
 import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
-import { UserPlaylist, UserPlaylistDocument, UsersPlaylist } from './../../../src/models/user-playlist.model'
+import { UserPlaylist, UsersPlaylist } from './../../../src/models/user-playlist.model'
 
 describe("User API", () => {
     const expressApp = express()
