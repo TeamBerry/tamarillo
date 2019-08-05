@@ -43,8 +43,8 @@ describe("User API", () => {
             password: 'Piano',
         })
 
-        ashJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com'})
-        foreignJWT = AuthApi.prototype.createSession({_id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com'})
+        ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
+        foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
 
         await UsersPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
@@ -77,12 +77,14 @@ describe("User API", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(404, 'USER_NOT_FOUND')
         })
 
         it("Sends a 200 with the user if the id matches", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba5d')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
         })
     })
@@ -91,12 +93,14 @@ describe("User API", () => {
         it("Sends a 404 back if no user matches the given id", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba4e/boxes')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(404, 'USER_NOT_FOUND')
         })
 
         it("Sends a 200 with the boxes if the id matches", () => {
             return supertest(expressApp)
                 .get('/9ca0df5f86abeb66da97ba5d/boxes')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
         })
     })
@@ -104,8 +108,8 @@ describe("User API", () => {
     describe("Gets the playlists of an user", () => {
         it("Sends a 401 back if the API is accessed from an non-authentified source", () => {
             return supertest(expressApp)
-            .get('/9ca0df5f86abeb66da97ba4e/playlists')
-            .expect(401, 'UNAUTHORIZED')
+                .get('/9ca0df5f86abeb66da97ba4e/playlists')
+                .expect(401, 'UNAUTHORIZED')
         })
 
         it("Sends a 404 back if no user matches the given id", () => {
