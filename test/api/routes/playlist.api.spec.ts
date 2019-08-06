@@ -10,6 +10,7 @@ import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UsersPlaylist } from './../../../src/models/user-playlist.model'
+import { Video, VideoModel } from './../../../src/models/video.model'
 
 describe.only("Playlists API", () => {
     const expressApp = express()
@@ -22,11 +23,15 @@ describe.only("Playlists API", () => {
         expressApp.use('/', PlaylistApi)
 
         await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] },
+            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
         })
 
         await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a'] },
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a', '8da1e01fda34eb8c1b9db470'] },
+        })
+
+        await VideoModel.deleteMany({
+            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
 
         await User.create({
@@ -43,6 +48,25 @@ describe.only("Playlists API", () => {
             password: 'Piano',
         })
 
+        await User.create({
+            _id: '9ca0df5f86abeb66da97ba5f',
+            name: 'Peter',
+            mail: 'peter@hoenn-league.com',
+            password: 'Metagr0ss',
+        })
+
+        await VideoModel.create({
+            _id: '9bc72f3d7edc6312d0ef2e47',
+            name: 'First Video',
+            link: '4c6e3f_aZ0d'
+        })
+
+        await VideoModel.create({
+            _id: '9bc72f3d7edc6312d0ef2e48',
+            name: 'Second Video',
+            link: 'aC9d3edD3e2'
+        })
+
         ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
         foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
 
@@ -51,7 +75,7 @@ describe.only("Playlists API", () => {
             name: "My First Playlist",
             isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
-            videos: [],
+            videos: ['9bc72f3d7edc6312d0ef2e47'],
         })
 
         await UsersPlaylist.create({
@@ -61,15 +85,52 @@ describe.only("Playlists API", () => {
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
         })
+
+        await UsersPlaylist.create({
+            _id: "8da1e01fda34eb8c1b9db470",
+            name: "Playlist by someone else",
+            isPrivate: false,
+            user: "9ca0df5f86abeb66da97ba5f",
+            videos: []
+        })
     })
 
     after(async () => {
-        await UsersPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a'] },
+        await User.deleteMany({
+            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
         })
 
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] },
+        await UsersPlaylist.deleteMany({
+            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a', '8da1e01fda34eb8c1b9db470'] },
+        })
+
+        await VideoModel.deleteMany({
+            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
+        })
+    })
+
+    describe("Lists playlists", () => {
+        it("Returns the list of all public playlists if there's no JWT", () => {
+            return supertest(expressApp)
+                .get('/')
+                .expect(200)
+                .then((response) => {
+                    const playlists: Array<UserPlaylist> = response.body
+
+                    expect(playlists).to.have.lengthOf(2)
+                })
+        })
+
+        it("Returns the list of all public playlists if there's a JWT with the user playlists excluded", () => {
+            return supertest(expressApp)
+                .get('/')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const playlists: Array<UserPlaylist> = response.body
+
+                    expect(playlists).to.have.lengthOf(1)
+                })
         })
     })
 
@@ -77,6 +138,13 @@ describe.only("Playlists API", () => {
         it("Sends a 401 if trying to get a private playlist without authorization", () => {
             return supertest(expressApp)
                 .get('/8da1e01fda34eb8c1b9db46e')
+                .expect(401, 'UNAUTHORIZED')
+        })
+
+        it("Sends a 401 if trying to get a private playlist with unauthorized access", () => {
+            return supertest(expressApp)
+                .get('/8da1e01fda34eb8c1b9db46e')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
                 .expect(401, 'UNAUTHORIZED')
         })
 
@@ -92,6 +160,15 @@ describe.only("Playlists API", () => {
                 .get('/8da1e01fda34eb8c1b9db46e')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
+                .then((response) => {
+                    const playlist = response.body
+
+                    expect(playlist.videos).to.eql([{
+                        _id: '9bc72f3d7edc6312d0ef2e47',
+                        name: 'First Video',
+                        link: '4c6e3f_aZ0d'
+                    }])
+                })
         })
 
         it("Sends a 200 with the public playlist", () => {
@@ -102,7 +179,7 @@ describe.only("Playlists API", () => {
         })
     })
 
-    describe("Posts a playlist", () => {
+    describe("Stores a playlist", () => {
         it("Sends a 401 if an attempt is made without authorization", () => {
             return supertest(expressApp)
                 .post('/')
@@ -181,6 +258,27 @@ describe.only("Playlists API", () => {
                 .expect(401, 'UNAUTHORIZED')
         })
 
+        it("Sends a 200 with the updated playlist with partial object", () => {
+            return supertest(expressApp)
+                .put('/8da1e01fda34eb8c1b9db46f')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({
+                    _id: "8da1e01fda34eb8c1b9db46f",
+                    videos: ['9bc72f3d7edc6312d0ef2e48'],
+                })
+                .expect(200)
+                .then((response) => {
+                    const updatedPlaylist: UserPlaylist = response.body
+
+                    expect(updatedPlaylist.name).to.equal("WiP Playlist 2")
+                    expect(updatedPlaylist.videos).to.deep.equal([{
+                        _id: '9bc72f3d7edc6312d0ef2e48',
+                        name: 'Second Video',
+                        link: 'aC9d3edD3e2'
+                    }])
+                })
+        })
+
         it("Sends a 200 with the updated playlist", () => {
             return supertest(expressApp)
                 .put('/8da1e01fda34eb8c1b9db46f')
@@ -190,14 +288,24 @@ describe.only("Playlists API", () => {
                     name: "WiP Playlist 2 Modified",
                     isPrivate: false,
                     user: "9ca0df5f86abeb66da97ba5d",
-                    videos: [],
+                    videos: ['9bc72f3d7edc6312d0ef2e48'],
                 })
                 .expect(200)
+                .then((response) => {
+                    const updatedPlaylist: UserPlaylist = response.body
+
+                    expect(updatedPlaylist.name).to.equal("WiP Playlist 2 Modified")
+                    expect(updatedPlaylist.videos).to.deep.equal([{
+                        _id: '9bc72f3d7edc6312d0ef2e48',
+                        name: 'Second Video',
+                        link: 'aC9d3edD3e2'
+                    }])
+                })
         })
     })
 
     describe("Deletes a playlist", () => {
-        it("Sends a 401 if trying to get a private playlist without authorization", () => {
+        it("Sends a 401 if trying to delete a private playlist without authorization", () => {
             return supertest(expressApp)
                 .delete('/8da1e01fda34eb8c1b9db46f')
                 .expect(401, 'UNAUTHORIZED')

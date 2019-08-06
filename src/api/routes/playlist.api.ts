@@ -8,11 +8,12 @@ export class PlaylistApi {
 
     constructor() {
         this.router = Router()
-        this.router.use(auth.isAuthorized)
         this.init()
     }
 
     public init() {
+        this.router.get('/', this.index)
+        this.router.use(auth.isAuthorized)
         this.router.get("/:playlist", this.show)
         this.router.post("/", this.store)
         this.router.put("/:playlist", this.update)
@@ -36,6 +37,17 @@ export class PlaylistApi {
         })
     }
 
+    public async index(request: Request, response: Response): Promise<Response> {
+        const playlists: Array<UserPlaylist> = await UsersPlaylist
+            .find({ isPrivate: false })
+            .populate("user", "name")
+            .populate("video", "name link")
+
+        console.log(playlists)
+
+        return response.status(200).send(playlists)
+    }
+
     /**
      * Gets a single playlist from the collection of user playlists
      *
@@ -48,6 +60,13 @@ export class PlaylistApi {
      * @memberof PlaylistApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+        const playlist: UserPlaylist = response.locals.playlist
+
+        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+            return response.status(401).send('UNAUTHORIZED')
+        }
+
         return response.status(200).send(response.locals.playlist)
     }
 
@@ -102,26 +121,25 @@ export class PlaylistApi {
             return response.status(401).send('UNAUTHORIZED')
         }
 
-        const { name, isPrivate, _id } = request.body
+        const clientPlaylist: Partial<UserPlaylist> = request.body
 
-        if (_id !== request.params.playlist) {
+        if (request.body._id !== request.params.playlist) {
             return response.status(412).send('IDENTIFIER_MISMATCH')
         }
 
         try {
-
-            const updatedPlaylist: UserPlaylist = await UsersPlaylist.findByIdAndUpdate(
-                request.param.playlist,
-                {
-                    $set: {
-                        name,
-                        isPrivate
+            const updatedPlaylist: UserPlaylist = await UsersPlaylist
+                .findByIdAndUpdate(
+                    request.params.playlist,
+                    {
+                        $set: clientPlaylist
+                    },
+                    {
+                        new: true
                     }
-                },
-                {
-                    new: true
-                }
-            )
+                )
+                .populate("user", "name")
+                .populate("videos", "name link")
 
             return response.status(200).send(updatedPlaylist)
         } catch (error) {
