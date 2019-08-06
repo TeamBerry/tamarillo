@@ -259,6 +259,10 @@ export class BoxApi {
         }
     }
 
+    public async convertPlaylist(request: Request, response: Response): Promise<Response> {
+
+    }
+
     /**
      * Adds a job to the box queue, that will be handled by the BoxService Microservice
      *

@@ -263,4 +263,18 @@ describe("Box API", () => {
                 })
         })
     })
+
+    describe("Converts the box of a playlist to an user playlist", () => {
+        it("Sends a 401 if there's no authentication", () => {
+
+        })
+
+        it("Sends a 412 if the box has no videos in its playlist", () => {
+
+        })
+
+        it("Sends a 200 confirmation if everything works correctly", () => {
+
+        })
+    })
 })
