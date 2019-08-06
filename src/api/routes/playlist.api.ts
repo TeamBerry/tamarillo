@@ -12,7 +12,10 @@ export class PlaylistApi {
     }
 
     public init() {
-        this.router.get('/', this.index)
+        // This API is public but the results might change depending on the presence of a JWT
+        this.router.get('/', auth.canBeAuthorized, this.index)
+
+        // All next APIs require authentication
         this.router.use(auth.isAuthorized)
         this.router.get("/:playlist", this.show)
         this.router.post("/", this.store)
@@ -38,12 +41,19 @@ export class PlaylistApi {
     }
 
     public async index(request: Request, response: Response): Promise<Response> {
+        let filters: Partial<{ isPrivate: boolean, user: any }> = { isPrivate: false }
+
+        // Excluding the user from the search to display only playlists to "discover"
+        // The user can go to "My Playlists" to see his own playlists
+        const decodedToken = response.locals.auth
+        if (decodedToken) {
+            filters.user = { $ne: decodedToken.user }
+        }
+
         const playlists: Array<UserPlaylist> = await UsersPlaylist
-            .find({ isPrivate: false })
+            .find(filters)
             .populate("user", "name")
             .populate("video", "name link")
-
-        console.log(playlists)
 
         return response.status(200).send(playlists)
     }
