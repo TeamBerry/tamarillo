@@ -6,13 +6,12 @@ const expect = chai.expect
 
 import PlaylistApi from './../../../src/api/routes/playlist.api'
 import { AuthApi } from './../../../src/api/routes/auth.api'
-import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UsersPlaylist } from './../../../src/models/user-playlist.model'
-import { Video, VideoModel } from './../../../src/models/video.model'
+import { VideoModel } from './../../../src/models/video.model'
 
-describe.only("Playlists API", () => {
+describe("Playlists API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
