@@ -516,14 +516,14 @@ describe.only("Box API", () => {
             };
 
             return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e9/convert')
+                .post('/7dec3a584ec1317ade113a58/convert')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .send(playlistSettings)
                 .expect(200)
                 .then(async (response) => {
                     const playlist: Partial<UserPlaylistDocument> = {
                         _id: '7dec3a584ec1317ade113a58',
-                        name: 'Test New Playlist',
+                        name: 'Existing playlist with videos',
                         isPrivate: false,
                         user: {
                             _id: '9ca0df5f86abeb66da97ba5d',

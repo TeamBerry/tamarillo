@@ -1,8 +1,11 @@
-import { Request, Response, Router } from "express"
+import { Request, Response, Router, NextFunction } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
+import { UserPlaylistDocument, UsersPlaylist } from "../../models/user-playlist.model";
+import { PlaylistItem } from "../../models/playlist-item.model";
 const Queue = require("bull")
 const boxQueue = new Queue("box")
+const auth = require("./../auth.middleware")
 
 const Box = require("./../../models/box.schema")
 
@@ -22,6 +25,25 @@ export class BoxApi {
         this.router.delete("/:box", this.destroy)
         this.router.post("/:box/close", this.close)
         this.router.post("/:box/open", this.open)
+
+        this.router.use(auth.isAuthorized)
+        this.router.post('/:box/convert', this.convertPlaylist)
+
+        this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
+            const matchingBox = await Box.findById(request.params.box)
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+
+            if (!matchingBox) {
+                return response.status(404).send("BOX_NOT_FOUND")
+            }
+
+            // Give the found box to APIs so they don't have to search for it themselves
+            response.locals.box = matchingBox
+
+            next()
+        })
     }
 
     /**
@@ -54,22 +76,7 @@ export class BoxApi {
      * @memberof BoxApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        const boxId = request.params.box
-
-        try {
-            const box = await Box.findById(boxId)
-                .populate("creator", "_id name")
-                .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
-
-            if (!box) {
-                return response.status(404).send("BOX_NOT_FOUND")
-            }
-
-            return response.status(200).send(box)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
+        return response.status(200).send(response.locals.box)
     }
 
     /**
@@ -259,8 +266,58 @@ export class BoxApi {
         }
     }
 
+    /**
+     * Creates a new user playlist from the playlist of the box.
+     *
+     * @param {Request} request Contains a Partial object of an UserPlaylistDocument
+     * @param {Response} response
+     * @returns {Promise<Response>} The newly created playlist is sent back as confirmation with a 200.
+     * If something goes wrong, one of the following error codes will be sent:
+     * - 401 Unauthorized is no auth is given, or an auth is given but doesn't match the owner of an existing playlist
+     * - 412 'EMPTY_PLAYLIST' If the box has no videos yet
+     * - 500 Server Error if something else happens
+     * @memberof BoxApi
+     */
     public async convertPlaylist(request: Request, response: Response): Promise<Response> {
+        let playlist: Partial<UserPlaylistDocument> = new UsersPlaylist(request.body)
+        console.log(playlist)
 
+        const decodedToken = response.locals.auth
+        const box = response.locals.box
+
+        if (box.creator._id.toString() !== decodedToken.user.toString()) {
+            return response.status(401).send('UNAUTHORIZED')
+        }
+
+        if (box.playlist.length === 0) {
+            return response.status(412).send('EMPTY_PLAYLIST')
+        }
+
+        try {
+            // If the playlist given as the _id property, then it's an existing one
+            if (playlist.hasOwnProperty('_id')) {
+                playlist = await UsersPlaylist.findById(playlist._id)
+            }
+
+            for (let video of box.playlist) {
+                // If the playlist doesn't have the video, we add it to the playlist
+                if (_.indexOf(playlist.videos, video.video._id) === -1) {
+                    playlist.videos.push(video.video._id)
+                }
+                console.log(playlist.videos)
+            }
+
+            const createdPlaylist: UserPlaylistDocument = new UsersPlaylist(playlist)
+            createdPlaylist.save()
+
+            console.log(createdPlaylist)
+
+            return response.status(200).send(createdPlaylist)
+
+        } catch (error) {
+            console.log(error)
+            return response.status(500).send(error)
+        }
     }
 
     /**
