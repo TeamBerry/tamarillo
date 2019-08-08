@@ -2,8 +2,8 @@ import { Document, model, Schema } from "mongoose"
 
 export class UserPlaylist {
     public name: string
-    public isPrivate: boolean
-    public user: {
+    public isPrivate?: boolean
+    public user?: {
         _id: string
         name: string,
     }
@@ -16,11 +16,12 @@ export class UserPlaylist {
     public updatedAt: Date
 
     constructor(data: UserPlaylist) {
-        this.name = data.name
-        this.user = data.user
-        this.videos = data.videos
-        this.createdAt = data.createdAt
-        this.updatedAt = data.updatedAt
+        this.name = data.name || null
+        this.user = data.user || { _id: null, name: null }
+        this.videos = data.videos || []
+        this.isPrivate = data.isPrivate || false
+        this.createdAt = data.createdAt || null
+        this.updatedAt = data.updatedAt || null
     }
 }
 

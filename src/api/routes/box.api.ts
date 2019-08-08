@@ -1,7 +1,7 @@
 import { Request, Response, Router, NextFunction } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
-import { UserPlaylistDocument, UsersPlaylist } from "../../models/user-playlist.model";
+import { UserPlaylistDocument, UsersPlaylist, UserPlaylist } from "../../models/user-playlist.model";
 import { PlaylistItem } from "../../models/playlist-item.model";
 const Queue = require("bull")
 const boxQueue = new Queue("box")
@@ -279,13 +279,26 @@ export class BoxApi {
      * @memberof BoxApi
      */
     public async convertPlaylist(request: Request, response: Response): Promise<Response> {
-        let playlist: Partial<UserPlaylistDocument> = new UsersPlaylist(request.body)
-        console.log(playlist)
+        let inputPlaylist: Partial<UserPlaylistDocument> = request.body
 
         const decodedToken = response.locals.auth
         const box = response.locals.box
 
-        if (box.creator._id.toString() !== decodedToken.user.toString()) {
+        // If the playlist given as the _id property, then it's an existing one
+        if (inputPlaylist.hasOwnProperty('_id')) {
+            inputPlaylist = await UsersPlaylist
+                .findById(inputPlaylist._id)
+                .populate('videos', 'name link')
+                .populate('user', 'name')
+        } else {
+            inputPlaylist = new UserPlaylist(request.body)
+        }
+
+        if (inputPlaylist.user._id === null) {
+            return response.status(412).send('MISSING_PARAMETERS')
+        }
+
+        if (inputPlaylist.user._id.toString() !== decodedToken.user.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -294,21 +307,18 @@ export class BoxApi {
         }
 
         try {
-            // If the playlist given as the _id property, then it's an existing one
-            if (playlist.hasOwnProperty('_id')) {
-                playlist = await UsersPlaylist.findById(playlist._id)
-            }
-
             for (let video of box.playlist) {
                 // If the playlist doesn't have the video, we add it to the playlist
-                if (_.indexOf(playlist.videos, video.video._id) === -1) {
-                    playlist.videos.push(video.video._id)
+                if (_.indexOf(inputPlaylist.videos, video.video._id) === -1) {
+                    inputPlaylist.videos.push(video.video._id)
                 }
-                console.log(playlist.videos)
             }
 
-            const createdPlaylist: UserPlaylistDocument = new UsersPlaylist(playlist)
-            createdPlaylist.save()
+            let createdPlaylist: UserPlaylistDocument = await UsersPlaylist.create(inputPlaylist)
+            createdPlaylist = await createdPlaylist
+                .populate({ path: 'user', select: 'name' })
+                .populate({ path: 'videos', select: 'link name' })
+                .execPopulate()
 
             console.log(createdPlaylist)
 

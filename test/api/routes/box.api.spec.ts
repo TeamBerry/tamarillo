@@ -389,6 +389,7 @@ describe.only("Box API", () => {
             await UsersPlaylist.create({
                 _id: '7dec3a584ec1317ade113a58',
                 name: 'Existing playlist with videos',
+                user: '9ca0df5f86abeb66da97ba5d',
                 isPrivate: true,
                 videos: ['9bc72f3d7edc6312d0ef2e48']
             })
@@ -412,24 +413,61 @@ describe.only("Box API", () => {
                 .expect(401, 'UNAUTHORIZED')
         })
 
+        it("Sends a 412 if the playlist body for creation is missing some parameters", () => {
+            const playlistSettings: Partial<UserPlaylistDocument> = {
+                name: 'Test New Playlist 2',
+                isPrivate: false
+            };
+
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef043ea/convert')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send(playlistSettings)
+                .expect(412, 'MISSING_PARAMETERS')
+        })
+
         it("Sends a 401 if there's a playlist specified as target but is not the user's", () => {
+            const playlistSettings: Partial<UserPlaylistDocument> = {
+                name: 'Test New Playlist 2',
+                isPrivate: false,
+                user: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ask Ketchum'
+                }
+            };
+
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e8/convert')
                 .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .send(playlistSettings)
                 .expect(401, 'UNAUTHORIZED')
         })
 
         it("Sends a 412 if the source box has no videos in its playlist", () => {
+            const playlistSettings: Partial<UserPlaylistDocument> = {
+                name: 'Test New Playlist 2',
+                isPrivate: false,
+                user: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ask Ketchum'
+                }
+            };
+
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e8/convert')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send(playlistSettings)
                 .expect(412, 'EMPTY_PLAYLIST')
         })
 
         it("Creates a new playlist if no playlist target is specified", () => {
             const playlistSettings: Partial<UserPlaylistDocument> = {
                 name: 'Test New Playlist',
-                isPrivate: false
+                isPrivate: false,
+                user: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ask Ketchum'
+                }
             };
 
             return supertest(expressApp)
@@ -471,7 +509,11 @@ describe.only("Box API", () => {
         it("Creates a new playlist with only unique videos from the source box", () => {
             const playlistSettings: Partial<UserPlaylistDocument> = {
                 name: 'Test New Playlist 2',
-                isPrivate: false
+                isPrivate: false,
+                user: {
+                    _id: '9ca0df5f86abeb66da97ba5d',
+                    name: 'Ask Ketchum'
+                }
             };
 
             return supertest(expressApp)
@@ -516,7 +558,7 @@ describe.only("Box API", () => {
             };
 
             return supertest(expressApp)
-                .post('/7dec3a584ec1317ade113a58/convert')
+                .post('/9cb763b6e72611381ef043ea/convert')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .send(playlistSettings)
                 .expect(200)
@@ -531,14 +573,14 @@ describe.only("Box API", () => {
                         },
                         videos: [
                             {
-                                _id: '9bc72f3d7edc6312d0ef2e47',
-                                name: 'First Video',
-                                link: '4c6e3f_aZ0d'
-                            },
-                            {
                                 _id: '9bc72f3d7edc6312d0ef2e48',
                                 name: 'Second Video',
                                 link: 'aC9d3edD3e2'
+                            },
+                            {
+                                _id: '9bc72f3d7edc6312d0ef2e47',
+                                name: 'First Video',
+                                link: '4c6e3f_aZ0d'
                             }
                         ]
                     }
