@@ -275,10 +275,13 @@ export class BoxApi {
      * If something goes wrong, one of the following error codes will be sent:
      * - 401 Unauthorized is no auth is given, or an auth is given but doesn't match the owner of an existing playlist
      * - 412 'EMPTY_PLAYLIST' If the box has no videos yet
+     * - 412 'MISSING_PARAMETERS' if the request body is not complete (mainly missing a title or an user)
      * - 500 Server Error if something else happens
      * @memberof BoxApi
      */
     public async convertPlaylist(request: Request, response: Response): Promise<Response> {
+        // Don't instanciate anything yet because the model will add an objectId when we need to compare against
+        // its existence
         let inputPlaylist: Partial<UserPlaylistDocument> = request.body
 
         const decodedToken = response.locals.auth
@@ -294,7 +297,8 @@ export class BoxApi {
             inputPlaylist = new UserPlaylist(request.body)
         }
 
-        if (inputPlaylist.user._id === null) {
+        // If there's no user, the request is rejected
+        if (inputPlaylist.user._id === null || inputPlaylist.name === null) {
             return response.status(412).send('MISSING_PARAMETERS')
         }
 
@@ -307,12 +311,18 @@ export class BoxApi {
         }
 
         try {
-            for (let video of box.playlist) {
+            box.playlist.forEach((playlistItem: PlaylistItem) => {
                 // If the playlist doesn't have the video, we add it to the playlist
-                if (_.indexOf(inputPlaylist.videos, video.video._id) === -1) {
-                    inputPlaylist.videos.push(video.video._id)
+                const { video }: PlaylistItem['video'] = playlistItem
+                // FIXME: Cannot find ObjectIds for some reason
+                if (_.indexOf(inputPlaylist.videos, { _id: video._id }) === -1) {
+                    inputPlaylist.videos.push({
+                        _id: video._id,
+                        name: video.name,
+                        link: video.link
+                    })
                 }
-            }
+            })
 
             let createdPlaylist: UserPlaylistDocument = await UsersPlaylist.create(inputPlaylist)
             createdPlaylist = await createdPlaylist
@@ -320,12 +330,8 @@ export class BoxApi {
                 .populate({ path: 'videos', select: 'link name' })
                 .execPopulate()
 
-            console.log(createdPlaylist)
-
             return response.status(200).send(createdPlaylist)
-
         } catch (error) {
-            console.log(error)
             return response.status(500).send(error)
         }
     }
