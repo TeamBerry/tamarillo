@@ -3,12 +3,8 @@ import { NextFunction, Request, Response, Router } from "express"
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.schema")
 
-const fs = require("fs")
-import * as jwt from "jsonwebtoken"
 import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
-
-// const RSA_PUBLIC_KEY = fs.readFileSync("certs/public_key.pem")
 
 export class UserApi {
     public router: Router

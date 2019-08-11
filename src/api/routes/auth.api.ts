@@ -4,11 +4,8 @@ const Queue = require("bull")
 const mailQueue = new Queue("mail")
 
 const User = require("./../../models/user.model")
-const fs = require("fs")
 import * as jwt from "jsonwebtoken"
 import { Session } from "../../models/session.model"
-
-// const RSA_PRIVATE_KEY = fs.readFileSync("certs/private_key.pem")
 
 export class AuthApi {
     public router: Router
