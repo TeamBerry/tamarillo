@@ -7,6 +7,9 @@ const User = require("./../../models/user.model")
 import * as jwt from "jsonwebtoken"
 import { Session } from "../../models/session.model"
 
+const dotenv = require("dotenv")
+dotenv.config()
+
 export class AuthApi {
     public router: Router
 
@@ -41,7 +44,7 @@ export class AuthApi {
 
         try {
             // Find user in database
-            const user = await User.findOne({ mail, password }, 'user mail')
+            const user = await User.findOne({ mail, password }, 'name mail')
 
             // If password is not correct, send back 401 HTTP error
             if (!user) {
@@ -53,6 +56,7 @@ export class AuthApi {
             // Sending bearer token
             return res.status(200).json(authResult)
         } catch (error) {
+            console.log(error)
             return res.status(500).send(error)
         }
     }
@@ -98,11 +102,11 @@ export class AuthApi {
      *
      * @private
      * @param {*} user The user for whom the session is created
-     * @param {string} [tokenExpiration='7d'] The duration of the session token (defaults to 1296000 seconds or 15 days)
+     * @param {number | string} [tokenExpiration=1296000] The duration of the session token (defaults to 1296000 seconds or 15 days)
      * @returns {Session} The JSON Web Token
      * @memberof AuthApi
      */
-    public createSession(user, tokenExpiration = '7d'): Session {
+    public createSession(user, tokenExpiration: number | string = 1296000): Session {
         // If password is correct, Create & Sign Bearer token and send it back to client
         const jwtBearerToken = jwt.sign(
             {
