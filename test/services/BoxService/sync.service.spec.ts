@@ -9,7 +9,7 @@ import syncService from './../../../src/services/BoxService/sync.service'
 const Box = require('../../../src/models/box.schema')
 const User = require('../../../src/models/user.model')
 
-import { Video, VideoModel } from './../../../src/models/video.model'
+import { Video, VideoClass, VideoDocument } from './../../../src/models/video.model'
 
 describe("Sync Service", () => {
 
@@ -20,7 +20,7 @@ describe("Sync Service", () => {
 
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
 
-        await VideoModel.deleteMany(
+        await Video.deleteMany(
             { _id: { $in: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba90a'] } }
         )
 
@@ -68,13 +68,13 @@ describe("Sync Service", () => {
             open: true
         })
 
-        await VideoModel.create({
+        await Video.create({
             _id: '9cb81150594b2e75f06ba8fe',
             link: 'Ivi1e-yCPcI',
             name: 'Destroid - Annihilate'
         })
 
-        await VideoModel.create({
+        await Video.create({
             _id: '9cb81150594b2e75f06ba90a',
             link: 'j6okxJ1CYJM',
             name: 'The Piano Before Cynthia'
@@ -88,7 +88,7 @@ describe("Sync Service", () => {
 
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
 
-        await VideoModel.deleteMany(
+        await Video.deleteMany(
             { _id: { $in: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba90a'] } }
         )
     })

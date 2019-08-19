@@ -8,8 +8,8 @@ import PlaylistApi from './../../../src/api/routes/playlist.api'
 import { AuthApi } from './../../../src/api/routes/auth.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
-import { UserPlaylist, UsersPlaylist } from './../../../src/models/user-playlist.model'
-import { VideoModel } from './../../../src/models/video.model'
+import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
+import { Video } from './../../../src/models/video.model'
 
 describe("Playlists API", () => {
     const expressApp = express()
@@ -25,11 +25,11 @@ describe("Playlists API", () => {
             _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
         })
 
-        await UsersPlaylist.deleteMany({
+        await UserPlaylist.deleteMany({
             _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a', '8da1e01fda34eb8c1b9db470'] },
         })
 
-        await VideoModel.deleteMany({
+        await Video.deleteMany({
             _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
 
@@ -54,13 +54,13 @@ describe("Playlists API", () => {
             password: 'Metagr0ss',
         })
 
-        await VideoModel.create({
+        await Video.create({
             _id: '9bc72f3d7edc6312d0ef2e47',
             name: 'First Video',
             link: '4c6e3f_aZ0d'
         })
 
-        await VideoModel.create({
+        await Video.create({
             _id: '9bc72f3d7edc6312d0ef2e48',
             name: 'Second Video',
             link: 'aC9d3edD3e2'
@@ -69,7 +69,7 @@ describe("Playlists API", () => {
         ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
         foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
 
-        await UsersPlaylist.create({
+        await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
             name: "My First Playlist",
             isPrivate: true,
@@ -77,7 +77,7 @@ describe("Playlists API", () => {
             videos: ['9bc72f3d7edc6312d0ef2e47'],
         })
 
-        await UsersPlaylist.create({
+        await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46f",
             name: "WiP Playlist 2",
             isPrivate: false,
@@ -85,7 +85,7 @@ describe("Playlists API", () => {
             videos: [],
         })
 
-        await UsersPlaylist.create({
+        await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db470",
             name: "Playlist by someone else",
             isPrivate: false,
@@ -99,11 +99,11 @@ describe("Playlists API", () => {
             _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
         })
 
-        await UsersPlaylist.deleteMany({
+        await UserPlaylist.deleteMany({
             _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a', '8da1e01fda34eb8c1b9db470'] },
         })
 
-        await VideoModel.deleteMany({
+        await Video.deleteMany({
             _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
     })
@@ -114,7 +114,7 @@ describe("Playlists API", () => {
                 .get('/')
                 .expect(200)
                 .then((response) => {
-                    const playlists: Array<UserPlaylist> = response.body
+                    const playlists: Array<UserPlaylistClass> = response.body
 
                     expect(playlists).to.have.lengthOf(2)
                 })
@@ -126,7 +126,7 @@ describe("Playlists API", () => {
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
                 .then((response) => {
-                    const playlists: Array<UserPlaylist> = response.body
+                    const playlists: Array<UserPlaylistClass> = response.body
 
                     expect(playlists).to.have.lengthOf(1)
                 })
@@ -267,7 +267,7 @@ describe("Playlists API", () => {
                 })
                 .expect(200)
                 .then((response) => {
-                    const updatedPlaylist: UserPlaylist = response.body
+                    const updatedPlaylist: UserPlaylistClass = response.body
 
                     expect(updatedPlaylist.name).to.equal("WiP Playlist 2")
                     expect(updatedPlaylist.videos).to.deep.equal([{
@@ -291,7 +291,7 @@ describe("Playlists API", () => {
                 })
                 .expect(200)
                 .then((response) => {
-                    const updatedPlaylist: UserPlaylist = response.body
+                    const updatedPlaylist: UserPlaylistClass = response.body
 
                     expect(updatedPlaylist.name).to.equal("WiP Playlist 2 Modified")
                     expect(updatedPlaylist.videos).to.deep.equal([{
