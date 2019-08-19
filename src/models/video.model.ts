@@ -1,10 +1,10 @@
 import { Document, model, Schema } from "mongoose"
 
-export class Video {
+export class VideoClass {
     public name: string
     public link: string
 
-    constructor(video: Video) {
+    constructor(video: VideoClass) {
         this.name = video.name
         this.link = video.link
     }
@@ -19,6 +19,6 @@ const videoSchema = new Schema(
     }
 )
 
-export interface IVideo extends Video, Document { }
+export interface VideoDocument extends VideoClass, Document { }
 
-export const VideoModel = model<IVideo>("Video", videoSchema)
+export const Video = model<VideoDocument>("Video", videoSchema)

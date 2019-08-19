@@ -1,7 +1,7 @@
 import { Request, Response, Router, NextFunction } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
-import { UserPlaylistDocument, UsersPlaylist, UserPlaylist } from "../../models/user-playlist.model";
+import { UserPlaylistDocument, UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model";
 import { PlaylistItem } from "../../models/playlist-item.model";
 const Queue = require("bull")
 const boxQueue = new Queue("box")
@@ -289,12 +289,12 @@ export class BoxApi {
 
         // If the playlist given as the _id property, then it's an existing one
         if (inputPlaylist.hasOwnProperty('_id')) {
-            inputPlaylist = await UsersPlaylist
+            inputPlaylist = await UserPlaylist
                 .findById(inputPlaylist._id)
                 .populate('videos', 'name link')
                 .populate('user', 'name')
         } else {
-            inputPlaylist = new UserPlaylist(request.body)
+            inputPlaylist = new UserPlaylistClass(request.body)
         }
 
         // If there's no user, the request is rejected
@@ -324,7 +324,7 @@ export class BoxApi {
                 }
             })
 
-            let createdPlaylist: UserPlaylistDocument = await UsersPlaylist.create(inputPlaylist)
+            let createdPlaylist: UserPlaylistDocument = await UserPlaylist.create(inputPlaylist)
             createdPlaylist = await createdPlaylist
                 .populate({ path: 'user', select: 'name' })
                 .populate({ path: 'videos', select: 'link name' })

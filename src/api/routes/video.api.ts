@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 
-import { Video, VideoModel } from './../../models/video.model'
+import { VideoClass, Video } from './../../models/video.model'
 
 export class VideoApi {
     public router: Router
@@ -17,7 +17,7 @@ export class VideoApi {
     }
 
     public index(req: Request, res: Response) {
-        VideoModel.find({}, (err, collection) => {
+        Video.find({}, (err, collection) => {
             if (err) {
                 res.status(500).send(err)
             }
@@ -31,7 +31,7 @@ export class VideoApi {
     }
 
     public show(req: Request, res: Response) {
-        VideoModel.findById(req.params.id, (err, document) => {
+        Video.findById(req.params.id, (err, document) => {
             if (err) {
                 res.status(500).send(err)
             }
@@ -45,7 +45,7 @@ export class VideoApi {
     }
 
     public store(req: Request, res: Response) {
-        VideoModel.create(req.body, (err, document) => {
+        Video.create(req.body, (err, document) => {
             if (err) {
                 res.status(500).send(err)
             }

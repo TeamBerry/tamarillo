@@ -1,7 +1,5 @@
 import { Document, model, Schema } from "mongoose"
 
-const Video = require("./video.model")
-
 const userSchema = new Schema(
     {
         name: String,

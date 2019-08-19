@@ -7,10 +7,10 @@ const expect = chai.expect
 import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.schema')
 const User = require('./../../../src/models/user.model')
-import { VideoModel } from './../../../src/models/video.model'
+import { Video } from './../../../src/models/video.model'
 import { AuthApi } from './../../../src/api/routes/auth.api'
 import { Session } from "./../../../src/models/session.model"
-import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
+import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 
 describe.only("Box API", () => {
     const expressApp = express()
@@ -36,7 +36,7 @@ describe.only("Box API", () => {
             },
         )
 
-        await VideoModel.deleteMany({
+        await Video.deleteMany({
             _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
 
@@ -295,19 +295,19 @@ describe.only("Box API", () => {
                 _id: { $in: ['9cb763b6e72611381ef043e8', '9cb763b6e72611381ef043e9', '9cb763b6e72611381ef043ea'] }
             })
 
-            await VideoModel.deleteMany({
+            await Video.deleteMany({
                 _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
             })
 
-            await UsersPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')
+            await UserPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')
 
-            await VideoModel.create({
+            await Video.create({
                 _id: '9bc72f3d7edc6312d0ef2e47',
                 name: 'First Video',
                 link: '4c6e3f_aZ0d'
             })
 
-            await VideoModel.create({
+            await Video.create({
                 _id: '9bc72f3d7edc6312d0ef2e48',
                 name: 'Second Video',
                 link: 'aC9d3edD3e2'
@@ -386,7 +386,7 @@ describe.only("Box API", () => {
                 open: false,
             })
 
-            await UsersPlaylist.create({
+            await UserPlaylist.create({
                 _id: '7dec3a584ec1317ade113a58',
                 name: 'Existing playlist with videos',
                 user: '9ca0df5f86abeb66da97ba5d',
@@ -400,11 +400,11 @@ describe.only("Box API", () => {
                 _id: { $in: ['9cb763b6e72611381ef043e8', '9cb763b6e72611381ef043e9', '9cb763b6e72611381ef043ea'] }
             })
 
-            await VideoModel.deleteMany({
+            await Video.deleteMany({
                 _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
             })
 
-            await UsersPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')
+            await UserPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')
         })
 
         it("Sends a 401 if there's no authentication", () => {
@@ -502,7 +502,7 @@ describe.only("Box API", () => {
                     expect(createdPlaylist.name).to.equal(playlist.name)
                     expect(createdPlaylist.videos).to.deep.equal(playlist.videos)
 
-                    await UsersPlaylist.findByIdAndDelete(createdPlaylist._id)
+                    await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
                 })
         })
 
@@ -548,7 +548,7 @@ describe.only("Box API", () => {
                     expect(createdPlaylist.name).to.equal(playlist.name)
                     expect(createdPlaylist.videos).to.deep.equal(playlist.videos)
 
-                    await UsersPlaylist.findByIdAndDelete(createdPlaylist._id)
+                    await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
                 })
         })
 
@@ -591,7 +591,7 @@ describe.only("Box API", () => {
                     expect(createdPlaylist.name).to.equal(playlist.name)
                     expect(createdPlaylist.videos).to.deep.equal(playlist.videos)
 
-                    await UsersPlaylist.findByIdAndDelete(createdPlaylist._id)
+                    await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
                 })
         })
     })

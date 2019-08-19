@@ -3,7 +3,7 @@ import { NextFunction, Request, Response, Router } from "express"
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.schema")
 
-import { UserPlaylist, UsersPlaylist } from "../../models/user-playlist.model"
+import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -159,7 +159,7 @@ export class UserApi {
                 delete filters.isPrivate
             }
 
-            const userPlaylists: UserPlaylist[] = await UsersPlaylist
+            const userPlaylists: UserPlaylistClass[] = await UserPlaylist
                 .find(filters)
                 .populate("videos")
 

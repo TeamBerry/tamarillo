@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
-import { UserPlaylist, UsersPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
+import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
 
 export class PlaylistApi {
@@ -24,7 +24,7 @@ export class PlaylistApi {
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingPlaylist: UserPlaylist = await UsersPlaylist
+            const matchingPlaylist: UserPlaylistClass = await UserPlaylist
                 .findById(request.params.playlist)
                 .populate("user", "name")
                 .populate("videos", "name link")
@@ -50,10 +50,10 @@ export class PlaylistApi {
             filters.user = { $ne: decodedToken.user }
         }
 
-        const playlists: Array<UserPlaylist> = await UsersPlaylist
+        const playlists: Array<UserPlaylistClass> = await UserPlaylist
             .find(filters)
             .populate("user", "name")
-            .populate("video", "name link")
+            .populate("videos", "name link")
 
         return response.status(200).send(playlists)
     }
@@ -71,7 +71,7 @@ export class PlaylistApi {
      */
     public async show(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylist = response.locals.playlist
+        const playlist: UserPlaylistClass = response.locals.playlist
 
         if (decodedToken.user.toString() !== playlist.user._id.toString()) {
             return response.status(401).send('UNAUTHORIZED')
@@ -98,7 +98,7 @@ export class PlaylistApi {
         }
 
         try {
-            const createdPlaylist: UserPlaylist = await UsersPlaylist.create(request.body)
+            const createdPlaylist: UserPlaylistClass = await UserPlaylist.create(request.body)
 
             return response.status(201).send(createdPlaylist)
         } catch (error) {
@@ -125,20 +125,20 @@ export class PlaylistApi {
         }
 
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylist = response.locals.playlist
+        const playlist: UserPlaylistClass = response.locals.playlist
 
         if (decodedToken.user.toString() !== playlist.user._id.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
-        const clientPlaylist: Partial<UserPlaylist> = request.body
+        const clientPlaylist: Partial<UserPlaylistClass> = request.body
 
         if (request.body._id !== request.params.playlist) {
             return response.status(412).send('IDENTIFIER_MISMATCH')
         }
 
         try {
-            const updatedPlaylist: UserPlaylist = await UsersPlaylist
+            const updatedPlaylist: UserPlaylistClass = await UserPlaylist
                 .findByIdAndUpdate(
                     request.params.playlist,
                     {
@@ -170,14 +170,14 @@ export class PlaylistApi {
      */
     public async destroy(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylist = response.locals.playlist
+        const playlist: UserPlaylistClass = response.locals.playlist
 
         if (decodedToken.user.toString() !== playlist.user._id.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
         try {
-            const deletedPlaylist = await UsersPlaylist.findByIdAndRemove(request.param.playlist)
+            const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.param.playlist)
 
             return response.status(200).send(deletedPlaylist)
         } catch (error) {

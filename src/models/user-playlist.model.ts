@@ -1,6 +1,6 @@
 import { Document, model, Schema } from "mongoose"
 
-export class UserPlaylist {
+export class UserPlaylistClass {
     public name: string
     public isPrivate?: boolean
     public user?: {
@@ -15,7 +15,7 @@ export class UserPlaylist {
     public createdAt: Date
     public updatedAt: Date
 
-    constructor(data: UserPlaylist) {
+    constructor(data: UserPlaylistClass) {
         this.name = data.name || null
         this.user = data.user || { _id: null, name: null }
         this.videos = data.videos || []
@@ -30,15 +30,13 @@ const userPlaylistSchema = new Schema(
         name: { type: String, required: true },
         isPrivate: { type: Boolean, default: false },
         user: { type: Schema.Types.ObjectId, ref: "User" },
-        videos: [{
-            type: Schema.Types.ObjectId, ref: "Video",
-        }],
+        videos: [{ type: Schema.Types.ObjectId, ref: "Video" }],
     },
     {
         timestamps: true,
     },
 )
 
-export interface UserPlaylistDocument extends UserPlaylist, Document { }
+export interface UserPlaylistDocument extends UserPlaylistClass, Document { }
 
-export const UsersPlaylist = model<UserPlaylistDocument>("UserPlaylist", userPlaylistSchema)
+export const UserPlaylist = model<UserPlaylistDocument>("UserPlaylist", userPlaylistSchema)
