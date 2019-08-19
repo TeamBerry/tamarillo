@@ -12,7 +12,7 @@ import { AuthApi } from './../../../src/api/routes/auth.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 
-describe.only("Box API", () => {
+describe("Box API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
