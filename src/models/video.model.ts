@@ -1,11 +1,24 @@
-import mongoose = require('mongoose');
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
+import { Document, model, Schema } from "mongoose"
 
-var Schema = mongoose.Schema;
+export class VideoClass {
+    public name: string
+    public link: string
 
-var videoSchema = new Schema({
-    link: String,
-    name: String,
-});
+    constructor(video: VideoClass) {
+        this.name = video.name
+        this.link = video.link
+    }
+}
 
-module.exports = mongoose.model('Video', videoSchema);
+const videoSchema = new Schema(
+    {
+        link: String,
+        name: String,
+    }, {
+        timestamps: true
+    }
+)
+
+export interface VideoDocument extends VideoClass, Document { }
+
+export const Video = model<VideoDocument>("Video", videoSchema)

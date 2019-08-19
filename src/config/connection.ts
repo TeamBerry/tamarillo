@@ -1,11 +1,11 @@
-import mongoose = require("mongoose");
+import mongoose = require("mongoose")
 
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox", { useNewUrlParser: true, useFindAndModify: true });
+mongoose.connect("mongodb://127.0.0.1:27017/berrybox", { useNewUrlParser: true, useFindAndModify: true })
 
-var db = mongoose.connection;
+const db = mongoose.connection
 
-db.on('open', () => {
-    console.log("Connected to MongoDB.");
-});
+db.on("open", () => {
+    console.log("Connected to MongoDB.")
+})
 
-module.exports = mongoose;
+module.exports = mongoose

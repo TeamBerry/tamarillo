@@ -1,6 +1,6 @@
-import * as _ from 'lodash';
+import * as _ from "lodash"
 
-import { Message } from '../../models/message.model';
+import { Message } from "../../models/message.model"
 
 class ChatService {
     /**
@@ -12,10 +12,10 @@ class ChatService {
      * @returns {Promise<boolean>} Whether or not the message is valid
      * @memberof ChatService
      */
-    async isMessageValid(message: Message): Promise<boolean> {
-        return message.scope ? true : false;
+    public async isMessageValid(message: Message): Promise<boolean> {
+        return message.scope ? true : false
     }
 }
 
-const chatService = new ChatService();
-export default chatService;
+const chatService = new ChatService()
+export default chatService

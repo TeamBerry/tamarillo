@@ -11,7 +11,7 @@ export class MailJob {
      * @type {string}
      * @memberof MailJob
      */
-    type: string;
+    public type: string
 
     /**
      * Array of mail addresses
@@ -19,5 +19,5 @@ export class MailJob {
      * @type {string[]}
      * @memberof MailJob
      */
-    addresses: string[];
+    public addresses: string[]
 }

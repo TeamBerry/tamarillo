@@ -1,5 +1,5 @@
 export class Session {
-    bearer: any;
-    subject: any;
-    expiresIn: number;
+    public bearer: any
+    public subject: any
+    public expiresIn: number | string
 }

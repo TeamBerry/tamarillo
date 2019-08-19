@@ -1,8 +1,8 @@
-var Queue = require('bull');
-var mailQueue = new Queue('mail');
+const Queue = require("bull")
+const mailQueue = new Queue("mail")
 
-import mailService from './mail.service';
-import { MailJob } from '../../models/mail.job';
+import { MailJob } from "../../models/mail.job"
+import mailService from "./mail.service"
 
 /**
  * Watches the "mail" Redis queue and sends the
@@ -24,25 +24,25 @@ export class MailWatcher {
      *
      * @memberof MailWatcher
      */
-    listen() {
+    public listen() {
         // When I detect a "mail" job, I send it to the service
         mailQueue.process((job, done) => {
-            const { type, addresses }: MailJob = job.data;
+            const { type, addresses }: MailJob = job.data
 
             mailService
                 .sendMail(type, addresses)
                 .then((response) => {
-                    console.log('mail has been sent.');
-                    done(response);
+                    console.log("mail has been sent.")
+                    done(response)
                 })
                 .catch((error) => {
-                    console.error('An error has occured.');
-                    done(error);
-                });
+                    console.error("An error has occured.")
+                    done(error)
+                })
         })
     }
 }
 
-const mailWatcher = new MailWatcher();
-mailWatcher.listen();
-export default mailWatcher;
+const mailWatcher = new MailWatcher()
+mailWatcher.listen()
+export default mailWatcher

@@ -1,30 +1,15 @@
-import mongoose = require("mongoose");
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox");
-const Video = require('./video.model');
+import { Document, model, Schema } from "mongoose"
 
-let Schema = mongoose.Schema;
-
-let userSchema = new Schema(
+const userSchema = new Schema(
     {
         name: String,
-        token: String,
         mail: String,
         password: String,
-        picture: String,
-        bio: String,
-        followers: [],
-        following: [],
-        moderators: [],
-        friends: [],
-        settings: {
-            color: String,
-        },
-        badges: [],
-        favorites: [{ type: Schema.Types.ObjectId, ref: 'Video' }],
+        favorites: [{ type: Schema.Types.ObjectId, ref: "Video" }],
     },
     {
-        timestamps: true // Will automatically insert createdAt & updatedAt fields
-    }
-);
+        timestamps: true, // Will automatically insert createdAt & updatedAt fields
+    },
+)
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = model("User", userSchema)

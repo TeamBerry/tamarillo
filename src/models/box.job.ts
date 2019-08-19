@@ -12,7 +12,7 @@ export class BoxJob {
      * @type {string}
      * @memberof BoxJob
      */
-    boxToken: string;
+    public boxToken: string
 
     /**
      * The subject of the job
@@ -20,5 +20,5 @@ export class BoxJob {
      * @type {string}
      * @memberof BoxJob
      */
-    subject: string;
+    public subject: string
 }
