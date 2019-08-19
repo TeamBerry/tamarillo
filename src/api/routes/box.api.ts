@@ -314,8 +314,7 @@ export class BoxApi {
             box.playlist.forEach((playlistItem: PlaylistItem) => {
                 // If the playlist doesn't have the video, we add it to the playlist
                 const { video }: PlaylistItem['video'] = playlistItem
-                // FIXME: Cannot find ObjectIds for some reason
-                if (_.indexOf(inputPlaylist.videos, { _id: video._id }) === -1) {
+                if (_.findIndex(inputPlaylist.videos, { _id: video._id }) === -1) {
                     inputPlaylist.videos.push({
                         _id: video._id,
                         name: video.name,
