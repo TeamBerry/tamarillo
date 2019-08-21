@@ -192,7 +192,7 @@ describe("Playlists API", () => {
                 .expect(412, 'MISSING_PARAMETERS')
         })
 
-        it("Sends a 201 with the created box", () => {
+        it("Sends a 201 with the created playlist", () => {
             return supertest(expressApp)
                 .post('/')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
