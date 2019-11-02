@@ -35,7 +35,7 @@
         "lodash": "^4.17.4",
         "moment": "^2.20.1",
         "mongodb": "^3.0.2",
-        "mongoose": "^5.5.6",
+        "mongoose": "^5.7.5",
         "nodemailer": "^4.6.8",
         "pug": "^2.0.4",
         "socket.io": "^2.0.4"
