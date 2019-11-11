@@ -89,7 +89,7 @@ export class SyncService {
      * @memberof SyncService
      */
     public async postToBox(video, boxToken: string, userToken: string) {
-        const box = await BoxSchema.findOne({ _id: boxToken })
+        const box = await BoxSchema.findById(boxToken)
 
         if (box.open === false) {
             throw new Error("This box is closed. Submission is disallowed.")
@@ -135,6 +135,10 @@ export class SyncService {
 
         if (box.open === false) {
             throw new Error("This box is closed. Video play is disabled.")
+        }
+
+        if (box.playlist.length === 0) {
+            return null
         }
 
         const currentVideo = _.find(box.playlist, (video) => {

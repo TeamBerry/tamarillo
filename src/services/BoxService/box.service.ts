@@ -149,7 +149,7 @@ class BoxService {
                 try {
                     const response = await syncService.onStart(request.boxToken)
 
-                    if (response) {
+                    if (response.item !== null) {
                         message.contents = 'Currently playing: "' + response.item.video.name + '"'
                         message.source = "bot"
 
