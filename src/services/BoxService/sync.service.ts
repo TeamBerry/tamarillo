@@ -4,13 +4,13 @@ const axios = require("axios")
 const mongoose = require("./../../config/connection")
 const querystring = require("querystring")
 
-const Video = require("./../../models/video.model")
 const BoxSchema = require("./../../models/box.schema")
 const User = require("./../../models/user.model")
 import { Box } from "../../models/box.model"
 import { PlaylistItem } from "../../models/playlist-item.model"
 import { SyncPacket } from "../../models/sync-packet.model"
 import { VideoPayload } from "../../models/video-payload.model"
+import { Video } from "../../models/video.model"
 import { Message } from "./../../models/message.model"
 
 export class SyncService {
