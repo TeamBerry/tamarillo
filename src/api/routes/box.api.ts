@@ -8,6 +8,8 @@ const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
 
 const Box = require("./../../models/box.schema")
+const User = require("./../../models/user.model")
+const SubscriberSchema = require("./../../models/subscriber.schema")
 
 export class BoxApi {
     public router: Router
@@ -25,6 +27,7 @@ export class BoxApi {
         this.router.delete("/:box", this.destroy)
         this.router.post("/:box/close", this.close)
         this.router.post("/:box/open", this.open)
+        this.router.get("/:box/users", this.users)
 
         this.router.use(auth.isAuthorized)
         this.router.post('/:box/convert', this.convertPlaylist)
@@ -330,6 +333,23 @@ export class BoxApi {
                 .execPopulate()
 
             return response.status(200).send(createdPlaylist)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async users(request: Request, response: Response): Promise<Response> {
+        try {
+            const subscribersOfBox = (await SubscriberSchema.find({ boxToken: request.params.box }))
+                .map((subscriber) => {
+                    return subscriber.userToken
+                })
+
+            const users = await User
+                .find({ _id: { $in: subscribersOfBox } })
+                .select('-password')
+
+            return response.status(200).send(users)
         } catch (error) {
             return response.status(500).send(error)
         }
