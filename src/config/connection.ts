@@ -1,6 +1,10 @@
 import mongoose = require("mongoose")
+const dotenv = require("dotenv")
+dotenv.config()
 
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox", { useNewUrlParser: true, useFindAndModify: true })
+const dbName = process.env.NODE_ENV === 'test' ? 'kiwi_test' : 'kiwi'
+
+mongoose.connect(`mongodb://127.0.0.1:27017/${dbName}`, { useNewUrlParser: true, useFindAndModify: true })
 
 const db = mongoose.connection
 

@@ -4,8 +4,8 @@
     "description": "Node server for berrybox - Handles sync, chat",
     "main": "index.js",
     "scripts": {
-        "test": "mocha --exit -r ts-node/register test/**/**/*.spec.ts",
-        "coverage": "nyc --reporter=lcov npm run test",
+        "test": "export NODE_ENV=test && mocha --exit -r ts-node/register test/**/**/*.spec.ts",
+        "test:coverage": "nyc --reporter=lcov npm run test",
         "tsc": "./node_modules/.bin/tsc",
         "emails": "cp -r ./src/services/MailService/emails ./dist/services/MailService",
         "start": "tsc && pm2 start processes.json",
