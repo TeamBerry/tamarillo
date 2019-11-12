@@ -15,7 +15,21 @@ describe.skip("MailService", () => {
 
     describe("Test mail send", () => {
         it("Sends a signup mail", async () => {
-            await mailService.sendMail('signup', ['pinbouen.andreas@gmail.com']);
+            await mailService.sendMail({
+                addresses: ['pinbouen.andreas@gmail.com'],
+                variables: {},
+                template: 'signup'
+            });
         });
+
+        it("Sends a reset password mail", async () => {
+            await mailService.sendMail({
+                addresses: ['pinbouen.andreas@gmail.com'],
+                variables: {
+                    resetToken: '35d76s813ez1s3C7f3dsf1s'
+                },
+                template: 'password-reset'
+            })
+        })
     });
 });

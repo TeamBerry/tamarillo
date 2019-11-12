@@ -7,6 +7,7 @@ const User = require("./../../models/user.model")
 import * as jwt from "jsonwebtoken"
 import { Session } from "../../models/session.model"
 import authService from "../services/auth.service"
+import { MailJob } from "../../models/mail.job"
 
 const dotenv = require("dotenv")
 dotenv.config()
@@ -84,10 +85,12 @@ export class AuthApi {
                     }
 
                     // Once the user is crated, we send a mail to the address to welcome him
-                    const mailJob = {
-                        mail,
-                        name,
-                        type: "signup",
+                    const mailJob: MailJob = {
+                        addresses: [mail],
+                        variables: {
+                            name: name
+                        },
+                        template: "signup",
                     }
                     mailQueue.add(mailJob)
 
@@ -119,6 +122,16 @@ export class AuthApi {
                     $set: { password: null, resetToken }
                 }
             )
+
+            const mailJob: MailJob = {
+                addresses: [mail],
+                variables: {
+                    resetToken: resetToken
+                },
+                template: 'password-reset'
+            }
+
+            mailQueue.add(mailJob)
 
             // Always OK to avoid hackers
             return response.status(200).send()
@@ -168,7 +181,7 @@ export class AuthApi {
         try {
             const password = request.body.password
 
-            const updatedUser = await User.findByIdAndUpdate(
+            await User.findByIdAndUpdate(
                 matchingUser._id,
                 {
                     $set: { password, resetToken: null }

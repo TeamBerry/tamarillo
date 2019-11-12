@@ -27,10 +27,8 @@ export class MailWatcher {
     public listen() {
         // When I detect a "mail" job, I send it to the service
         mailQueue.process((job, done) => {
-            const { type, addresses }: MailJob = job.data
-
             mailService
-                .sendMail(type, addresses)
+                .sendMail(job.data)
                 .then((response) => {
                     console.log("mail has been sent.")
                     done(response)
