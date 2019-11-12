@@ -3,10 +3,12 @@ import { Document, model, Schema } from "mongoose"
 export class VideoClass {
     public name: string
     public link: string
+    public duration: string
 
     constructor(video: VideoClass) {
         this.name = video.name
         this.link = video.link
+        this.duration = video.duration
     }
 }
 
@@ -14,6 +16,7 @@ const videoSchema = new Schema(
     {
         link: String,
         name: String,
+        duration: String,
     }, {
         timestamps: true
     }

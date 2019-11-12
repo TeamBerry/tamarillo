@@ -3,6 +3,8 @@ import * as moment from "moment"
 const axios = require("axios")
 const mongoose = require("./../../config/connection")
 const querystring = require("querystring")
+const dotenv = require("dotenv")
+dotenv.config()
 
 const BoxSchema = require("./../../models/box.schema")
 const User = require("./../../models/user.model")
@@ -238,10 +240,13 @@ export class SyncService {
         let video = await Video.findOne({ link })
 
         if (!video) {
-            const youtubeDetails = await axios.get("http://youtube.com/get_video_info?video_id=" + link)
-            const parsedData = querystring.parse(youtubeDetails.data)
+            const youtubeDetails = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${link}&key=${process.env.YOUTUBE_API_KEY}`).data
 
-            video = await Video.create({ link, name: parsedData.title })
+            video = await Video.create({
+                link,
+                name: youtubeDetails.items[0].snippet.title,
+                duration: youtubeDetails.items[0].contentDetails.duration
+            })
         }
 
         return video
