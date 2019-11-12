@@ -3,6 +3,8 @@ import * as moment from "moment"
 const axios = require("axios")
 const mongoose = require("./../../config/connection")
 const querystring = require("querystring")
+const dotenv = require("dotenv")
+dotenv.config()
 
 const BoxSchema = require("./../../models/box.schema")
 const User = require("./../../models/user.model")
@@ -49,14 +51,14 @@ export class SyncService {
      * @memberof SyncService
      */
     public async onVideo(payload: VideoPayload): Promise<{ feedback: Message, updatedBox: any }> {
-        // Obtaining video from database. Creating it if needed
-        const video = await this.getVideo(payload.link)
-
-        // Finding the user who submitted the video
-        const user = await User.findById(payload.userToken)
-
-        // Adding it to the playlist of the box
         try {
+            // Obtaining video from database. Creating it if needed
+            const video = await this.getVideo(payload.link)
+
+            // Finding the user who submitted the video
+            const user = await User.findById(payload.userToken)
+
+            // Adding it to the playlist of the box
             const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken)
             let message: string
 
@@ -237,14 +239,23 @@ export class SyncService {
     private async getVideo(link: string) {
         let video = await Video.findOne({ link })
 
-        if (!video) {
-            const youtubeDetails = await axios.get("http://youtube.com/get_video_info?video_id=" + link)
-            const parsedData = querystring.parse(youtubeDetails.data)
+        try {
+            if (!video) {
+                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=${link}&key=${process.env.YOUTUBE_API_KEY}`)
 
-            video = await Video.create({ link, name: parsedData.title })
+                const youtubeResponse = youtubeRequest.data
+
+                video = await Video.create({
+                    link,
+                    name: youtubeResponse.items[0].snippet.title,
+                    duration: youtubeResponse.items[0].contentDetails.duration
+                })
+            }
+
+            return video
+        } catch (error) {
+            throw new Error(error)
         }
-
-        return video
     }
 }
 
