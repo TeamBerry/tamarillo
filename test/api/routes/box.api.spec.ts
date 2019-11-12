@@ -7,6 +7,7 @@ const expect = chai.expect
 import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.schema')
 const User = require('./../../../src/models/user.model')
+const SubscriberSchema = require('./../../../src/models/subscriber.schema')
 import { Video } from './../../../src/models/video.model'
 import { AuthApi } from './../../../src/api/routes/auth.api'
 import { Session } from "./../../../src/models/session.model"
@@ -39,6 +40,8 @@ describe("Box API", () => {
         await Video.deleteMany({
             _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
+
+        await SubscriberSchema.deleteMany({})
 
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
@@ -592,6 +595,49 @@ describe("Box API", () => {
                     expect(createdPlaylist.videos).to.deep.equal(playlist.videos)
 
                     await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
+                })
+        })
+    })
+
+    describe("Gets all users currently in a box", () => {
+        before(async () => {
+            await SubscriberSchema.create([
+                {
+                    origin: "BERRYBOX PNEUMA",
+                    boxToken: '9cb763b6e72611381ef043e4',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    socket: ''
+                },
+                {
+                    origin: "BERRYBOX PNEUMA",
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    socket: ''
+                }
+            ])
+        })
+
+        after(async () => {
+            await SubscriberSchema.deleteMany({})
+        })
+
+        it("Sends a 404 back if no box matches the id given", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef044e4/users')
+                .expect(404, 'BOX_NOT_FOUND')
+        })
+
+        it("Sends a 200 with the users", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef043e4/users')
+                .expect(200)
+                .then((response) => {
+                    const users = response.body
+
+                    expect(users).to.have.lengthOf(1)
+
+                    expect(users[0].name).to.equal('Shirona')
+                    expect(users[0].password).to.be.undefined
                 })
         })
     })
