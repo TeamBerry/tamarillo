@@ -6,6 +6,7 @@ const mailQueue = new Queue("mail")
 const User = require("./../../models/user.model")
 import * as jwt from "jsonwebtoken"
 import { Session } from "../../models/session.model"
+import authService from "../services/auth.service"
 
 const dotenv = require("dotenv")
 dotenv.config()
@@ -21,6 +22,9 @@ export class AuthApi {
     public init() {
         this.router.post("/login", this.login)
         this.router.post("/signup", this.signup)
+        this.router.post("/reset", this.triggerPasswordReset.bind(this))
+        this.router.get("/reset/:token", this.checkResetToken)
+        this.router.post("/reset/:token", this.resetPassword)
     }
 
     /**
@@ -93,7 +97,88 @@ export class AuthApi {
                 })
             }
         })
+    }
 
+    /**
+     * Triggers the reset of password for an user
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof AuthApi
+     */
+    public async triggerPasswordReset(request: Request, response: Response): Promise<Response> {
+        const mail = request.body.mail
+
+        try {
+            const resetToken = authService.generateAuthenticationToken(20)
+
+            await User.findOneAndUpdate(
+                { mail },
+                {
+                    $set: { password: null, resetToken }
+                }
+            )
+
+            // Always OK to avoid hackers
+            return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Checks if the reset token exists. This is used to allow an user to reset their password.
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof AuthApi
+     */
+    public async checkResetToken(request: Request, response: Response): Promise<Response> {
+        try {
+            const user = await User.exists({ resetToken: request.params.token })
+
+            if (!user) {
+                return response.status(404).send('TOKEN_NOT_FOUND')
+            }
+
+            return response.status(200).send()
+        } catch (error) {
+            console.log(error)
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Resets the password of an user.
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof AuthApi
+     */
+    public async resetPassword(request: Request, response: Response): Promise<Response> {
+        const matchingUser = await User.findOne({ resetToken: request.params.token })
+
+        if (!matchingUser) {
+            return response.status(404).send('TOKEN_NOT_FOUND')
+        }
+
+        try {
+            const password = request.body.password
+
+            const updatedUser = await User.findByIdAndUpdate(
+                matchingUser._id,
+                {
+                    $set: { password, resetToken: null }
+                }
+            )
+
+            return response.status(200).send()
+        } catch (error) {
+            return response.status(503).send()
+        }
     }
 
     /**

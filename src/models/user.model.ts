@@ -6,6 +6,7 @@ const userSchema = new Schema(
         mail: String,
         password: String,
         favorites: [{ type: Schema.Types.ObjectId, ref: "Video" }],
+        resetToken: String
     },
     {
         timestamps: true, // Will automatically insert createdAt & updatedAt fields
