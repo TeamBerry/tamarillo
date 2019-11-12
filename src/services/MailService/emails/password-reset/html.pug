@@ -1,7 +1,7 @@
 doctype html
-html(lang='en')
+html(lang="en")
   head
-    title Welcome !
+    title Your Password has been reset
     link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
     link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=Montserrat&display=swap')
     style
@@ -12,8 +12,7 @@ html(lang='en')
       .row.justify-content-center
         .col-7
           .mail-contents
-            h1#main-title Welcome!
+            h1#main-title Reset your password.
             hr
-            p Welcome to Berrybox! Your registration is now complete.
-            p Join or create boxes and start sharing your favorite YouTube videos!
-            a(href='http://beta.berrybox.tv').btn.btn-primary Access the site
+            p Your request to reset your password is almost finished! Click below to enter your new password.
+            a(href=`http://beta.berrybox.tv/password/reset?token=${resetToken}`).btn.btn-primary Reset my password

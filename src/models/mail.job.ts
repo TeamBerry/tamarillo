@@ -11,7 +11,7 @@ export class MailJob {
      * @type {string}
      * @memberof MailJob
      */
-    public type: string
+    public template: 'signup' | 'password-reset'
 
     /**
      * Array of mail addresses
@@ -19,5 +19,13 @@ export class MailJob {
      * @type {string[]}
      * @memberof MailJob
      */
-    public addresses: string[]
+    public addresses: Array<string>
+
+    /**
+     * All variables to give to the builder
+     *
+     * @type {*}
+     * @memberof MailJob
+     */
+    public variables: any
 }

@@ -1,4 +1,5 @@
 import * as _ from "lodash"
+import { MailJob } from "../../models/mail.job"
 
 const nodemailer = require("nodemailer")
 const Email = require("email-templates")
@@ -21,7 +22,7 @@ class MailService {
      * @returns {Promise<any>}
      * @memberof MailService
      */
-    public sendMail(type: string, addresses: string[]): Promise<any> {
+    public sendMail(mailJob: MailJob): Promise<any> {
         let transport = nodemailer.createTransport({
             ignoreTLS: true,
             host: "localhost",
@@ -47,10 +48,11 @@ class MailService {
             send: true,
             transport,
         }).send({
-            template: path.resolve(`dist/services/MailService/emails/${type}`),
+            template: path.resolve(`dist/services/MailService/emails/${mailJob.template}`),
             message: {
-                to: addresses,
+                to: mailJob.addresses,
             },
+            locals: mailJob.variables
         })
     }
 }
