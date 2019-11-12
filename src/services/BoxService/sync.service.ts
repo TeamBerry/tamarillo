@@ -241,7 +241,7 @@ export class SyncService {
 
         try {
             if (!video) {
-                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics&id=${link}&key=${process.env.YOUTUBE_API_KEY}`)
+                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=${link}&key=${process.env.YOUTUBE_API_KEY}`)
 
                 const youtubeResponse = youtubeRequest.data
 
