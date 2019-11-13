@@ -16,7 +16,7 @@ describe.skip("MailService", () => {
     describe("Test mail send", () => {
         it("Sends a signup mail", async () => {
             await mailService.sendMail({
-                addresses: ['pinbouen.andreas@gmail.com'],
+                addresses: ['success@simulator.amazonses.com'],
                 variables: {},
                 template: 'signup'
             });
@@ -24,7 +24,7 @@ describe.skip("MailService", () => {
 
         it("Sends a reset password mail", async () => {
             await mailService.sendMail({
-                addresses: ['pinbouen.andreas@gmail.com'],
+                addresses: ['success@simulator.amazonses.com'],
                 variables: {
                     resetToken: '35d76s813ez1s3C7f3dsf1s'
                 },
