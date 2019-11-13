@@ -9,9 +9,9 @@ const Box = require('./../../../src/models/box.schema')
 const User = require('./../../../src/models/user.model')
 const SubscriberSchema = require('./../../../src/models/subscriber.schema')
 import { Video } from './../../../src/models/video.model'
-import { AuthApi } from './../../../src/api/routes/auth.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
+import authService from '../../../src/api/services/auth.service'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -97,8 +97,8 @@ describe("Box API", () => {
             open: false,
         })
 
-        ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
+        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
     })
 
     after(async () => {

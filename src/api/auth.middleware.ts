@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 
 import * as jwt from "jsonwebtoken"
+import { PUBLIC_KEY } from "../config/keys"
 
 // Prevents an API from being accessed unless the user is authentified
 module.exports.isAuthorized = (request: Request, response: Response, next: NextFunction) => {
@@ -54,7 +55,7 @@ function verifyAuth(requestHeadersAuthorization): String {
     // TODO: Add token integrity check (is "Bearer " present?)
 
     // Verify Token
-    const decodedToken = jwt.verify(tokenArray[1], process.env.JWT_PASS, { algorithm: "HS256" })
+    const decodedToken = jwt.verify(tokenArray[1], PUBLIC_KEY, { algorithm: "RS256", issuer: 'Berrybox' })
 
     // Return decoded
     return decodedToken

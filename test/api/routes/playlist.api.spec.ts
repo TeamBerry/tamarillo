@@ -10,6 +10,7 @@ const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Video } from './../../../src/models/video.model'
+import authService from "../../../src/api/services/auth.service"
 
 describe("Playlists API", () => {
     const expressApp = express()
@@ -66,8 +67,8 @@ describe("Playlists API", () => {
             link: 'aC9d3edD3e2'
         })
 
-        ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
+        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
 
         await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
