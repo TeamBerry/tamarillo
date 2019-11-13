@@ -97,14 +97,12 @@ export class SyncService {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        const submissionTime = moment().format("x")
-
         const submission = {
             video: video._id,
             startTime: null,
             endTime: null,
             ignored: false,
-            submitted_at: submissionTime,
+            submittedAt: new Date(),
             submitted_by: userToken,
         }
 

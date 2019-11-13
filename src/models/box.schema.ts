@@ -8,7 +8,7 @@ const boxSchema = new Schema(
         name: String,
         playlist: [{
             _id: false,
-            submitted_at: Number,
+            submittedAt: Date,
             video: { type: Schema.Types.ObjectId, ref: "Video" },
             submitted_by: { type: Schema.Types.ObjectId, ref: "User" },
             startTime: Number,

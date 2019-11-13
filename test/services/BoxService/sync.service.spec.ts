@@ -61,7 +61,7 @@ describe("Sync Service", () => {
                 startTime: 1559294384,
                 endTime: null,
                 ignored: false,
-                submitted_at: 1559294381,
+                submittedAt: 1559294381,
                 submitted_by: '9ca0df5f86abeb66da97ba5d'
             }],
             creator: '9ca0df5f86abeb66da97ba5d',
@@ -132,7 +132,7 @@ describe("Sync Service", () => {
                 startTime: 1559294384,
                 endTime: null,
                 ignored: false,
-                submitted_at: 1559294381,
+                submittedAt: 1559294381,
                 submitted_by: {
                     _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
                     name: 'Ash Ketchum'
