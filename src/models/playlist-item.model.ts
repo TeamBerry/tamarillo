@@ -1,8 +1,8 @@
 export class PlaylistItem {
-    submitted_at: string | number;
-    video: any;
-    submitted_by: any;
-    startTime: string | number;
-    endTime: string | number;
-    ignored: boolean;
+    public submittedAt: Date
+    public video: any
+    public submitted_by: any
+    public startTime: Date
+    public endTime: Date
+    public ignored: boolean
 }

@@ -1,11 +1,14 @@
-import * as _ from 'lodash';
+import * as _ from "lodash"
+import { MailJob } from "../../models/mail.job"
 
-const nodemailer = require('nodemailer');
-const Email = require('email-templates');
-const path = require('path');
+const nodemailer = require("nodemailer")
+const AWS = require("aws-sdk")
+AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: process.env.AWS_PROFILE })
+const Email = require("email-templates")
+const path = require("path")
 
-const dotenv = require('dotenv');
-dotenv.config();
+const dotenv = require("dotenv")
+dotenv.config()
 
 /**
  * Service that handles mailing requests.
@@ -21,39 +24,34 @@ class MailService {
      * @returns {Promise<any>}
      * @memberof MailService
      */
-    sendMail(type: string, addresses: Array<string>): Promise<any> {
-        let transport = nodemailer.createTransport({
-            ignoreTLS: true,
-            host: 'localhost',
-            port: process.env.MAILDEV_PORT || 1025
-        });
+    public sendMail(mailJob: MailJob): Promise<any> {
+        let transport
 
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NODE_ENV === "production") {
+            transport = nodemailer.createTransport({ SES: new AWS.SES({ apiVersion: '2010-12-01' }) })
+        } else {
             transport = nodemailer.createTransport({
-                service: 'Gmail',
-                port: 587,
-                secure: true,
-                auth: {
-                    user: process.env.GMAIL_USER,
-                    pass: process.env.GMAIL_PASS
-                }
-            });
+                ignoreTLS: true,
+                host: "localhost",
+                port: process.env.MAILDEV_PORT || 1025,
+            })
         }
 
         return new Email({
             message: {
-                from: 'system@berrybox.tv'
+                from: "no-reply@berrybox.tv",
             },
             send: true,
-            transport: transport
+            transport,
         }).send({
-            template: path.resolve(`dist/services/MailService/emails/${type}`),
+            template: path.resolve(`dist/services/MailService/emails/${mailJob.template}`),
             message: {
-                to: addresses
-            }
-        });
+                to: mailJob.addresses,
+            },
+            locals: mailJob.variables
+        })
     }
 }
 
-const mailService = new MailService();
-export default mailService;
+const mailService = new MailService()
+export default mailService

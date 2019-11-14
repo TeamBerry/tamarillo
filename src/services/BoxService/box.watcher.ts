@@ -1,68 +1,68 @@
-const Queue = require('bull');
-const boxQueue = new Queue('box');
+const Queue = require("bull")
+const boxQueue = new Queue("box")
 
-import boxService from './box.service';
-import { Message } from '../../models/message.model';
-import { BoxJob } from '../../models/box.job';
+import { BoxJob } from "../../models/box.job"
+import { Message } from "../../models/message.model"
+import boxService from "./box.service"
 
 export class BoxWatcher {
-    listen() {
+    public listen() {
         boxQueue.process((job, done) => {
-            const { boxToken, subject }: BoxJob = job.data;
+            const { boxToken, subject }: BoxJob = job.data
 
             // Do things depending on the subject
-            let message: Message;
+            let message: Message
             switch (subject) {
-                case 'close':
+                case "close":
                     // Build message
                     message = new Message({
-                        author: 'system',
+                        author: "system",
                         contents: `This box has just been closed. Video play and submission have been disabled.
                         Please exit this box.`,
-                        source: 'bot',
-                        scope: boxToken
-                    });
+                        source: "bot",
+                        scope: boxToken,
+                    })
 
                     // Alert subscribers
-                    boxService.alertSubscribers(boxToken, message);
-                    break;
+                    boxService.alertSubscribers(boxToken, message)
+                    break
 
-                case 'open':
+                case "open":
                     // Build message
                     message = new Message({
-                        author: 'system',
-                        contents: 'This box has been reopened. Video play and submissions have been reenabled.',
-                        source: 'bot',
-                        scope: boxToken
-                    });
+                        author: "system",
+                        contents: "This box has been reopened. Video play and submissions have been reenabled.",
+                        source: "bot",
+                        scope: boxToken,
+                    })
 
                     // Alert subscribers
-                    boxService.alertSubscribers(boxToken, message);
+                    boxService.alertSubscribers(boxToken, message)
 
-                case 'destroy':
+                case "destroy":
                     // Build message
                     message = new Message({
-                        author: 'system',
+                        author: "system",
                         contents: `This box is being destroyed following an extended period of inactivity or a decision
                         of its creator. All systems have been deactivated and cannot be restored. Please exit this box.`,
-                        source: 'bot',
-                        scope: boxToken
-                    });
+                        source: "bot",
+                        scope: boxToken,
+                    })
 
                     // Alert subscribers
-                    boxService.alertSubscribers(boxToken, message);
+                    boxService.alertSubscribers(boxToken, message)
 
                     // Remove subscribers
-                    boxService.removeSubscribers(boxToken);
+                    boxService.removeSubscribers(boxToken)
 
                 default:
-                    break;
-            };
+                    break
+            }
 
-            done();
-        });
+            done()
+        })
     }
 }
-const boxWatcher = new BoxWatcher();
-boxWatcher.listen();
-export default boxWatcher;
+const boxWatcher = new BoxWatcher()
+boxWatcher.listen()
+export default boxWatcher

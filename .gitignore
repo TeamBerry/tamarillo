@@ -6,7 +6,9 @@
 /out-tsc
 
 # dependencies
-/node_modules
+node_modules
+docs
+certs
 
 # IDEs and editors
 /.idea
@@ -19,10 +21,7 @@
 
 # IDE - VSCode
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/
 
 # System Files
 .DS_Store
@@ -34,3 +33,4 @@ Thumbs.db
 coverage
 
 \.env
+

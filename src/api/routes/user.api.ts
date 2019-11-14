@@ -1,34 +1,39 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from "express"
 
-const User = require("./../../models/user.model");
-const Box = require("./../../models/box.schema");
+const User = require("./../../models/user.model")
+const Box = require("./../../models/box.schema")
+
+import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
+const auth = require("./../auth.middleware")
 
 export class UserApi {
-    public router: Router;
+    public router: Router
 
     constructor() {
-        this.router = Router();
-        this.init();
+        this.router = Router()
+        this.router.use(auth.isAuthorized)
+        this.init()
     }
 
     public init() {
-        this.router.get("/:user", this.show);
-        this.router.get('/:user/boxes', this.boxes);
-        this.router.post("/", this.store);
-        this.router.put("/:user", this.update);
-        this.router.patch('/:user/favorites', this.patchFavorites);
-        this.router.delete("/:user", this.destroy);
+        this.router.get("/:user", this.show)
+        this.router.get("/:user/boxes", this.boxes)
+        this.router.get('/:user/playlists', this.playlists)
+        this.router.post("/", this.store)
+        this.router.put("/:user", this.update)
+        this.router.patch("/:user/favorites", this.patchFavorites)
+        this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
-        this.router.param('user', async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingUser = await User.findById(request.params.user);
+        this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
+            const matchingUser = await User.findById(request.params.user)
 
             if (!matchingUser) {
-                return response.status(404).send('USER_NOT_FOUND');
+                return response.status(404).send("USER_NOT_FOUND")
             }
 
-            next();
-        });
+            next()
+        })
     }
 
     /**
@@ -41,15 +46,15 @@ export class UserApi {
      * @memberof UserApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        const userId = request.params.user;
+        const userId = request.params.user
 
         try {
             const user = await User.findById(userId)
-                .populate('favorites');
+                .populate("favorites")
 
-            return response.status(200).send(user);
+            return response.status(200).send(user)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -64,11 +69,11 @@ export class UserApi {
      */
     public async store(request: Request, response: Response): Promise<Response> {
         try {
-            const newUser = await User.create(request.body);
+            const newUser = await User.create(request.body)
 
-            return response.status(201).send(newUser);
+            return response.status(201).send(newUser)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
         }
     }
 
@@ -77,29 +82,29 @@ export class UserApi {
     }
 
     public patchFavorites(req: Request, res: Response) {
-        console.log('PATCHING USER: ' + req.params.user + 'WITH DATA: ', req.body);
+        console.log("PATCHING USER: " + req.params.user + "WITH DATA: ", req.body)
 
-        const favoritesList = [];
-        req.body.forEach(favorite => {
-            favoritesList.push(favorite._id);
-        });
+        const favoritesList = []
+        req.body.forEach((favorite) => {
+            favoritesList.push(favorite._id)
+        })
 
         User.findByIdAndUpdate(
             req.params.user,
             { $set: { favorites: favoritesList } },
             { new: true })
-            .populate('favorites')
+            .populate("favorites")
             .exec((err, document) => {
                 if (err) {
-                    res.status(500).send(err);
+                    res.status(500).send(err)
                 }
 
                 if (document) {
-                    res.status(200).send(document);
+                    res.status(200).send(document)
                 }
 
-                res.status(204);
-            });
+                res.status(204)
+            })
     }
 
     public destroy(req: Request, res: Response) {
@@ -117,19 +122,54 @@ export class UserApi {
      * @memberof UserApi
      */
     public async boxes(request: Request, response: Response): Promise<Response> {
-        const userId = request.params.user;
+        const userId = request.params.user
 
         try {
             const boxes = await Box.find({ creator: userId })
-                .populate('creator', '_id name');
+                .populate("creator", "_id name")
 
-            return response.status(200).send(boxes);
+            return response.status(200).send(boxes)
         } catch (error) {
-            return response.status(500).send(error);
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Gets the playlists of an user. Will serve only public or public and private boxes depending
+     * on who pings the API:
+     * - Only public playlists will be shown if the authentication shows a different user than the creator
+     * - All playlists if the user is requesting his own playlists
+     * @param request The request, containing the user as a parameter
+     * @param response
+     * @returns {Promise<Response>} An array of user playlists or one of the following error codes:
+     * - 404 'USER_NOT_FOUND' if no user matches the given ObjectId in parameter
+     */
+    public async playlists(request: Request, response: Response): Promise<Response> {
+        const filters = {
+            user: request.params.user,
+            isPrivate: false,
+        }
+
+        const decodedToken = response.locals.auth
+
+        try {
+            // If the token is decoded correctly and the user inside matches the request parameters, the privacy filter
+            // is removed so that the API serves private and public playlists.
+            if (decodedToken && decodedToken.user === request.params.user) {
+                delete filters.isPrivate
+            }
+
+            const userPlaylists: UserPlaylistClass[] = await UserPlaylist
+                .find(filters)
+                .populate("videos")
+
+            return response.status(200).send(userPlaylists)
+        } catch (error) {
+            console.log('ERROR: ', error)
+            return response.status(500).send(error)
         }
     }
 }
 
-
-const userApi = new UserApi();
-export default userApi.router;
+const userApi = new UserApi()
+export default userApi.router

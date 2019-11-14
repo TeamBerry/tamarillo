@@ -1,11 +1,15 @@
-import mongoose = require("mongoose");
+import mongoose = require("mongoose")
+const dotenv = require("dotenv")
+dotenv.config()
 
-mongoose.connect("mongodb://127.0.0.1:27017/berrybox", { useNewUrlParser: true, useFindAndModify: true });
+const dbName = process.env.NODE_ENV === 'test' ? 'kiwi_test' : 'kiwi'
 
-var db = mongoose.connection;
+mongoose.connect(`mongodb://127.0.0.1:27017/${dbName}`, { useNewUrlParser: true, useFindAndModify: true })
 
-db.on('open', () => {
-    console.log("Connected to MongoDB.");
-});
+const db = mongoose.connection
 
-module.exports = mongoose;
+db.on("open", () => {
+    console.log("Connected to MongoDB.")
+})
+
+module.exports = mongoose

@@ -1,6 +1,6 @@
 export class Subscriber {
-    origin: string;
-    boxToken: string;
-    userToken: string;
-    socket: string;
+    public origin: string
+    public boxToken: string
+    public userToken: string
+    public socket: string
 }

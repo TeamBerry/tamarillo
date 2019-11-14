@@ -1,4 +1,4 @@
-import { PlaylistItem } from "./playlist-item.model";
+import { PlaylistItem } from "./playlist-item.model"
 
 /**
  * Packet sent to clients for video sync
@@ -10,7 +10,7 @@ export class SyncPacket {
      * @type {string}
      * @memberof SyncPacket
      */
-    box: string;
+    public box: string
 
     /**
      * The video to play to ensure sync
@@ -18,5 +18,5 @@ export class SyncPacket {
      * @type {PlaylistItem}
      * @memberof SyncPacket
      */
-    item: PlaylistItem;
+    public item: PlaylistItem
 }
