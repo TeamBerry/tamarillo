@@ -13,7 +13,7 @@ jobs:
                 command: npm install
             - run:
                 name: Setup auth keys
-                command: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -ouform PEM -out auth.pub;
+                command: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -outform PEM -out auth.pub;
             - run:
                 name: Run Tests
                 command: npm run test
