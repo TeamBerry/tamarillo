@@ -27,12 +27,12 @@ export class AuthService {
      * Creates the session for the user, based on the results of the login/signup
      *
      * @private
-     * @param {*} user The user for whom the session is created
+     * @param {{ _id: string, name: string, mail: string }} user The user for whom the session is created
      * @param {number | string} [tokenExpiration=1296000] The duration of the session token (defaults to 1296000 seconds or 15 days)
      * @returns {Session} The JSON Web Token
      * @memberof AuthApi
      */
-    public createSession(user, tokenExpiration: number | string = 1296000): Session {
+    public createSession(user: { _id: string, name: string, mail: string }, tokenExpiration: number | string = 1296000): Session {
         // If password is correct, Create & Sign Bearer token and send it back to client
         const jwtBearerToken = jwt.sign(
             {
