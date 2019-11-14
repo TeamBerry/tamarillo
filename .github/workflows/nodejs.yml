@@ -13,6 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - uses: docker://mongo
+    - uses: docker://redis
+    - uses: docker//djfarrelly/maildev
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
