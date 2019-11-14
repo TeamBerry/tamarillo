@@ -58,10 +58,10 @@ describe("Sync Service", () => {
             name: 'Box playing',
             playlist: [{
                 video: '9cb81150594b2e75f06ba90a',
-                startTime: 1559294384,
+                startTime: "2019-05-31T09:19:44+0000",
                 endTime: null,
                 ignored: false,
-                submittedAt: 1559294381,
+                submittedAt: "2019-05-31T09:19:41+0000",
                 submitted_by: '9ca0df5f86abeb66da97ba5d'
             }],
             creator: '9ca0df5f86abeb66da97ba5d',
@@ -129,10 +129,10 @@ describe("Sync Service", () => {
                     link: 'j6okxJ1CYJM',
                     name: 'The Piano Before Cynthia',
                 },
-                startTime: 1559294384,
+                startTime: new Date("2019-05-31T09:19:44+0000"),
                 endTime: null,
                 ignored: false,
-                submittedAt: 1559294381,
+                submittedAt: new Date("2019-05-31T09:19:41+0000"),
                 submitted_by: {
                     _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
                     name: 'Ash Ketchum'

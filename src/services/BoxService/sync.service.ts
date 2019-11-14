@@ -158,7 +158,7 @@ export class SyncService {
      * @memberof SyncService
      */
     public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
-        const transitionTime = moment().format("x")
+        const transitionTime = new Date()
         const response = null
 
         const box: Box = await BoxSchema.findById(boxToken)
