@@ -3,7 +3,7 @@ jobs:
     build:
         docker:
             - image: circleci/node:8.10
-            - image: circle/mongo:3.6.14
+            - image: circleci/mongo:3.6.14
             - image: circleci/redis
             - image: djfarrelly/maildev
         steps:
