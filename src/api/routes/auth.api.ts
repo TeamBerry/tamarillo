@@ -4,8 +4,6 @@ const Queue = require("bull")
 const mailQueue = new Queue("mail")
 
 const User = require("./../../models/user.model")
-import * as jwt from "jsonwebtoken"
-import { Session } from "../../models/session.model"
 import authService from "../services/auth.service"
 import { MailJob } from "../../models/mail.job"
 
@@ -56,7 +54,7 @@ export class AuthApi {
                 return res.status(401).send("INVALID_CREDENTIALS") // Unauthorized
             }
 
-            const authResult = authApi.createSession(user)
+            const authResult = authService.createSession(user)
 
             // Sending bearer token
             return res.status(200).json(authResult)
@@ -94,7 +92,7 @@ export class AuthApi {
                     }
                     mailQueue.add(mailJob)
 
-                    const authResult = authApi.createSession(newUser)
+                    const authResult = authService.createSession(newUser)
 
                     res.status(200).json(authResult)
                 })
@@ -191,36 +189,6 @@ export class AuthApi {
             return response.status(200).send()
         } catch (error) {
             return response.status(503).send()
-        }
-    }
-
-    /**
-     *
-     * Creates the session for the user, based on the results of the login/signup
-     *
-     * @private
-     * @param {*} user The user for whom the session is created
-     * @param {number | string} [tokenExpiration=1296000] The duration of the session token (defaults to 1296000 seconds or 15 days)
-     * @returns {Session} The JSON Web Token
-     * @memberof AuthApi
-     */
-    public createSession(user, tokenExpiration: number | string = 1296000): Session {
-        // If password is correct, Create & Sign Bearer token and send it back to client
-        const jwtBearerToken = jwt.sign(
-            {
-                user: user._id
-            },
-            process.env.JWT_PASS,
-            {
-                algorithm: "HS256",
-                expiresIn: tokenExpiration
-            }
-        )
-
-        return {
-            bearer: jwtBearerToken,
-            subject: user,
-            expiresIn: tokenExpiration,
         }
     }
 }

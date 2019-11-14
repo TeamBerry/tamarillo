@@ -13,7 +13,7 @@ describe("Chat Service", () => {
                 contents: 'This is an invalid test message',
                 source: '54cxpsdjqhdjad',
                 scope: null,
-                time: moment()
+                time: new Date()
             };
 
             let response = await chatService.isMessageValid(invalidMessage);
@@ -28,7 +28,7 @@ describe("Chat Service", () => {
                 contents: 'This is an invalid test message',
                 source: '54cxpsdjqhdjad',
                 scope: 'box',
-                time: moment()
+                time: new Date()
             };
 
             let response = await chatService.isMessageValid(invalidMessage);

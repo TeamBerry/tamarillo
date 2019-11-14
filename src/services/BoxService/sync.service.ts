@@ -97,14 +97,12 @@ export class SyncService {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        const submissionTime = moment().format("x")
-
         const submission = {
             video: video._id,
             startTime: null,
             endTime: null,
             ignored: false,
-            submitted_at: submissionTime,
+            submittedAt: new Date(),
             submitted_by: userToken,
         }
 
@@ -160,7 +158,7 @@ export class SyncService {
      * @memberof SyncService
      */
     public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
-        const transitionTime = moment().format("x")
+        const transitionTime = new Date()
         const response = null
 
         const box: Box = await BoxSchema.findById(boxToken)

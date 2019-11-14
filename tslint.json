@@ -29,5 +29,5 @@
         "trailing-comma": [true, "never"],
         "variable-name": false
     },
-    "rulesDirectory": [],
+    "rulesDirectory": []
 }

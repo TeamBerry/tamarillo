@@ -9,6 +9,7 @@ import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist } from './../../../src/models/user-playlist.model'
+import authService from "../../../src/api/services/auth.service"
 
 describe("User API", () => {
     const expressApp = express()
@@ -42,8 +43,8 @@ describe("User API", () => {
             password: 'Piano',
         })
 
-        ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
+        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
 
         await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",

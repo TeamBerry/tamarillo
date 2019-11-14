@@ -9,9 +9,9 @@ const Box = require('./../../../src/models/box.schema')
 const User = require('./../../../src/models/user.model')
 const SubscriberSchema = require('./../../../src/models/subscriber.schema')
 import { Video } from './../../../src/models/video.model'
-import { AuthApi } from './../../../src/api/routes/auth.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
+import authService from '../../../src/api/services/auth.service'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -97,8 +97,8 @@ describe("Box API", () => {
             open: false,
         })
 
-        ashJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = AuthApi.prototype.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
+        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
     })
 
     after(async () => {
@@ -335,18 +335,18 @@ describe("Box API", () => {
                 playlist: [
                     {
                         video: '9bc72f3d7edc6312d0ef2e47',
-                        startTime: 1526835089934,
-                        endTime: 1562835233415,
+                        startTime: "2018-05-20T16:51:29.934+0000",
+                        endTime: "2019-07-11T08:53:53.415+0000",
                         ignored: false,
-                        submitted_at: 1562835089885,
+                        submittedAt: "2019-07-11T08:51:29.885+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
                     {
                         video: '9bc72f3d7edc6312d0ef2e48',
-                        startTime: 1562835233415,
+                        startTime: "2019-07-11T08:53:53.415+0000",
                         endTime: null,
                         ignored: false,
-                        submitted_at: 1562835089886,
+                        submittedAt: "2019-07-11T08:51:29.886+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
                 ],
@@ -362,18 +362,18 @@ describe("Box API", () => {
                 playlist: [
                     {
                         video: '9bc72f3d7edc6312d0ef2e47',
-                        startTime: 1526835089934,
-                        endTime: 1562835233415,
+                        startTime: "2018-05-20T16:51:29.934+0000",
+                        endTime: "2019-07-11T08:53:53.415+0000",
                         ignored: false,
-                        submitted_at: 1562835089885,
+                        submittedAt: "2019-07-11T08:51:29.885+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
                     {
                         video: '9bc72f3d7edc6312d0ef2e48',
-                        startTime: 1562835233415,
+                        startTime: "2019-07-11T08:53:53.415+0000",
                         endTime: null,
                         ignored: false,
-                        submitted_at: 1562835089886,
+                        submittedAt: "2019-07-11T08:51:29.886+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
                     {
@@ -381,7 +381,7 @@ describe("Box API", () => {
                         startTime: null,
                         endTime: null,
                         ignored: false,
-                        submitted_at: 1562835089887,
+                        submittedAt: "2019-07-11T08:51:29.887+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
                 ],
