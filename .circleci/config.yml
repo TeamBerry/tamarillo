@@ -1,12 +1,19 @@
 version: 2.1
 jobs:
-    build:
+    build_and_test:
         docker:
-            - image: circleci/node
-            - image: mongo
-            - image: redis
+            - image: circleci/node:8.10
+            - image: circle/mongo:3.6.14
+            - image: circleci/redis
             - image: djfarrelly/maildev
         steps:
             - checkout
-            - run: npm install
-            - run: npm test
+            - run:
+                name: Installing Dependencies
+                command: npm install
+            - run:
+                name: Setup auth keys
+                command: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -ouform PEM -out auth.pub;
+            - run:
+                name: Run Tests
+                command: npm run test
