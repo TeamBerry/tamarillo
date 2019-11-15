@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express"
 
 const Queue = require("bull")
 const mailQueue = new Queue("mail")
+import * as bcrypt from 'bcrypt'
 
 const User = require("./../../models/user.model")
 import authService from "../services/auth.service"
@@ -12,6 +13,7 @@ dotenv.config()
 
 export class AuthApi {
     public router: Router
+    public readonly SALT_ROUNDS = 10
 
     constructor() {
         this.router = Router()
@@ -20,10 +22,10 @@ export class AuthApi {
 
     public init() {
         this.router.post("/login", this.login)
-        this.router.post("/signup", this.signup)
+        this.router.post("/signup", this.signup.bind(this))
         this.router.post("/reset", this.triggerPasswordReset.bind(this))
         this.router.get("/reset/:token", this.checkResetToken)
-        this.router.post("/reset/:token", this.resetPassword)
+        this.router.post("/reset/:token", this.resetPassword.bind(this))
     }
 
     /**
@@ -47,57 +49,59 @@ export class AuthApi {
 
         try {
             // Find user in database
-            const user = await User.findOne({ mail, password }, 'name mail')
+            const user = await User.findOne({ mail }, 'name mail password')
 
             // If password is not correct, send back 401 HTTP error
             if (!user) {
                 return res.status(401).send("INVALID_CREDENTIALS") // Unauthorized
             }
 
-            const authResult = authService.createSession(user)
+            if (await bcrypt.compare(password, user.password)) {
+                const authResult = authService.createSession({ _id: user._id, name: user.name, mail: user.mail })
 
-            // Sending bearer token
-            return res.status(200).json(authResult)
+
+                // Sending bearer token
+                return res.status(200).json(authResult)
+            } else {
+                return res.status(401).send("INVALID_CREDENTIALS")
+            }
         } catch (error) {
             console.log(error)
             return res.status(500).send(error)
         }
     }
 
-    public signup(req: Request, res: Response) {
-        const mail = req.body.mail
-        const password = req.body.password
-        const name = req.body.username
+    public async signup(request: Request, response: Response): Promise<Response> {
+        const { mail, password, name } = request.body
 
-        User.findOne({ mail }, (err, user) => {
-            if (err) {
-                res.status(500).send(err)
+        try {
+            const userExists = await User.exists({ mail })
+
+            if (userExists) {
+                return response.status(409).send()
             }
 
-            if (user) {
-                res.status(400).send("DUPLICATE_MAIL") // 400 Bad Request
-            } else {
-                User.create({ mail, password, name }, (err, newUser) => {
-                    if (err) {
-                        res.status(500).send(err)
-                    }
+            const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS)
 
-                    // Once the user is crated, we send a mail to the address to welcome him
-                    const mailJob: MailJob = {
-                        addresses: [mail],
-                        variables: {
-                            name: name
-                        },
-                        template: "signup",
-                    }
-                    mailQueue.add(mailJob)
+            const createdUser = await User.create({
+                mail,
+                password: hashedPassword,
+                name
+            })
 
-                    const authResult = authService.createSession(newUser)
-
-                    res.status(200).json(authResult)
-                })
+            const mailJob: MailJob = {
+                addresses: [mail],
+                variables: { name },
+                template: "signup"
             }
-        })
+            mailQueue.add(mailJob)
+
+            const authResult = authService.createSession(createdUser)
+
+            return response.status(200).send(authResult)
+        } catch (error) {
+            response.status(500).send(error)
+        }
     }
 
     /**
@@ -177,7 +181,7 @@ export class AuthApi {
         }
 
         try {
-            const password = request.body.password
+            const password = await bcrypt.hash(request.body.password, this.SALT_ROUNDS)
 
             await User.findByIdAndUpdate(
                 matchingUser._id,
@@ -188,7 +192,8 @@ export class AuthApi {
 
             return response.status(200).send()
         } catch (error) {
-            return response.status(503).send()
+            console.log(error)
+            return response.status(500).send()
         }
     }
 }

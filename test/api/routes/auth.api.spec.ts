@@ -1,3 +1,4 @@
+import * as bcrypt from "bcrypt"
 import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
@@ -20,11 +21,13 @@ describe("Auth API", () => {
         before(async () => {
             await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
 
+            const password = await bcrypt.hash('Pikachu', 10)
+
             await User.create({
                 _id: '9ca0df5f86abeb66da97ba5d',
                 name: 'Ash Ketchum',
                 mail: 'ash@pokemon.com',
-                password: 'Pikachu'
+                password
             })
         })
 
@@ -75,7 +78,38 @@ describe("Auth API", () => {
     })
 
     describe("Signup", () => {
+        before(async () => {
+            await User.create({
+                _id: '9ca0df5f86abeb66da97ba5d',
+                name: 'Ash Ketchum',
+                mail: 'ash@pokemon.com',
+                password: 'Pikachu',
+                resetToken: null
+            })
+        })
 
+        after(async () => {
+            await User.deleteMany({})
+        })
+
+        it("Sends a 409 if the user already exists", async () => {
+            return supertest(expressApp)
+                .post('/signup')
+                .send({ mail: 'ash@pokemon.com', password: 'Mewtwo' })
+                .expect(409)
+        })
+
+        it("Returns a 200 with an active session", async () => {
+            return supertest(expressApp)
+                .post('/signup')
+                .send({ mail: 'blue@pokemon.com', password: 'Ratticate' })
+                .expect(200)
+                .then(async () => {
+                    const user = await User.findOne({ mail: 'blue@pokemon.com' })
+
+                    expect(user.password).to.not.equal('Ratticate')
+                })
+        })
     })
 
     describe("Reset password", () => {
