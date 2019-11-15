@@ -3,8 +3,8 @@ import * as _ from "lodash"
 
 // MongoDB & Sockets
 const express = require("express")()
-const http = require("http").Server(express)
-const io = require("socket.io")(http)
+const https = require("https").Server(express)
+const io = require("socket.io")(https)
 io.set("transports", ["websocket"])
 
 // Models
@@ -28,7 +28,7 @@ class BoxService {
         console.log("Manager service initialisation...")
 
         // Start listening on port 8008.
-        http.listen(8008, async () => {
+        https.listen(8008, async () => {
             // Empty subscribers collection
             await SubscriberSchema.deleteMany({})
 
