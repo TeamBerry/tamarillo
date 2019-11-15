@@ -4,7 +4,7 @@ const path = require('path')
 
 import mailService from './../../../src/services/MailService/mail.service'
 
-describe.skip("MailService", () => {
+describe.only("MailService", () => {
     before(() => {
 
     })
@@ -13,7 +13,7 @@ describe.skip("MailService", () => {
 
     })
 
-    describe("Test mail send", () => {
+    describe.only("Test mail send", () => {
         it("Sends a signup mail", async () => {
             await mailService.sendMail({
                 addresses: ['angelzatch@gmail.com'],
