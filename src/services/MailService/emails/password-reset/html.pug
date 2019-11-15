@@ -2,7 +2,6 @@ doctype html
 html(lang="en")
   head
     title Your Password has been reset
-    link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
     link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=Montserrat&display=swap')
     style
       include style.css
@@ -15,4 +14,4 @@ html(lang="en")
             h1#main-title Reset your password.
             hr
             p Your request to reset your password is almost finished! Click below to enter your new password.
-            a(href=`http://beta.berrybox.tv/password/reset?token=${resetToken}`).btn.btn-primary Reset my password
+            a(href=`https://berrybox.tv/password/reset?token=${resetToken}`).btn.btn-primary Reset my password
