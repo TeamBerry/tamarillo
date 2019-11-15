@@ -13,7 +13,7 @@ describe.skip("MailService", () => {
 
     })
 
-    describe.only("Test mail send", () => {
+    describe("Test mail send", () => {
         it("Sends a signup mail", async () => {
             await mailService.sendMail({
                 addresses: ['angelzatch@gmail.com'],
