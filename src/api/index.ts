@@ -1,8 +1,8 @@
-import * as https from "https"
+import * as http from "http"
 const mongoose = require("./../config/connection")
 
 import App from "./app"
 
-https
+http
     .createServer(App)
     .listen(3000)
