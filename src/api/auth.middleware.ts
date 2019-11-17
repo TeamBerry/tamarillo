@@ -3,39 +3,34 @@ import { NextFunction, Request, Response } from "express"
 import * as jwt from "jsonwebtoken"
 import { PUBLIC_KEY } from "../config/keys"
 
+const User = require("../models/user.model")
+
 // Prevents an API from being accessed unless the user is authentified
-module.exports.isAuthorized = (request: Request, response: Response, next: NextFunction) => {
-    console.log("Auth middleware check...")
+module.exports.isAuthorized = async (request: Request, response: Response, next: NextFunction) => {
     const auth = request.headers.authorization
     if (auth) {
         try {
             // Pass token to other methods in the chain
-            response.locals.auth = verifyAuth(request.headers.authorization)
+            response.locals.auth = await verifyAuth(request.headers.authorization)
 
             return next()
         } catch (error) {
-            console.log("Access refused: ", error)
-
             return response.status(401).send("UNAUTHORIZED")
         }
     }
-    console.log("Access refused. No auth is given")
     return response.status(401).send("UNAUTHORIZED")
 }
 
 // Allows an API to be reached even without authentification, but gives the decoded token if there's one
-module.exports.canBeAuthorized = (request: Request, response: Response, next: NextFunction) => {
-    console.log("Auth middleware check...")
+module.exports.canBeAuthorized = async (request: Request, response: Response, next: NextFunction) => {
     const auth = request.headers.authorization
     if (auth) {
         try {
             // Pass token to other methods in the chain
-            response.locals.auth = verifyAuth(request.headers.authorization)
+            response.locals.auth = await verifyAuth(request.headers.authorization)
 
             return next()
         } catch (error) {
-            console.log("Access refused: ", error)
-
             return response.status(401).send("UNAUTHORIZED")
         }
     }
@@ -48,15 +43,25 @@ module.exports.canBeAuthorized = (request: Request, response: Response, next: Ne
  * @param {*} requestHeadersAuthorization
  * @returns {String} The decoded token
  */
-function verifyAuth(requestHeadersAuthorization): String {
+async function verifyAuth(requestHeadersAuthorization) {
     // Split the token to isolate parts (since it's a Bearer token, some parts like "Bearer " have to be left out)
     const tokenArray = requestHeadersAuthorization.split(" ")
 
     // TODO: Add token integrity check (is "Bearer " present?)
 
     // Verify Token
-    const decodedToken = jwt.verify(tokenArray[1], PUBLIC_KEY, { algorithm: "RS256", issuer: 'Berrybox' })
+    try {
+        // Verify JWT validity
+        const decodedToken = jwt.verify(tokenArray[1], PUBLIC_KEY, { algorithm: "RS256", issuer: 'Berrybox' })
 
-    // Return decoded
-    return decodedToken
+        // Verify user existence
+        if (!await User.exists({ _id: decodedToken.user })) {
+            throw new Error()
+        }
+
+        // Return decoded
+        return decodedToken
+    } catch (error) {
+        throw new Error()
+    }
 }
