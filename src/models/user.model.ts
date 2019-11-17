@@ -8,7 +8,7 @@ const userSchema = new Schema(
         favorites: [{ type: Schema.Types.ObjectId, ref: "Video" }],
         resetToken: { type: String, default: null },
         settings: {
-            theme: String
+            theme: { type: String, default: 'dark' }
         }
     },
     {
