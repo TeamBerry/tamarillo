@@ -34,6 +34,9 @@ describe("User API", () => {
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
             password: 'Pikachu',
+            settings: {
+                theme: 'light'
+            }
         })
 
         await User.create({
@@ -41,6 +44,9 @@ describe("User API", () => {
             name: 'Shirona',
             mail: 'shirona@sinnoh-league.com',
             password: 'Piano',
+            settings: {
+                theme: 'dark'
+            }
         })
 
         ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
@@ -92,6 +98,34 @@ describe("User API", () => {
                 .get('/9ca0df5f86abeb66da97ba5d')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
+        })
+    })
+
+    describe("Update their settings", () => {
+        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
+            return supertest(expressApp)
+                .patch('/settings')
+                .expect(401)
+        })
+
+        it("Sends a 412 if no settings are given", () => {
+            return supertest(expressApp)
+                .patch('/settings')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(412)
+        })
+
+        it("Sends a 200 if all goes well", () => {
+            return supertest(expressApp)
+                .patch('/settings')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({ theme: 'dark' })
+                .expect(200)
+                .then(async () => {
+                    const user = await User.findById('9ca0df5f86abeb66da97ba5d')
+
+                    expect(user.settings.theme).to.equal("light")
+                })
         })
     })
 
