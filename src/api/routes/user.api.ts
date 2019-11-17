@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express"
+import * as _ from "lodash"
 
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.schema")
@@ -22,6 +23,7 @@ export class UserApi {
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
         this.router.patch("/:user/favorites", this.patchFavorites)
+        this.router.patch("/settings", auth.isAuthorized, this.patchSettings)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
@@ -105,6 +107,27 @@ export class UserApi {
 
                 res.status(204)
             })
+    }
+
+    public async patchSettings(request: Request, response: Response): Promise<Response> {
+        try {
+            const settings = request.body
+
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send("MISSING_PARAMETERS")
+            }
+
+            await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                {
+                    $set: settings
+                }
+            )
+
+            return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send()
+        }
     }
 
     public destroy(req: Request, res: Response) {

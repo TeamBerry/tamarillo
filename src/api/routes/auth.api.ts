@@ -57,7 +57,7 @@ export class AuthApi {
             }
 
             if (await bcrypt.compare(password, user.password)) {
-                const authResult = authService.createSession({ _id: user._id, name: user.name, mail: user.mail })
+                const authResult = authService.createSession(user)
 
 
                 // Sending bearer token

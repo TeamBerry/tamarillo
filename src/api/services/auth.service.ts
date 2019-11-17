@@ -1,7 +1,7 @@
 import * as jwt from "jsonwebtoken"
 
-import { Session } from "../../models/session.model"
 import { PRIVATE_KEY } from '../../config/keys'
+import { IAuthSubject, Session } from "../../models/session.model"
 
 export class AuthService {
     /**
@@ -32,8 +32,14 @@ export class AuthService {
      * @returns {Session} The JSON Web Token
      * @memberof AuthApi
      */
-    public createSession(user: { _id: string, name: string, mail: string }, tokenExpiration: number | string = 1296000): Session {
+    public createSession(user, tokenExpiration: number | string = 1296000): Session {
         // If password is correct, Create & Sign Bearer token and send it back to client
+        const authSubject: IAuthSubject = {
+            _id: user._id,
+            name: user.name,
+            settings: user.settings
+        }
+
         const jwtBearerToken = jwt.sign(
             {
                 user: user._id
@@ -41,6 +47,7 @@ export class AuthService {
             PRIVATE_KEY,
             {
                 issuer: 'Berrybox',
+                subject: JSON.stringify(authSubject),
                 algorithm: "RS256",
                 expiresIn: tokenExpiration
             }
@@ -48,7 +55,7 @@ export class AuthService {
 
         return {
             bearer: jwtBearerToken,
-            subject: user,
+            subject: authSubject,
             expiresIn: tokenExpiration,
         }
     }
