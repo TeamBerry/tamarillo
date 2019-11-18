@@ -124,7 +124,6 @@ describe("User API", () => {
                 .then(async () => {
                     const user = await User.findById('9ca0df5f86abeb66da97ba5d')
 
-                    expect(user.settings.theme).to.equal("light")
                     expect(user.settings.theme).to.equal("dark")
                 })
         })
