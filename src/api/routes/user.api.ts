@@ -120,7 +120,7 @@ export class UserApi {
             await User.findByIdAndUpdate(
                 response.locals.auth.user,
                 {
-                    $set: settings
+                    $set: { settings }
                 }
             )
 
