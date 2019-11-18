@@ -5,6 +5,7 @@ const User = require("./../../models/user.model")
 const Box = require("./../../models/box.schema")
 
 import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
+import { Video } from "../../models/video.model"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -22,7 +23,7 @@ export class UserApi {
         this.router.get('/:user/playlists', this.playlists)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
-        this.router.patch("/:user/favorites", this.patchFavorites)
+        this.router.post("/favorites", auth.isAuthorized, this.updateFavorites)
         this.router.patch("/settings", auth.isAuthorized, this.patchSettings)
         this.router.delete("/:user", this.destroy)
 
@@ -83,30 +84,47 @@ export class UserApi {
 
     }
 
-    public patchFavorites(req: Request, res: Response) {
-        console.log("PATCHING USER: " + req.params.user + "WITH DATA: ", req.body)
+    /**
+     * Updates the favorites of an user
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof UserApi
+     */
+    public async updateFavorites(request: Request, response: Response): Promise<Response> {
+        const command: { action: 'like' | 'unlike', target: string } = request.body
 
-        const favoritesList = []
-        req.body.forEach((favorite) => {
-            favoritesList.push(favorite._id)
-        })
+        if (_.isEmpty(command)) {
+            return response.status(412).send()
+        }
 
-        User.findByIdAndUpdate(
-            req.params.user,
-            { $set: { favorites: favoritesList } },
-            { new: true })
-            .populate("favorites")
-            .exec((err, document) => {
-                if (err) {
-                    res.status(500).send(err)
+        try {
+            let query = {}
+
+            if (command.action === 'like') {
+                query = { $push: { favorites: command.target } }
+            } else {
+                query = { $pull: { favorites: command.target } }
+            }
+
+            if (!await Video.exists({ _id: command.target })) {
+                return response.status(404).send('VIDEO_NOT_FOUND')
+            }
+
+            const updatedUser = await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                query,
+                {
+                    new: true
                 }
+            )
+                .populate("favorites")
 
-                if (document) {
-                    res.status(200).send(document)
-                }
-
-                res.status(204)
-            })
+            return response.status(200).send(updatedUser.favorites)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
     }
 
     public async patchSettings(request: Request, response: Response): Promise<Response> {
