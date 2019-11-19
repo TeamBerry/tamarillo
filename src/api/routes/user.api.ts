@@ -23,9 +23,12 @@ export class UserApi {
         this.router.get('/:user/playlists', this.playlists)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
-        this.router.post("/favorites", auth.isAuthorized, this.updateFavorites)
-        this.router.patch("/settings", auth.isAuthorized, this.patchSettings)
         this.router.delete("/:user", this.destroy)
+        
+        this.router.use(auth.isAuthorized)
+        this.router.get('/favorites', this.favorites)
+        this.router.post("/favorites", this.updateFavorites)
+        this.router.patch("/settings", this.patchSettings)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -82,6 +85,15 @@ export class UserApi {
 
     public update(req: Request, res: Response) {
 
+    }
+
+    public async favorites(request: Request, response: Response): Promise<Response> {
+        return response.status(503).send()
+
+        // const user = await User.findById(response.locals.auth.user)
+        //     .populate('favorites')
+
+        // return response.status(200).send('LOL')
     }
 
     /**

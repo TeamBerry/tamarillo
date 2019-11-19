@@ -4,7 +4,6 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import { AuthApi } from './../../../src/api/routes/auth.api'
 import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
@@ -34,6 +33,16 @@ describe("User API", () => {
             _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
 
+        await Video.create([{
+            _id: '9bc72f3d7edc6312d0ef2e47',
+            name: 'First Video',
+            link: '4c6e3f_aZ0d'
+        }, {
+            _id: '9bc72f3d7edc6312d0ef2e48',
+            name: 'Second Video',
+            link: 'aC9d3edD3e2'
+        }])
+
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
@@ -55,17 +64,6 @@ describe("User API", () => {
             },
             favorites: ['9bc72f3d7edc6312d0ef2e48']
         })
-
-        await Video.create([{
-            _id: '9bc72f3d7edc6312d0ef2e47',
-            name: 'First Video',
-            link: '4c6e3f_aZ0d'
-        }, {
-            _id: '9bc72f3d7edc6312d0ef2e48',
-            name: 'Second Video',
-            link: 'aC9d3edD3e2'
-        }])
-
 
         ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
         foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
@@ -145,6 +143,53 @@ describe("User API", () => {
                     expect(user.settings.theme).to.equal("dark")
                 })
         })
+    })
+
+    describe("Getting the favorites of an user", () => {
+        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
+            return supertest(expressApp)
+                .get('/favorites')
+                .expect(401)
+        })
+
+        it("Sends a 200 with the favorites", () => {
+            return supertest(expressApp)
+                .get('/favorites')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    console.log('FAVORITES')
+                    // const favorites = response.body
+
+                    // expect(favorites).to.have.lengthOf(1)
+                    // expect(favorites[0].name).to.equal('Second Video')
+                })
+        })
+
+        // it("Returns an enmpty array when search gives off nothing", () => {
+        //     return supertest(expressApp)
+        //         .get('/favorites?title=piano')
+        //         .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+        //         .expect(200)
+        //         .then((response) => {
+        //             const favorites = response.body
+
+        //             expect(favorites).to.have.lengthOf(0)
+        //         })
+        // })
+
+        // it("Searches through favorites by title", () => {
+        //     return supertest(expressApp)
+        //         .get('/favorites?title=video')
+        //         .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+        //         .expect(200)
+        //         .then((response) => {
+        //             const favorites = response.body
+
+        //             expect(favorites).to.have.lengthOf(1)
+        //             expect(favorites[0].name).to.equal('Second Video')
+        //         })
+        // })
     })
 
     describe("Updating their favorites", () => {
