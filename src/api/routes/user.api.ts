@@ -18,17 +18,15 @@ export class UserApi {
     }
 
     public init() {
+        this.router.get("/favorites", this.favorites)
+        this.router.post("/favorites", this.updateFavorites)
+        this.router.patch("/settings", this.patchSettings)
+        this.router.post("/", this.store)
+        this.router.put("/:user", this.update)
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
-        this.router.post("/", this.store)
-        this.router.put("/:user", this.update)
         this.router.delete("/:user", this.destroy)
-        
-        this.router.use(auth.isAuthorized)
-        this.router.get('/favorites', this.favorites)
-        this.router.post("/favorites", this.updateFavorites)
-        this.router.patch("/settings", this.patchSettings)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -88,6 +86,7 @@ export class UserApi {
     }
 
     public async favorites(request: Request, response: Response): Promise<Response> {
+        console.log('AUTH: ', response.locals.auth)
         return response.status(503).send()
 
         // const user = await User.findById(response.locals.auth.user)
