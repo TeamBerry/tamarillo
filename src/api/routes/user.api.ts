@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response, Router } from "express"
+import * as _ from "lodash"
 
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.schema")
 
 import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
+import { Video } from "../../models/video.model"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -16,12 +18,14 @@ export class UserApi {
     }
 
     public init() {
+        this.router.get("/favorites", this.favorites)
+        this.router.post("/favorites", this.updateFavorites)
+        this.router.patch("/settings", this.patchSettings)
+        this.router.post("/", this.store)
+        this.router.put("/:user", this.update)
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
-        this.router.post("/", this.store)
-        this.router.put("/:user", this.update)
-        this.router.patch("/:user/favorites", this.patchFavorites)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
@@ -81,30 +85,85 @@ export class UserApi {
 
     }
 
-    public patchFavorites(req: Request, res: Response) {
-        console.log("PATCHING USER: " + req.params.user + "WITH DATA: ", req.body)
+    public async favorites(request: Request, response: Response): Promise<Response> {
+        let user
 
-        const favoritesList = []
-        req.body.forEach((favorite) => {
-            favoritesList.push(favorite._id)
-        })
+        if (request.query.title) {
+            user = await User.findById(response.locals.auth.user)
+                .populate({
+                    path: 'favorites',
+                    match: { name: { $regex: request.query.title, $options: "i" } }
+                })
+        } else {
+            user = await User.findById(response.locals.auth.user)
+                .populate('favorites')
+        }
 
-        User.findByIdAndUpdate(
-            req.params.user,
-            { $set: { favorites: favoritesList } },
-            { new: true })
-            .populate("favorites")
-            .exec((err, document) => {
-                if (err) {
-                    res.status(500).send(err)
+        return response.status(200).send(user.favorites)
+    }
+
+    /**
+     * Updates the favorites of an user
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof UserApi
+     */
+    public async updateFavorites(request: Request, response: Response): Promise<Response> {
+        const command: { action: 'like' | 'unlike', target: string } = request.body
+
+        if (_.isEmpty(command)) {
+            return response.status(412).send()
+        }
+
+        try {
+            let query = {}
+
+            if (command.action === 'like') {
+                query = { $push: { favorites: command.target } }
+            } else {
+                query = { $pull: { favorites: command.target } }
+            }
+
+            if (!await Video.exists({ _id: command.target })) {
+                return response.status(404).send('VIDEO_NOT_FOUND')
+            }
+
+            const updatedUser = await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                query,
+                {
+                    new: true
                 }
+            )
+                .populate("favorites")
 
-                if (document) {
-                    res.status(200).send(document)
+            return response.status(200).send(updatedUser.favorites)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async patchSettings(request: Request, response: Response): Promise<Response> {
+        try {
+            const settings = request.body
+
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send("MISSING_PARAMETERS")
+            }
+
+            await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                {
+                    $set: { settings }
                 }
+            )
 
-                res.status(204)
-            })
+            return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send()
+        }
     }
 
     public destroy(req: Request, res: Response) {
