@@ -4,12 +4,12 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import { AuthApi } from './../../../src/api/routes/auth.api'
 import UserApi from './../../../src/api/routes/user.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist } from './../../../src/models/user-playlist.model'
 import authService from "../../../src/api/services/auth.service"
+import { Video } from "../../../src/models/video.model"
 
 describe("User API", () => {
     const expressApp = express()
@@ -29,6 +29,20 @@ describe("User API", () => {
             _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
         })
 
+        await Video.deleteMany({
+            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
+        })
+
+        await Video.create([{
+            _id: '9bc72f3d7edc6312d0ef2e47',
+            name: 'First Video',
+            link: '4c6e3f_aZ0d'
+        }, {
+            _id: '9bc72f3d7edc6312d0ef2e48',
+            name: 'Second Video',
+            link: 'aC9d3edD3e2'
+        }])
+
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
@@ -36,7 +50,8 @@ describe("User API", () => {
             password: 'Pikachu',
             settings: {
                 theme: 'light'
-            }
+            },
+            favorites: []
         })
 
         await User.create({
@@ -46,7 +61,8 @@ describe("User API", () => {
             password: 'Piano',
             settings: {
                 theme: 'dark'
-            }
+            },
+            favorites: ['9bc72f3d7edc6312d0ef2e48']
         })
 
         ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
@@ -126,6 +142,113 @@ describe("User API", () => {
 
                     expect(user.settings.theme).to.equal("dark")
                 })
+        })
+    })
+
+    describe("Getting the favorites of an user", () => {
+        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
+            return supertest(expressApp)
+                .get('/favorites')
+                .expect(401)
+        })
+
+        it("Sends a 200 with the favorites", () => {
+            return supertest(expressApp)
+                .get('/favorites')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const favorites = response.body
+
+                    expect(favorites).to.have.lengthOf(1)
+                    expect(favorites[0].name).to.equal('Second Video')
+                })
+        })
+
+        it("Returns an enmpty array when search gives off nothing", () => {
+            return supertest(expressApp)
+                .get('/favorites?title=piano')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const favorites = response.body
+
+                    expect(favorites).to.have.lengthOf(0)
+                })
+        })
+
+        it("Searches through favorites by title", () => {
+            return supertest(expressApp)
+                .get('/favorites?title=video')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const favorites = response.body
+
+                    expect(favorites).to.have.lengthOf(1)
+                    expect(favorites[0].name).to.equal('Second Video')
+                })
+        })
+    })
+
+    describe("Updating their favorites", () => {
+        describe("Like a video", () => {
+            it("Sends a 401 back if the API is the token is invalid or not provided", () => {
+                return supertest(expressApp)
+                    .post('/favorites')
+                    .expect(401)
+            })
+
+            it("Sends a 404 if the video does not exist", () => {
+                return supertest(expressApp)
+                    .post('/favorites')
+                    .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                    .send({ action: 'like', target: '8bc72f3d7edc6312d0ef2e47' })
+                    .expect(404)
+            })
+
+            it("Sends a 200 and adds the video to favorites", () => {
+                return supertest(expressApp)
+                    .post('/favorites')
+                    .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                    .send({ action: 'like', target: '9bc72f3d7edc6312d0ef2e47' })
+                    .expect(200)
+                    .then(async () => {
+                        const user = await User.findById('9ca0df5f86abeb66da97ba5d')
+
+                        expect(user.favorites).to.have.lengthOf(1)
+                        expect(user.favorites[0].toString()).to.equal('9bc72f3d7edc6312d0ef2e47')
+                    })
+            })
+        })
+
+        describe("Unlike a video", () => {
+            it("Sends a 401 back if the API is the token is invalid or not provided", () => {
+                return supertest(expressApp)
+                    .post('/favorites')
+                    .expect(401)
+            })
+
+            it("Sends a 404 if the video does not exist", () => {
+                return supertest(expressApp)
+                    .post('/favorites')
+                    .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                    .send({ action: 'unlike', target: '8bc72f3d7edc6312d0ef2e48' })
+                    .expect(404)
+            })
+
+            it("Sends a 200 and removes the video from favorites", () => {
+                return supertest(expressApp)
+                    .post('/favorites')
+                    .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                    .send({ action: 'unlike', target: '9bc72f3d7edc6312d0ef2e48' })
+                    .expect(200)
+                    .then(async () => {
+                        const user = await User.findById('9ca0df5f86abeb66da97ba5e')
+
+                        expect(user.favorites).to.have.lengthOf(0)
+                    })
+            })
         })
     })
 
