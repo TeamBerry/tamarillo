@@ -159,37 +159,37 @@ describe("User API", () => {
                 .expect(200)
                 .then((response) => {
                     console.log('FAVORITES')
-                    // const favorites = response.body
+                    const favorites = response.body
 
-                    // expect(favorites).to.have.lengthOf(1)
-                    // expect(favorites[0].name).to.equal('Second Video')
+                    expect(favorites).to.have.lengthOf(1)
+                    expect(favorites[0].name).to.equal('Second Video')
                 })
         })
 
-        // it("Returns an enmpty array when search gives off nothing", () => {
-        //     return supertest(expressApp)
-        //         .get('/favorites?title=piano')
-        //         .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-        //         .expect(200)
-        //         .then((response) => {
-        //             const favorites = response.body
+        it("Returns an enmpty array when search gives off nothing", () => {
+            return supertest(expressApp)
+                .get('/favorites?title=piano')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const favorites = response.body
 
-        //             expect(favorites).to.have.lengthOf(0)
-        //         })
-        // })
+                    expect(favorites).to.have.lengthOf(0)
+                })
+        })
 
-        // it("Searches through favorites by title", () => {
-        //     return supertest(expressApp)
-        //         .get('/favorites?title=video')
-        //         .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-        //         .expect(200)
-        //         .then((response) => {
-        //             const favorites = response.body
+        it("Searches through favorites by title", () => {
+            return supertest(expressApp)
+                .get('/favorites?title=video')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const favorites = response.body
 
-        //             expect(favorites).to.have.lengthOf(1)
-        //             expect(favorites[0].name).to.equal('Second Video')
-        //         })
-        // })
+                    expect(favorites).to.have.lengthOf(1)
+                    expect(favorites[0].name).to.equal('Second Video')
+                })
+        })
     })
 
     describe("Updating their favorites", () => {
