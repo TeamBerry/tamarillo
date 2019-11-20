@@ -86,13 +86,10 @@ export class UserApi {
     }
 
     public async favorites(request: Request, response: Response): Promise<Response> {
-        console.log('AUTH: ', response.locals.auth)
-        return response.status(503).send()
+        const user = await User.findById(response.locals.auth.user)
+            .populate('favorites')
 
-        // const user = await User.findById(response.locals.auth.user)
-        //     .populate('favorites')
-
-        // return response.status(200).send('LOL')
+        return response.status(200).send(user.favorites)
     }
 
     /**
