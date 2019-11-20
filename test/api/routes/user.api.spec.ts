@@ -155,10 +155,9 @@ describe("User API", () => {
         it("Sends a 200 with the favorites", () => {
             return supertest(expressApp)
                 .get('/favorites')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
                 .expect(200)
                 .then((response) => {
-                    console.log('FAVORITES')
                     const favorites = response.body
 
                     expect(favorites).to.have.lengthOf(1)

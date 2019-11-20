@@ -86,8 +86,18 @@ export class UserApi {
     }
 
     public async favorites(request: Request, response: Response): Promise<Response> {
-        const user = await User.findById(response.locals.auth.user)
-            .populate('favorites')
+        let user
+
+        if (request.query.title) {
+            user = await User.findById(response.locals.auth.user)
+                .populate({
+                    path: 'favorites',
+                    match: { name: { $regex: request.query.title, $options: "i" } }
+                })
+        } else {
+            user = await User.findById(response.locals.auth.user)
+                .populate('favorites')
+        }
 
         return response.status(200).send(user.favorites)
     }
