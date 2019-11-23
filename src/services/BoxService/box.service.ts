@@ -125,6 +125,30 @@ class BoxService {
                 }
             })
 
+            // When a user deletes a video from the playlist
+            socket.on("cancel", async (payload: { boxToken, userToken, playlistItem }) => {
+                try {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken })
+
+                    // Remove the video from the playlist (_id is sent)
+                    const response = await syncService.onVideoCancel(payload)
+
+                    this.emitToSocket(recipients, 'chat', response.feedback)
+
+                    this.emitToSocket(recipients, 'box', response.updatedBox)
+                } catch (error) {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+
+                    const message: Message = new Message({
+                        author: 'system',
+                        contents: 'The box is closed. The playlist cannot be changed.',
+                        source: 'bot',
+                        scope: payload.boxToken
+                    })
+                    this.emitToSocket(recipients, "chat", message)
+                }
+            })
+
             /**
              * After the client auth themselves, they need to be caught up with the others in the box. It means they will ask for the
              * current video playing and must have an answer.

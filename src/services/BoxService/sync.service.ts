@@ -82,6 +82,51 @@ export class SyncService {
     }
 
     /**
+     * Removing a video from the playlist of a box.
+     *
+     * @param {{ boxToken, userToken, playlistItem }} payload
+     * @returns {Promise<{ feedback: Message, updatedBox: any }>}
+     * @memberof SyncService
+     */
+    public async onVideoCancel(payload: { boxToken, userToken, playlistItem }): Promise<{ feedback: Message, updatedBox: any }> {
+        try {
+            const user = await User.findById(payload.userToken)
+
+            const box = await BoxSchema.findById(payload.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The playlist cannot be modifieds.")
+            }
+
+            // Pull the video from the paylist
+            const updatedBox = await BoxSchema
+                .findByIdAndUpdate(
+                    payload.boxToken,
+                    {
+                        $pull: { playlist: { _id: payload.playlistItem } }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+
+            const message: string = `${user.name} has removed a submission from the playlist`
+
+            const feedback = new Message({
+                contents: message,
+                source: 'bot',
+                scope: payload.boxToken
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
+    /**
      * Adds the obtained video to the playlist of the box
      *
      * @param {any} video The video to add to the playlist

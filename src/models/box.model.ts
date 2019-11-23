@@ -7,7 +7,7 @@ export class Box {
     public description: string
     public lang: string
     public name: string
-    public playlist: PlaylistItem[]
+    public playlist: Array<PlaylistItem>
     public open: boolean
 }
 
@@ -18,7 +18,6 @@ const boxSchema = new Schema(
         lang: String,
         name: String,
         playlist: [{
-            _id: false,
             submittedAt: Date,
             video: { type: Schema.Types.ObjectId, ref: "Video" },
             submitted_by: { type: Schema.Types.ObjectId, ref: "User" },
