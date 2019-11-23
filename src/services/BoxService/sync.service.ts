@@ -6,7 +6,7 @@ const querystring = require("querystring")
 const dotenv = require("dotenv")
 dotenv.config()
 
-const BoxSchema = require("./../../models/box.schema")
+const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
 import { Box } from "../../models/box.model"
 import { PlaylistItem } from "../../models/playlist-item.model"
