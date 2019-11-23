@@ -9,10 +9,6 @@ export class Box {
     public name: string
     public playlist: PlaylistItem[]
     public open: boolean
-    public settings: {
-        // If true, the user controls the autoplay
-        syncMaster: boolean
-    }
 }
 
 const boxSchema = new Schema(
@@ -30,10 +26,7 @@ const boxSchema = new Schema(
             endTime: Date,
             ignored: Boolean, // Indicates if the video has to be ignored by the autoplay. False by deafult
         }],
-        open: Boolean,
-        settings: {
-            syncMaster: { type: Boolean, default: false }
-        }
+        open: Boolean
     },
     {
         timestamps: true,
