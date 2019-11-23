@@ -2,7 +2,7 @@ const Queue = require("bull")
 const boxQueue = new Queue("box")
 
 import { BoxJob } from "../models/box.job"
-const BoxSchema = require("./../models/box.schema")
+const BoxSchema = require("./../models/box.model")
 const Subscriber = require("./../models/subscriber.schema")
 
 /**

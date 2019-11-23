@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 
 const User = require("./../../models/user.model")
-const Box = require("./../../models/box.schema")
+const Box = require("./../../models/box.model")
 
 import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"

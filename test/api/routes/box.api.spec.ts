@@ -5,7 +5,7 @@ import * as supertest from "supertest"
 const expect = chai.expect
 
 import BoxApi from './../../../src/api/routes/box.api'
-const Box = require('./../../../src/models/box.schema')
+const Box = require('./../../../src/models/box.model')
 const User = require('./../../../src/models/user.model')
 const SubscriberSchema = require('./../../../src/models/subscriber.schema')
 import { Video } from './../../../src/models/video.model'

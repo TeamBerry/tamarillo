@@ -6,7 +6,7 @@ var mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 
 import syncService from './../../../src/services/BoxService/sync.service'
-const Box = require('../../../src/models/box.schema')
+const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
 import { Video, VideoClass, VideoDocument } from './../../../src/models/video.model'
