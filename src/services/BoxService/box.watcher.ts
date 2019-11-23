@@ -1,5 +1,6 @@
 const Queue = require("bull")
 const boxQueue = new Queue("box")
+const syncQueue = new Queue("sync")
 
 import { BoxJob } from "../../models/box.job"
 import { Message } from "../../models/message.model"
@@ -57,6 +58,17 @@ export class BoxWatcher {
 
                 default:
                     break
+            }
+
+            done()
+        })
+
+        // Listen to the sync queue for autoplay
+        syncQueue.process((job, done) => {
+            const { boxToken, order } = job.data
+
+            if (order === 'next') {
+                boxService.transitionToNextVideo(boxToken)
             }
 
             done()

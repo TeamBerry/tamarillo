@@ -6,6 +6,8 @@ const express = require("express")()
 const http = require("http").Server(express)
 const io = require("socket.io")(http)
 io.set("transports", ["websocket"])
+const Queue = require("bull")
+const syncQueue = new Queue("sync")
 
 // Models
 const User = require("./../../models/user.model")
@@ -18,6 +20,7 @@ import { VideoPayload } from "./../../models/video-payload.model"
 // Import services that need to be managed
 import chatService from "./chat.service"
 import syncService from "./sync.service"
+import moment = require("moment")
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
@@ -303,7 +306,7 @@ class BoxService {
      * @param {string} boxToken
      * @memberof BoxService
      */
-    private async transitionToNextVideo(boxToken: string) {
+    public async transitionToNextVideo(boxToken: string) {
         const response = await syncService.getNextVideo(boxToken)
         const message: Message = new Message()
         message.scope = boxToken
@@ -318,7 +321,6 @@ class BoxService {
                         box: boxToken,
                         item: response.nextVideo,
                     }
-                    console.log("Sync packet for next video.")
                     io.to(recipient.socket).emit("sync", syncPacket)
                 }
                 io.to(recipient.socket).emit("box", response.updatedBox)
@@ -328,12 +330,22 @@ class BoxService {
                 // Send chat message for subscribers
                 message.contents = "Currently playing: " + response.nextVideo.video.name
                 message.source = "bot"
+
+                // Create a new sync job
+                syncQueue.add(
+                    { boxToken, order: 'next' },
+                    {
+                        priority: 1,
+                        delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
+                        attempts: 5,
+                        removeOnComplete: true
+                    }
+                )
             } else {
                 message.contents = "The playlist has no upcoming videos."
                 message.source = "system"
             }
 
-            console.log("Alerting users of the next video.")
             this.emitToSocket(recipients, "chat", message)
         }
     }
