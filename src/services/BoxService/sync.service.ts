@@ -11,7 +11,7 @@ const User = require("./../../models/user.model")
 import { Box } from "../../models/box.model"
 import { PlaylistItem } from "../../models/playlist-item.model"
 import { SyncPacket } from "../../models/sync-packet.model"
-import { VideoPayload } from "../../models/video-payload.model"
+import { SubmissionPayload, CancelPayload } from "../../models/video-payload.model"
 import { Video } from "../../models/video.model"
 import { Message } from "./../../models/message.model"
 
@@ -46,11 +46,11 @@ export class SyncService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {VideoPayload} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     * @param {SubmissionPayload} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof SyncService
      */
-    public async onVideo(payload: VideoPayload): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideo(payload: SubmissionPayload): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
             const video = await this.getVideo(payload.link)
@@ -78,6 +78,51 @@ export class SyncService {
         } catch (error) {
             // If the box is closed, the error is sent back to the socket method.
             throw Error(error)
+        }
+    }
+
+    /**
+     * Removing a video from the playlist of a box.
+     *
+     * @param {{ boxToken, userToken, playlistItem }} payload
+     * @returns {Promise<{ feedback: Message, updatedBox: any }>}
+     * @memberof SyncService
+     */
+    public async onVideoCancel(payload: CancelPayload): Promise<{ feedback: Message, updatedBox: any }> {
+        try {
+            const user = await User.findById(payload.userToken)
+
+            const box = await BoxSchema.findById(payload.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The playlist cannot be modifieds.")
+            }
+
+            // Pull the video from the paylist
+            const updatedBox = await BoxSchema
+                .findByIdAndUpdate(
+                    payload.boxToken,
+                    {
+                        $pull: { playlist: { _id: payload.item } }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+
+            const message: string = `${user.name} has removed a submission from the playlist`
+
+            const feedback = new Message({
+                contents: message,
+                source: 'bot',
+                scope: payload.boxToken
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw new Error(error)
         }
     }
 

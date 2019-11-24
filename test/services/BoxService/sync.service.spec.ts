@@ -10,6 +10,7 @@ const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
 import { Video, VideoClass, VideoDocument } from './../../../src/models/video.model'
+import { CancelPayload } from "../../../src/models/video-payload.model"
 
 describe("Sync Service", () => {
 
@@ -46,7 +47,17 @@ describe("Sync Service", () => {
             description: 'Closed box',
             lang: 'English',
             name: 'Closed box',
-            playlist: [],
+            playlist: [
+                {
+                    _id: '9cb763b6e72611381ef043e9',
+                    video: '9cb81150594b2e75f06ba90a',
+                    startTime: null,
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                }
+            ],
             creator: '9ca0df5f86abeb66da97ba5d',
             open: false
         })
@@ -56,14 +67,26 @@ describe("Sync Service", () => {
             description: 'Box with a video playing',
             lang: 'English',
             name: 'Box playing',
-            playlist: [{
-                video: '9cb81150594b2e75f06ba90a',
-                startTime: "2019-05-31T09:19:44+0000",
-                endTime: null,
-                ignored: false,
-                submittedAt: "2019-05-31T09:19:41+0000",
-                submitted_by: '9ca0df5f86abeb66da97ba5d'
-            }],
+            playlist: [
+                {
+                    _id: '9cb763b6e72611381ef043e7',
+                    video: '9cb81150594b2e75f06ba90a',
+                    startTime: "2019-05-31T09:19:44+0000",
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                },
+                {
+                    _id: '9cb763b6e72611381ef043e8',
+                    video: '9cb81150594b2e75f06ba90a',
+                    startTime: null,
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                }
+            ],
             creator: '9ca0df5f86abeb66da97ba5d',
             open: true
         })
@@ -111,6 +134,34 @@ describe("Sync Service", () => {
         })
     })
 
+    describe("Remove video from box", () => {
+        it("Refuses video if the box is closed", async () => {
+            const cancelPayload: CancelPayload = {
+                boxToken: '9cb763b6e72611381ef043e5',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043e9'
+            }
+
+            const result = syncService.onVideoCancel(cancelPayload)
+
+            expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified.")
+        })
+
+        it("Removes the video from the playlist", async () => {
+            const cancelPayload: CancelPayload = {
+                boxToken: '9cb763b6e72611381ef043e6',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043e8'
+            }
+
+            await syncService.onVideoCancel(cancelPayload)
+
+            const box = await Box.findById('9cb763b6e72611381ef043e6')
+
+            expect(box.playlist).to.have.lengthOf(1)
+        })
+    })
+
     describe("Get current video", () => {
         it("Returns null when there's no currently playing video", async () => {
             const currentVideo = await syncService.getCurrentVideo('9cb763b6e72611381ef043e4')
@@ -124,6 +175,7 @@ describe("Sync Service", () => {
 
         it("Returns the currently playing video", async () => {
             const video = {
+                _id: new ObjectId('9cb763b6e72611381ef043e7'),
                 video: {
                     _id: new ObjectId('9cb81150594b2e75f06ba90a'),
                     link: 'j6okxJ1CYJM',
