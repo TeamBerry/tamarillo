@@ -15,7 +15,7 @@ const SubscriberSchema = require("./../../models/subscriber.schema")
 import { SyncPacket } from "../../models/sync-packet.model"
 import { Message } from "./../../models/message.model"
 import { Subscriber } from "./../../models/subscriber.model"
-import { VideoPayload } from "./../../models/video-payload.model"
+import { SubmissionPayload, CancelPayload } from "./../../models/video-payload.model"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -86,10 +86,10 @@ class BoxService {
             /**
              * What to do when you've got a video.
              *
-             * @param {VideoPayload} payload the Video Payload
+             * @param {SubmissionPayload} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on("video", async (payload: VideoPayload) => {
+            socket.on("video", async (payload: SubmissionPayload) => {
                 // Emitting feedback to the chat
                 const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: payload.boxToken })
 
@@ -126,7 +126,7 @@ class BoxService {
             })
 
             // When a user deletes a video from the playlist
-            socket.on("cancel", async (payload: { boxToken, userToken, playlistItem }) => {
+            socket.on("cancel", async (payload: CancelPayload) => {
                 try {
                     const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken })
 

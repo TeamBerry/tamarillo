@@ -10,6 +10,7 @@ const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
 import { Video, VideoClass, VideoDocument } from './../../../src/models/video.model'
+import { CancelPayload } from "../../../src/models/video-payload.model"
 
 describe("Sync Service", () => {
 
@@ -135,25 +136,25 @@ describe("Sync Service", () => {
 
     describe("Remove video from box", () => {
         it("Refuses video if the box is closed", async () => {
-            const args = {
+            const cancelPayload: CancelPayload = {
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
-                playlistItem: '9cb763b6e72611381ef043e9'
+                item: '9cb763b6e72611381ef043e9'
             }
 
-            const result = syncService.onVideoCancel(args)
+            const result = syncService.onVideoCancel(cancelPayload)
 
             expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified.")
         })
 
         it("Removes the video from the playlist", async () => {
-            const args = {
+            const cancelPayload: CancelPayload = {
                 boxToken: '9cb763b6e72611381ef043e6',
                 userToken: '9ca0df5f86abeb66da97ba5d',
-                playlistItem: '9cb763b6e72611381ef043e8'
+                item: '9cb763b6e72611381ef043e8'
             }
 
-            await syncService.onVideoCancel(args)
+            await syncService.onVideoCancel(cancelPayload)
 
             const box = await Box.findById('9cb763b6e72611381ef043e6')
 
