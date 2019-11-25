@@ -11,9 +11,8 @@ This project uses the official YouTube API to fetch videos. If you want to run t
 ## Deploy
 
 ```
-scp -r dist/ package.json processes.json root@berrybox.tv:berrybox/Chronos/
-rm -rf node_modules npm-shrinkwrap.json
-npm install
+scp -r dist/ package.json npm-shrinkwrap.json processes.json root@berrybox.tv:berrybox/Chronos/
+npm ci
 npm restart
 ```
 
