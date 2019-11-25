@@ -6,6 +6,8 @@ const express = require("express")()
 const http = require("http").Server(express)
 const io = require("socket.io")(http)
 io.set("transports", ["websocket"])
+const Queue = require("bull")
+const syncQueue = new Queue("sync")
 
 // Models
 const User = require("./../../models/user.model")
@@ -13,11 +15,12 @@ const SubscriberSchema = require("./../../models/subscriber.schema")
 import { SyncPacket } from "../../models/sync-packet.model"
 import { Message } from "./../../models/message.model"
 import { Subscriber } from "./../../models/subscriber.model"
-import { VideoPayload } from "./../../models/video-payload.model"
+import { SubmissionPayload, CancelPayload } from "./../../models/video-payload.model"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
 import syncService from "./sync.service"
+import moment = require("moment")
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
@@ -83,10 +86,10 @@ class BoxService {
             /**
              * What to do when you've got a video.
              *
-             * @param {VideoPayload} payload the Video Payload
+             * @param {SubmissionPayload} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on("video", async (payload: VideoPayload) => {
+            socket.on("video", async (payload: SubmissionPayload) => {
                 // Emitting feedback to the chat
                 const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: payload.boxToken })
 
@@ -117,6 +120,30 @@ class BoxService {
                         contents: "This box is closed. Submission is disallowed.",
                         source: "bot",
                         scope: payload.boxToken,
+                    })
+                    this.emitToSocket(recipients, "chat", message)
+                }
+            })
+
+            // When a user deletes a video from the playlist
+            socket.on("cancel", async (payload: CancelPayload) => {
+                try {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken })
+
+                    // Remove the video from the playlist (_id is sent)
+                    const response = await syncService.onVideoCancel(payload)
+
+                    this.emitToSocket(recipients, 'chat', response.feedback)
+
+                    this.emitToSocket(recipients, 'box', response.updatedBox)
+                } catch (error) {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+
+                    const message: Message = new Message({
+                        author: 'system',
+                        contents: 'The box is closed. The playlist cannot be changed.',
+                        source: 'bot',
+                        scope: payload.boxToken
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
@@ -303,7 +330,7 @@ class BoxService {
      * @param {string} boxToken
      * @memberof BoxService
      */
-    private async transitionToNextVideo(boxToken: string) {
+    public async transitionToNextVideo(boxToken: string) {
         const response = await syncService.getNextVideo(boxToken)
         const message: Message = new Message()
         message.scope = boxToken
@@ -318,7 +345,6 @@ class BoxService {
                         box: boxToken,
                         item: response.nextVideo,
                     }
-                    console.log("Sync packet for next video.")
                     io.to(recipient.socket).emit("sync", syncPacket)
                 }
                 io.to(recipient.socket).emit("box", response.updatedBox)
@@ -328,12 +354,22 @@ class BoxService {
                 // Send chat message for subscribers
                 message.contents = "Currently playing: " + response.nextVideo.video.name
                 message.source = "bot"
+
+                // Create a new sync job
+                syncQueue.add(
+                    { boxToken, order: 'next' },
+                    {
+                        priority: 1,
+                        delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
+                        attempts: 5,
+                        removeOnComplete: true
+                    }
+                )
             } else {
                 message.contents = "The playlist has no upcoming videos."
                 message.source = "system"
             }
 
-            console.log("Alerting users of the next video.")
             this.emitToSocket(recipients, "chat", message)
         }
     }
