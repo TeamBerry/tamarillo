@@ -6,7 +6,7 @@ const express = require("express")()
 const http = require("http").Server(express)
 const io = require("socket.io")(http)
 io.set("transports", ["websocket"])
-const Queue = require("bull")
+import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 
 // Models
@@ -210,11 +210,10 @@ class BoxService {
             /**
              * Every in-box communication regarding video sync between clients will go through this event.
              */
-            socket.on("sync", async (request) => {
-                // TODO: The whole sync process needs to be redone in here, since it has to leave Logos.
+            socket.on("sync", async (request: { boxToken: string, order: string }) => {
                 switch (request.order) {
-                    case "next": // Go to next video (the previous one ended or a skip was requested)
-                        this.transitionToNextVideo(request.boxToken)
+                    case "next": // Go to next video
+                        this.skipVideo(request.boxToken)
                         break
 
                     default:
@@ -320,6 +319,23 @@ class BoxService {
         const recipients = await SubscriberSchema.find({ boxToken })
 
         this.emitToSocket(recipients, "chat", message)
+    }
+
+    /**
+     * Skips a video
+     *
+     * @param {string} boxToken
+     * @memberof BoxService
+     */
+    public async skipVideo(boxToken: string) {
+        const jobs = await syncQueue.getJobs(['delayed'])
+
+        jobs.map((job: Queue.Job) => {
+            if (job.data.boxToken === boxToken) {
+                job.remove()
+            }
+        })
+        this.transitionToNextVideo(boxToken)
     }
 
     /**
