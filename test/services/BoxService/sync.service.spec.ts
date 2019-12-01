@@ -261,6 +261,170 @@ describe("Sync Service", () => {
     })
 
     describe("Get next video", () => {
+        before(async () => {
+            await Box.deleteMany({})
+            await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
+            await Video.deleteMany({})
+
+            await User.create({
+                _id: '9ca0df5f86abeb66da97ba5d',
+                name: 'Ash Ketchum',
+                mail: 'ash@pokemon.com',
+                password: 'Pikachu'
+            })
+
+            await Box.create({
+                _id: '9cb763b6e72611381ef043e4',
+                description: null,
+                lang: 'English',
+                name: 'Test box',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true
+            })
+
+            await Box.create({
+                _id: '9cb763b6e72611381ef043e5',
+                description: 'Closed box',
+                lang: 'English',
+                name: 'Closed box',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef043e9',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: false,
+                options: {
+                    random: true
+                }
+            })
+
+            await Box.create({
+                _id: '9cb763b6e72611381ef043e6',
+                description: 'Box with a video playing',
+                lang: 'English',
+                name: 'Box playing',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef043e8',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043e7',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: "2019-05-31T09:19:44+0000",
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true
+            })
+
+            await Box.create({
+                _id: '9cb763b6e72611381ef043e7',
+                description: 'Box with a video playing',
+                lang: 'English',
+                name: 'Box playing in random mode',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef043f4',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f3',
+                        video: '9cb81150594b2e75f06ba90b',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f2',
+                        video: '9cb81150594b2e75f06ba8fe',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f1',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: "2019-05-31T09:21:12+0000",
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f0',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: "2019-05-31T09:19:44+0000",
+                        endTime: "2019-05-31T09:21:12+0000",
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true,
+                options: {
+                    random: true
+                }
+            })
+
+            await Video.create({
+                _id: '9cb81150594b2e75f06ba8fe',
+                link: 'Ivi1e-yCPcI',
+                name: 'Destroid - Annihilate'
+            })
+
+            await Video.create({
+                _id: '9cb81150594b2e75f06ba90a',
+                link: 'j6okxJ1CYJM',
+                name: 'The Piano Before Cynthia'
+            })
+
+            await Video.create({
+                _id: '9cb81150594b2e75f06ba90b',
+                link: 'SeSOzTr_yfA',
+                name: 'The Evil King'
+            })
+
+            await Video.create({
+                _id: '9cb81150594b2e75f06ba90c',
+                link: '0he85BszwL8',
+                name: 'Connected'
+            })
+        })
+
+        after(async () => {
+            await Box.deleteMany({})
+            await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
+            await Video.deleteMany({})
+        })
+
         it("Sends null if there's no next video", async () => {
             const response = await syncService.getNextVideo('9cb763b6e72611381ef043e4')
 
