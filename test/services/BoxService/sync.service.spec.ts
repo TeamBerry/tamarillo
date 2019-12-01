@@ -260,7 +260,7 @@ describe("Sync Service", () => {
         })
     })
 
-    describe.only("Get next video", () => {
+    describe("Get next video", () => {
         it("Sends null if there's no next video", async () => {
             const response = await syncService.getNextVideo('9cb763b6e72611381ef043e4')
 
