@@ -69,18 +69,18 @@ describe("Sync Service", () => {
             name: 'Box playing',
             playlist: [
                 {
-                    _id: '9cb763b6e72611381ef043e7',
+                    _id: '9cb763b6e72611381ef043e8',
                     video: '9cb81150594b2e75f06ba90a',
-                    startTime: "2019-05-31T09:19:44+0000",
+                    startTime: null,
                     endTime: null,
                     ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 },
                 {
-                    _id: '9cb763b6e72611381ef043e8',
+                    _id: '9cb763b6e72611381ef043e7',
                     video: '9cb81150594b2e75f06ba90a',
-                    startTime: null,
+                    startTime: "2019-05-31T09:19:44+0000",
                     endTime: null,
                     ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
@@ -194,6 +194,26 @@ describe("Sync Service", () => {
             const currentVideo = await syncService.getCurrentVideo('9cb763b6e72611381ef043e6')
 
             expect(currentVideo).to.eql(video)
+        })
+    })
+
+    describe.only("Get next video", () => {
+        it("Sends null if there's no next video", async () => {
+            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e4')
+
+            expect(response).to.equal(null)
+        })
+
+        it("Get the next video if no video just ended", async () => {
+            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e6')
+
+            expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043e8')
+        })
+
+        it("Get next video when no video was playing before", async () => {
+            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e5')
+
+            expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043e9')
         })
     })
 })
