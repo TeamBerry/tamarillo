@@ -4,6 +4,7 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 var mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
+import * as _ from 'lodash'
 
 import syncService from './../../../src/services/BoxService/sync.service'
 const Box = require('../../../src/models/box.model')
@@ -15,15 +16,9 @@ import { CancelPayload } from "../../../src/models/video-payload.model"
 describe("Sync Service", () => {
 
     before(async () => {
-        await Box.deleteMany(
-            { _id: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5', '9cb763b6e72611381ef043e6'] } }
-        )
-
+        await Box.deleteMany({})
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
-
-        await Video.deleteMany(
-            { _id: { $in: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba90a'] } }
-        )
+        await Video.deleteMany({})
 
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
@@ -59,7 +54,10 @@ describe("Sync Service", () => {
                 }
             ],
             creator: '9ca0df5f86abeb66da97ba5d',
-            open: false
+            open: false,
+            options: {
+                random: true
+            }
         })
 
         await Box.create({
@@ -91,6 +89,65 @@ describe("Sync Service", () => {
             open: true
         })
 
+        await Box.create({
+            _id: '9cb763b6e72611381ef043e7',
+            description: 'Box with a video playing',
+            lang: 'English',
+            name: 'Box playing in random mode',
+            playlist: [
+                {
+                    _id: '9cb763b6e72611381ef043f4',
+                    video: '9cb81150594b2e75f06ba90c',
+                    startTime: null,
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f3',
+                    video: '9cb81150594b2e75f06ba90b',
+                    startTime: null,
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f2',
+                    video: '9cb81150594b2e75f06ba8fe',
+                    startTime: null,
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f1',
+                    video: '9cb81150594b2e75f06ba90a',
+                    startTime: "2019-05-31T09:21:12+0000",
+                    endTime: null,
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f0',
+                    video: '9cb81150594b2e75f06ba90c',
+                    startTime: "2019-05-31T09:19:44+0000",
+                    endTime: "2019-05-31T09:21:12+0000",
+                    ignored: false,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                }
+            ],
+            creator: '9ca0df5f86abeb66da97ba5d',
+            open: true,
+            options: {
+                random: true
+            }
+        })
+
         await Video.create({
             _id: '9cb81150594b2e75f06ba8fe',
             link: 'Ivi1e-yCPcI',
@@ -102,18 +159,24 @@ describe("Sync Service", () => {
             link: 'j6okxJ1CYJM',
             name: 'The Piano Before Cynthia'
         })
+
+        await Video.create({
+            _id: '9cb81150594b2e75f06ba90b',
+            link: 'SeSOzTr_yfA',
+            name: 'The Evil King'
+        })
+
+        await Video.create({
+            _id: '9cb81150594b2e75f06ba90c',
+            link: '0he85BszwL8',
+            name: 'Connected'
+        })
     })
 
     after(async () => {
-        await Box.deleteMany(
-            { _id: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5', '9cb763b6e72611381ef043e6'] } }
-        )
-
+        await Box.deleteMany({})
         await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
-
-        await Video.deleteMany(
-            { _id: { $in: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba90a'] } }
-        )
+        await Video.deleteMany({})
     })
 
     describe("Submit video to box", () => {
@@ -214,6 +277,20 @@ describe("Sync Service", () => {
             const response = await syncService.getNextVideo('9cb763b6e72611381ef043e5')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043e9')
+        })
+
+        it("Gets the next video in random mode", async () => {
+            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e7')
+
+            const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+            const possibleVideos = ['9cb763b6e72611381ef043f4', '9cb763b6e72611381ef043f3', '9cb763b6e72611381ef043f2']
+
+            expect(possibleVideos.indexOf(response.nextVideo._id.toString())).to.not.equal(-1)
+
+            const playingIndex = _.findIndex(box.playlist, (video) => video.startTime !== null && video.endTime === null)
+
+            expect(playingIndex).to.equal(2)
         })
     })
 })

@@ -1,5 +1,6 @@
 import * as _ from "lodash"
 import * as moment from "moment"
+import arrayMove from 'array-move'
 const axios = require("axios")
 const mongoose = require("./../../config/connection")
 const querystring = require("querystring")
@@ -209,7 +210,7 @@ export class SyncService {
             updatedBox: null
         }
 
-        const box: Box = await BoxSchema.findById(boxToken)
+        const box: Box = await BoxSchema.findById(boxToken).lean()
 
         // TODO: Find last index to skip ignored videos
         const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => {
@@ -222,10 +223,21 @@ export class SyncService {
         }
 
         // Search for a new video
-        // TODO: Randomize if box.options.random is true
-        const nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
-            return video.startTime === null
-        })
+        let nextVideoIndex = -1
+        if (box.options.random === true) {
+            const availableVideos = box.playlist.filter((video) => {
+                return video.startTime === null
+            }).length
+
+            if (availableVideos > 0) {
+                nextVideoIndex = Math.floor(Math.random() * availableVideos)
+            }
+        } else {
+            // Non-random
+            nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
+                return video.startTime === null
+            })
+        }
 
         if (nextVideoIndex === -1) {
             return null
@@ -233,6 +245,9 @@ export class SyncService {
 
         box.playlist[nextVideoIndex].startTime = transitionTime
         response.nextVideo = box.playlist[nextVideoIndex]
+
+        // Puts the starting video between the upcoming & played videos
+        box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)
 
         // Updates the box
         response.updatedBox = await BoxSchema
