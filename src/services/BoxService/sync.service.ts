@@ -110,6 +110,7 @@ export class SyncService {
                         new: true
                     }
                 )
+                .populate("creator", "_id name")
                 .populate("playlist.video")
                 .populate("playlist.submitted_by", "_id name")
 
@@ -159,7 +160,9 @@ export class SyncService {
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
                 { new: true },
-            ).populate("playlist.video")
+            )
+            .populate("creator", "_id name")
+            .populate("playlist.video")
             .populate("playlist.submitted_by", "_id name")
 
         return updatedBox
@@ -256,6 +259,7 @@ export class SyncService {
                 { $set: { playlist: box.playlist } },
                 { new: true },
             )
+            .populate("creator", "_id name")
             .populate("playlist.video")
             .populate("playlist.submitted_by", "_id name")
 

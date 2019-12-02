@@ -39,6 +39,7 @@ export class BoxWatcher {
 
                     // Alert subscribers
                     boxService.alertSubscribers(boxToken, message)
+                    break
 
                 case "destroy":
                     // Build message
@@ -55,6 +56,7 @@ export class BoxWatcher {
 
                     // Remove subscribers
                     boxService.removeSubscribers(boxToken)
+                    break
 
                 default:
                     break

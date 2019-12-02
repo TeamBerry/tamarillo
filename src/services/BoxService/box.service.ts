@@ -396,13 +396,13 @@ class BoxService {
      * @private
      * @param {Array<Subscriber>} recipients The list of subscribers
      * @param {string} channel The channel to emit on
-     * @param {Message} message The message to send
+     * @param {Message | any} contents The contents to send
      * @memberof BoxService
      */
-    private emitToSocket(recipients: Subscriber[], channel: string, message: Message) {
+    private emitToSocket(recipients: Subscriber[], channel: string, contents: Message | any) {
         recipients.forEach((recipient: Subscriber) => {
-            console.log(`Send message on socket ${recipient.socket}, channel ${channel} for subscribers`)
-            io.to(recipient.socket).emit(channel, message)
+            console.log(`Send contents on socket ${recipient.socket}, channel ${channel} for subscribers`)
+            io.to(recipient.socket).emit(channel, contents)
         })
     }
 
