@@ -455,6 +455,11 @@
       "integrity": "sha1-z+nYwmYoudxa7MYqn12PHzUsEZU=",
       "dev": true
     },
+    "array-move": {
+      "version": "2.2.1",
+      "resolved": "https://registry.npmjs.org/array-move/-/array-move-2.2.1.tgz",
+      "integrity": "sha512-qQpEHBnVT6HAFgEVUwRdHVd8TYJThrZIT5wSXpEUTPwBaYhPLclw12mEpyUvRWVdl1VwPOqnIy6LqTFN3cSeUQ=="
+    },
     "arraybuffer.slice": {
       "version": "0.0.7",
       "resolved": "https://registry.npmjs.org/arraybuffer.slice/-/arraybuffer.slice-0.0.7.tgz",

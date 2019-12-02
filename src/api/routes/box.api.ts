@@ -23,10 +23,10 @@ export class BoxApi {
         this.router.get("/", this.index)
         this.router.get("/:box", this.show)
         this.router.post("/", this.store)
-        this.router.put("/:box", this.update)
-        this.router.delete("/:box", this.destroy)
-        this.router.post("/:box/close", this.close)
-        this.router.post("/:box/open", this.open)
+        this.router.put("/:box", this.update.bind(this))
+        this.router.delete("/:box", this.destroy.bind(this))
+        this.router.post("/:box/close", this.close.bind(this))
+        this.router.post("/:box/open", this.open.bind(this))
         this.router.get("/:box/users", this.users)
 
         this.router.use(auth.isAuthorized)
@@ -120,7 +120,7 @@ export class BoxApi {
 
             const targetId = request.params.box
 
-            const { _id, description, lang, name } = request.body
+            const { _id, description, lang, name, options } = request.body
 
             if (targetId !== _id) {
                 return response.status(412).send("IDENTIFIER_MISMATCH")
@@ -133,6 +133,7 @@ export class BoxApi {
                         description,
                         lang,
                         name,
+                        options
                     },
                 },
                 {
@@ -143,6 +144,8 @@ export class BoxApi {
             if (!updatedBox) {
                 return response.status(404).send("BOX_NOT_FOUND")
             }
+
+            this.createJob(_id, 'update')
 
             return response.status(200).send(updatedBox)
         } catch (error) {
@@ -182,7 +185,7 @@ export class BoxApi {
             }
 
             // Create job to alert people in the box that the box has been closed
-            boxApi.createJob(targetId, "close")
+            this.createJob(targetId, "close")
 
             return response.status(200).send(closedBox)
         } catch (error) {
@@ -222,7 +225,7 @@ export class BoxApi {
             }
 
             // Create a job to alert subscribers that the box has been opened
-            boxApi.createJob(targetId, "open")
+            this.createJob(targetId, "open")
 
             return response.status(200).send(openedBox)
         } catch (error) {
@@ -261,7 +264,7 @@ export class BoxApi {
             const deletedBox = await Box.findOneAndRemove({ _id: targetId })
 
             // Create job to alert people in the box and have them removed
-            boxApi.createJob(targetId, "destroy")
+            this.createJob(targetId, "destroy")
 
             return response.status(200).send(deletedBox)
         } catch (error) {
