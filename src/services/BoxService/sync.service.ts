@@ -213,7 +213,10 @@ export class SyncService {
             updatedBox: null
         }
 
-        const box: Box = await BoxSchema.findById(boxToken).lean()
+        const box: Box = await BoxSchema
+            .findById(boxToken)
+            .populate("playlist.video")
+            .lean()
 
         // TODO: Find last index to skip ignored videos
         const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => {

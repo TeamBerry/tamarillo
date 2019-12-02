@@ -58,6 +58,19 @@ export class BoxWatcher {
                     boxService.removeSubscribers(boxToken)
                     break
 
+                case "update":
+                    message = new Message({
+                        author: "system",
+                        contents: `This box has just been updated.`,
+                        source: "bot",
+                        scope: boxToken
+                    })
+
+                    boxService.alertSubscribers(boxToken, message)
+
+                    boxService.sendBoxToSubscribers(boxToken)
+                    break
+
                 default:
                     break
             }

@@ -145,6 +145,8 @@ export class BoxApi {
                 return response.status(404).send("BOX_NOT_FOUND")
             }
 
+            this.createJob(_id, 'update')
+
             return response.status(200).send(updatedBox)
         } catch (error) {
             return response.status(500).send(error)
