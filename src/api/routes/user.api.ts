@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
+const multer = require('multer')
+const upload = multer()
 
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.model")
@@ -26,6 +28,7 @@ export class UserApi {
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
+        this.router.post('/picture', upload.single('avatar'), this.uploadProfilePicture)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
@@ -227,6 +230,18 @@ export class UserApi {
             console.log('ERROR: ', error)
             return response.status(500).send(error)
         }
+    }
+
+    /**
+     * Uploads a new profile picture for the user
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof UserApi
+     */
+    public async uploadProfilePicture(request: Request, response: Response): Promise<Response> {
+        return response.status(503).send()
     }
 }
 
