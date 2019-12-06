@@ -28,7 +28,7 @@ export class UserApi {
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
-        this.router.post('/picture', upload.single('avatar'), this.uploadProfilePicture)
+        this.router.post('/picture', [auth.isAuthorized, upload.single('avatar')], this.uploadProfilePicture)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
