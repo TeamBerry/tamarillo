@@ -8,7 +8,8 @@ export class UserClass {
     public favorites: Array<VideoDocument>
     public resetToken: string
     public settings: {
-        theme: 'light' | 'dark'
+        theme: 'light' | 'dark',
+        picture: string
     }
 
     constructor(user?: Partial<UserClass>) {
@@ -18,7 +19,8 @@ export class UserClass {
         this.favorites = user && user.favorites || []
         this.resetToken = user && user.resetToken || null
         this.settings = user && user.settings || {
-            theme: 'dark'
+            theme: 'dark',
+            picture: null
         }
     }
 }
@@ -31,7 +33,8 @@ const userSchema = new Schema(
         favorites: [{ type: Schema.Types.ObjectId, ref: 'Video' }],
         resetToken: { type: String, default: null },
         settings: {
-            theme: { type: String, default: 'dark' }
+            theme: { type: String, default: 'dark' },
+            picture: { type: String, default: null }
         }
     },
     {
