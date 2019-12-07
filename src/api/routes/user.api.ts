@@ -1,13 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 const multer = require('multer')
-const upload = multer()
+const upload = multer({ dest: 'upload/' })
 
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.model")
 
 import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
+import uploadService, { ExpressFile } from "../services/upload.service"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -28,7 +29,7 @@ export class UserApi {
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
-        this.router.post('/picture', [auth.isAuthorized, upload.single('avatar')], this.uploadProfilePicture)
+        this.router.post('/:user/picture', [auth.isAuthorized, upload.single('picture')], this.uploadProfilePicture)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
@@ -38,6 +39,8 @@ export class UserApi {
             if (!matchingUser) {
                 return response.status(404).send("USER_NOT_FOUND")
             }
+
+            response.locals.user = matchingUser
 
             next()
         })
@@ -241,7 +244,35 @@ export class UserApi {
      * @memberof UserApi
      */
     public async uploadProfilePicture(request: Request, response: Response): Promise<Response> {
-        return response.status(503).send()
+        const user = response.locals.user
+
+        try {
+            if (!request.file) {
+                return response.status(404).send('FILE_NOT_FOUND')
+            }
+
+            const fileToUpload: ExpressFile = request.file
+
+            // Uploads file
+            const uploadedFile = await uploadService.storeProfilePicture(user._id, fileToUpload)
+
+            if (!uploadedFile) {
+                return response.status(400).send("CORRUPTED_FILE")
+            }
+
+            // Updates entity
+            await User.findByIdAndUpdate(
+                user._id,
+                {
+                    $set: { 'settings.picture': uploadedFile }
+                }
+            )
+
+            return response.status(200).send()
+        } catch (error) {
+            console.log(error)
+            return response.status(500).send(error)
+        }
     }
 }
 
