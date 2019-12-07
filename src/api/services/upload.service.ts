@@ -5,13 +5,16 @@ AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: process.env
 const DEFAULT_BUCKET = 'berrybox-user-content'
 const DEFAULT_FOLDER = 'profile-pictures'
 
-export interface ExpressFile {
-    fieldName: string
-    originalFilename: string
-    path: string
-    headers: object
+export interface MulterFile {
+    fieldname: string
+    originalname: string
+    encoding: string
+    mimetype: string
     size: number
-    type: string
+    destination: string
+    filename: string
+    path: string
+    buffer: Buffer
 }
 
 export class UploadService {
@@ -21,14 +24,14 @@ export class UploadService {
         this.s3 = new AWS.S3()
     }
 
-    public async storeProfilePicture(user: string, uploadedFile: ExpressFile) {
+    public async storeProfilePicture(user: string, uploadedFile: MulterFile) {
         if (!uploadedFile) {
             return null
         }
 
         const fileStream: fs.ReadStream = fs.createReadStream(uploadedFile.path)
 
-        const extension = this.matchExtension(uploadedFile.type)
+        const extension = this.matchExtension(uploadedFile.mimetype)
 
         if (!extension) {
             return null

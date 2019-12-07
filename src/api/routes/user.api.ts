@@ -8,7 +8,7 @@ const Box = require("./../../models/box.model")
 
 import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
-import uploadService, { ExpressFile } from "../services/upload.service"
+import uploadService, { MulterFile } from "../services/upload.service"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -251,7 +251,7 @@ export class UserApi {
                 return response.status(404).send('FILE_NOT_FOUND')
             }
 
-            const fileToUpload: ExpressFile = request.file
+            const fileToUpload: MulterFile = request.file as MulterFile
 
             // Uploads file
             const uploadedFile = await uploadService.storeProfilePicture(user._id, fileToUpload)
@@ -259,6 +259,8 @@ export class UserApi {
             if (!uploadedFile) {
                 return response.status(400).send("CORRUPTED_FILE")
             }
+
+            console.log(uploadedFile)
 
             // Updates entity
             await User.findByIdAndUpdate(
