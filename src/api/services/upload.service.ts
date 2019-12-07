@@ -37,15 +37,15 @@ export class UploadService {
             return null
         }
 
-        const filePath = `${DEFAULT_FOLDER}/${user}-picture.${extension}`
+        const fileName = `${user}-picture.${extension}`
 
         await this.s3.putObject({
             Bucket: DEFAULT_BUCKET,
-            Key: filePath,
+            Key: `${DEFAULT_FOLDER}/${fileName}`,
             Body: fileStream
         })
 
-        return filePath
+        return fileName
     }
 
     /**
