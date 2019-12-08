@@ -270,9 +270,8 @@ export class UserApi {
                 }
             )
 
-            return response.status(200).send()
+            return response.status(200).send({ file: uploadedFile })
         } catch (error) {
-            console.log(error)
             return response.status(500).send(error)
         }
     }
