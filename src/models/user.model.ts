@@ -34,7 +34,7 @@ const userSchema = new Schema(
         resetToken: { type: String, default: null },
         settings: {
             theme: { type: String, default: 'dark' },
-            picture: { type: String, default: null }
+            picture: { type: String, default: 'default-picture' }
         }
     },
     {
