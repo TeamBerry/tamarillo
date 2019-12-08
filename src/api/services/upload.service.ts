@@ -2,7 +2,7 @@ import * as AWS from 'aws-sdk'
 import * as fs from 'fs'
 AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: process.env.AWS_PROFILE })
 
-const DEFAULT_BUCKET = 'berrybox-user-content'
+const DEFAULT_BUCKET = 'berrybox-user-pictures'
 const DEFAULT_FOLDER = 'profile-pictures'
 
 export interface MulterFile {
@@ -37,13 +37,13 @@ export class UploadService {
             return null
         }
 
-        const fileName = `${user}-picture.${extension}`
+        const fileName = `${user}-picture`
 
         await this.s3.putObject({
             Bucket: DEFAULT_BUCKET,
             Key: `${DEFAULT_FOLDER}/${fileName}`,
             Body: fileStream
-        })
+        }).promise()
 
         return fileName
     }
