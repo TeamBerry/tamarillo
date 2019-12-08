@@ -159,10 +159,15 @@ export class UserApi {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
+            const updateFields = {}
+            Object.keys(settings).map((value, index) => {
+                updateFields[`settings.${value}`] = settings[value]
+            })
+
             await User.findByIdAndUpdate(
                 response.locals.auth.user,
                 {
-                    $set: { settings }
+                    $set: updateFields
                 }
             )
 
