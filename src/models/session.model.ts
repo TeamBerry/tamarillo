@@ -2,7 +2,8 @@ export interface IAuthSubject {
     _id: string
     name: string
     settings: {
-        theme: 'light' | 'dark'
+        theme: 'light' | 'dark',
+        picture: string
     }
 }
 
