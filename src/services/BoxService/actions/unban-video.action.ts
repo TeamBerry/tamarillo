@@ -9,8 +9,9 @@ export class UnbanVideo implements BoxAction {
     public async execute(boxToken: string, target: string) {
         await BoxSchema.findOneAndUpdate(
             {
-                _id: boxToken,
-                playlist: { _id: target, endTime: { $ne: null } }
+                "_id": boxToken,
+                'playlist._id': target,
+                'playlist.endTime': null
             },
             {
                 $set: { 'playlist.$.ignored': false }
@@ -18,3 +19,6 @@ export class UnbanVideo implements BoxAction {
         )
     }
 }
+
+const unbanVideo = new UnbanVideo()
+export default unbanVideo
