@@ -1,4 +1,5 @@
 import { BoxAction } from "./box-action.interface"
+import { PlaylistItem } from "../../../models/playlist-item.model"
 const BoxSchema = require("./../../../models/box.model")
 
 export class UnbanVideo implements BoxAction {
@@ -7,7 +8,7 @@ export class UnbanVideo implements BoxAction {
     }
 
     public async execute(boxToken: string, target: string) {
-        await BoxSchema.findOneAndUpdate(
+        const updatedBox = await BoxSchema.findOneAndUpdate(
             {
                 "_id": boxToken,
                 'playlist._id': target,
@@ -15,8 +16,16 @@ export class UnbanVideo implements BoxAction {
             },
             {
                 $set: { 'playlist.$.ignored': false }
+            },
+            {
+                new: true
             }
         )
+            .populate('playlist.video')
+
+        const targetVideo: PlaylistItem = updatedBox.playlist.find((item: PlaylistItem) => item._id === target)
+
+        return `The video ${targetVideo.video.name} has been restored in the playlist.`
     }
 }
 

@@ -22,6 +22,8 @@ import chatService from "./chat.service"
 import syncService from "./sync.service"
 import moment = require("moment")
 import { BoxAction } from "./actions/box-action.interface"
+import { BanVideo } from "./actions/ban-video.action"
+import { UnbanVideo } from "./actions/unban-video.action"
 const BoxSchema = require("./../../models/box.model")
 
 export type BoxActionConstructor = (new () => BoxAction)
@@ -42,7 +44,10 @@ class BoxService {
 
     constructor() {
         this.boxActions = new Map()
-
+        this.registerBoxActions([
+            BanVideo,
+            UnbanVideo
+        ])
     }
 
     public init() {
@@ -423,11 +428,35 @@ class BoxService {
      * @param {string} target
      * @memberof BoxService
      */
-    public async executeAction(request: { boxToken: string, actionName: string, target: string }) {
+    public async executeAction(request: { boxToken: string, actionName: string, target: string, author: string }) {
         const actionConstructor: BoxActionConstructor = this.boxActions.get(request.actionName.toLocaleLowerCase())
         const action = new actionConstructor()
 
-        await action.execute(request.boxToken, request.target)
+        try {
+            const feedback: string = await action.execute(request.boxToken, request.target)
+
+            // Emit feedback to the box
+            const message: Message = new Message({
+                source: 'bot',
+                scope: request.boxToken,
+                contents: feedback
+            })
+
+            const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
+
+            this.emitToSocket(recipients, 'chat', message)
+        } catch (error) {
+            // Send the error feedback to the author of the action if it exists
+            const message: Message = new Message({
+                source: 'system',
+                scope: request.author,
+                contents: 'The action you asked could not be executed.'
+            })
+
+            const recipient: Subscriber = await SubscriberSchema.findOne({ userToken: request.author, boxToken: request.boxToken })
+
+            this.emitToSocket([recipient], 'chat', message)
+        }
     }
 
     /**

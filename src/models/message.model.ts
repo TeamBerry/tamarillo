@@ -5,11 +5,11 @@ export class Message {
     public scope: string
     public time: Date
 
-    constructor(obj?: any) {
-        this.author = obj && obj.author || null
-        this.contents = obj && obj.contents
-        this.source = obj && obj.source || null
-        this.scope = obj && obj.scope || null
-        this.time = obj && obj.time || new Date()
+    constructor(message?: Partial<Message>) {
+        this.author = message && message.author || null
+        this.contents = message && message.contents
+        this.source = message && message.source || null
+        this.scope = message && message.scope || null
+        this.time = message && message.time || new Date()
     }
 }

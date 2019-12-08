@@ -8,5 +8,5 @@ export interface BoxAction {
      * @param {string} target The target of the box. Can be anything
      * @memberof BoxAction
      */
-    execute(boxToken: string, target: string)
+    execute(boxToken: string, target: string): Promise<string>
 }
