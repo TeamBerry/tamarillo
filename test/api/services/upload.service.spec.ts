@@ -1,5 +1,3 @@
-import '../../test-helper'
-
 import * as chai from 'chai'
 const expect = chai.expect
 import * as _ from 'lodash'
