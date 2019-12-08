@@ -21,13 +21,30 @@ import { SubmissionPayload, CancelPayload } from "./../../models/video-payload.m
 import chatService from "./chat.service"
 import syncService from "./sync.service"
 import moment = require("moment")
+import { BoxAction } from "./actions/box-action.interface"
 const BoxSchema = require("./../../models/box.model")
+
+export type BoxActionConstructor = (new () => BoxAction)
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
 */
 class BoxService {
+    /**
+     * Strategy patten to act on the box. Can be accessed by Sockets or APIs
+     *
+     * @private
+     * @type {Map<string, BoxActionConstructor>}
+     * @memberof BoxService
+     */
+    private boxActions: Map<string, BoxActionConstructor>
+
+    constructor() {
+        this.boxActions = new Map()
+
+    }
+
     public init() {
         console.log("Manager service initialisation...")
 
@@ -400,6 +417,20 @@ class BoxService {
     }
 
     /**
+     * Finds and executes the corresponding action
+     *
+     * @param {string} actionName
+     * @param {string} target
+     * @memberof BoxService
+     */
+    public async executeAction(request: { boxToken: string, actionName: string, target: string }) {
+        const actionConstructor: BoxActionConstructor = this.boxActions.get(request.actionName.toLocaleLowerCase())
+        const action = new actionConstructor()
+
+        await action.execute(request.boxToken, request.target)
+    }
+
+    /**
      * Emits a message to a list of recipients
      *
      * @private
@@ -423,6 +454,21 @@ class BoxService {
      */
     private checkAuth() {
 
+    }
+
+    /**
+     * Builds the list of available actions on the box
+     *
+     * @private
+     * @param {(new () => BoxAction)[]} boxActionConstructors
+     * @memberof BoxService
+     */
+    private registerBoxActions(boxActionConstructors: (new () => BoxAction)[]): void {
+        for (const boxActionConstructor of boxActionConstructors) {
+            const actionName = new boxActionConstructor().getName().toLowerCase()
+
+            this.boxActions.set(actionName, boxActionConstructor)
+        }
     }
 }
 

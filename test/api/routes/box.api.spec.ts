@@ -12,6 +12,7 @@ import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 import authService from '../../../src/api/services/auth.service'
+import { PlaylistItem } from '../../../src/models/playlist-item.model'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -558,7 +559,7 @@ describe("Box API", () => {
         it("Updates a playlist with unique videos if an existing playlist is specified as target", () => {
             const playlistSettings: Partial<UserPlaylistDocument> = {
                 _id: '7dec3a584ec1317ade113a58'
-            };
+            }
 
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043ea/convert')
@@ -596,6 +597,103 @@ describe("Box API", () => {
 
                     await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
                 })
+        })
+    })
+
+    describe("Acts on a video of the playlist", () => {
+        before(async () => {
+            await Video.create({
+                _id: '9bc72f3d7edc6312d0ef2e47',
+                name: 'First Video',
+                link: '4c6e3f_aZ0d',
+                duration: 'PT4M12S'
+            })
+
+            await Video.create({
+                _id: '9bc72f3d7edc6312d0ef2e48',
+                name: 'Second Video',
+                link: 'aC9d3edD3e2',
+                duration: 'PT1M19S'
+            })
+
+            await Box.create({
+                _id: '9cb763b6e72611381ef043e8',
+                description: 'Currently playing box',
+                lang: 'English',
+                name: 'Closed box to delete',
+                playlist: [
+                    // Upcoming videos
+                    {
+                        _id: '9cb763b6e72611381ef043f2',
+                        submittedAt: '2019-12-08T15:37:14',
+                        video: '9bc72f3d7edc6312d0ef2e48',
+                        startTime: null,
+                        endTime: null,
+                        ignored: true
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f1',
+                        submittedAt: '2019-12-08T15:37:14',
+                        video: '9bc72f3d7edc6312d0ef2e48',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false
+                    },
+                    // Currently playing video
+                    {
+                        _id: '9cb763b6e72611381ef043f0',
+                        submittedAt: '2019-12-08T15:37:14',
+                        video: '9bc72f3d7edc6312d0ef2e48',
+                        startTime: '2019-12-08T15:41:26',
+                        endTime: null,
+                        ignored: false
+                    },
+                    // Played videos
+                    {
+                        _id: '9cb763b6e72611381ef043e9',
+                        submittedAt: '2019-12-08T15:37:14',
+                        video: '9bc72f3d7edc6312d0ef2e48',
+                        startTime: '2019-12-08T15:37:14',
+                        endTime: '2019-12-08T15:41:26',
+                        ignored: false
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: false,
+            })
+        })
+
+        after(async () => {
+            await Box.remove({})
+            await Video.deleteMany({})
+        })
+
+        describe("Mark for skip", () => {
+            it("Sends an error if the given action does not exist", () => {
+                const actionRequest = {
+                    action: 'timeout',
+                    target: '9cb763b6e72611381ef043f2'
+                }
+
+                return supertest(expressApp)
+                    .post('/9cb763b6e72611381ef043e8/videos')
+                    .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                    .send(actionRequest)
+                    .expect(412)
+            })
+
+            it("Sends an error if the given video does not exist", () => {
+                const actionRequest = {
+                    action: 'ban',
+                    target: '9cb763b6e72611381ef043f3'
+                }
+
+                return supertest(expressApp)
+                    .post('/9cb763b6e72611381ef043e8/videos')
+                    .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                    .send(actionRequest)
+                    .expect(404)
+            })
         })
     })
 

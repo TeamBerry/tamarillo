@@ -1,6 +1,7 @@
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const syncQueue = new Queue("sync")
+const boxActionQueue = new Queue("box-actions")
 
 import { BoxJob } from "../../models/box.job"
 import { Message } from "../../models/message.model"
@@ -85,6 +86,12 @@ export class BoxWatcher {
             if (order === 'next') {
                 boxService.transitionToNextVideo(boxToken)
             }
+
+            done()
+        })
+
+        boxActionQueue.process((job, done) => {
+            boxService.executeAction(job.data)
 
             done()
         })

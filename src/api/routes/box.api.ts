@@ -5,6 +5,7 @@ import { UserPlaylistDocument, UserPlaylist, UserPlaylistClass } from "../../mod
 import { PlaylistItem } from "../../models/playlist-item.model";
 const Queue = require("bull")
 const boxQueue = new Queue("box")
+const boxActionQueue = new Queue("box-actions")
 const auth = require("./../auth.middleware")
 
 const Box = require("./../../models/box.model")
@@ -28,6 +29,7 @@ export class BoxApi {
         this.router.post("/:box/close", this.close.bind(this))
         this.router.post("/:box/open", this.open.bind(this))
         this.router.get("/:box/users", this.users)
+        this.router.post("/:box/videos", this.actionOnVideo)
 
         this.router.use(auth.isAuthorized)
         this.router.post('/:box/convert', this.convertPlaylist)
@@ -267,6 +269,48 @@ export class BoxApi {
             this.createJob(targetId, "destroy")
 
             return response.status(200).send(deletedBox)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Executes an action on a video:
+     * - ban/unban: marks an upcoming video to be ignored
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof BoxApi
+     */
+    public async actionOnVideo(request: Request, response: Response): Promise<Response> {
+        const box = response.locals.box
+        const availableActions: Array<string> = ['ban', 'unban']
+
+        const actionRequest: { action: string, target: string } = request.body
+
+        try {
+            // Return error if the given action does not exist or is not supported
+            if (availableActions.indexOf(actionRequest.action) === -1) {
+                return response.status(412).send()
+            }
+
+            // Try to find the video
+            const targetVideo = box.playlist.find((item: PlaylistItem) => {
+                return item._id === actionRequest.target
+            })
+            if (!targetVideo) {
+                return response.status(404).send()
+            }
+
+            // Everything went well.
+            // Create action job for the box service
+            boxActionQueue.createJob({
+                boxToken: box._id,
+                ...actionRequest
+            })
+
+            return response.status(200).send()
         } catch (error) {
             return response.status(500).send(error)
         }
