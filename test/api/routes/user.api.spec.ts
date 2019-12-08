@@ -49,7 +49,8 @@ describe("User API", () => {
             mail: 'ash@pokemon.com',
             password: 'Pikachu',
             settings: {
-                theme: 'light'
+                theme: 'light',
+                picture: '9ca0df5f86abeb66da97ba5d-picture'
             },
             favorites: []
         })
@@ -60,7 +61,8 @@ describe("User API", () => {
             mail: 'shirona@sinnoh-league.com',
             password: 'Piano',
             settings: {
-                theme: 'dark'
+                theme: 'dark',
+                picture: 'default-picture'
             },
             favorites: ['9bc72f3d7edc6312d0ef2e48']
         })
@@ -141,6 +143,7 @@ describe("User API", () => {
                     const user = await User.findById('9ca0df5f86abeb66da97ba5d')
 
                     expect(user.settings.theme).to.equal("dark")
+                    expect(user.settings.picture).to.equal("9ca0df5f86abeb66da97ba5d-picture")
                 })
         })
     })
