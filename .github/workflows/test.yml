@@ -32,6 +32,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Authenticating to Team Berry's GitHub Registry
+      run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.REGISTRY_KEY }}" >> ~/.npmrc
     - name: npm install
       run: npm install
     - name: Setup Auth Keys
