@@ -241,9 +241,9 @@
       "dev": true
     },
     "@teamberry/muscadine": {
-      "version": "0.0.2",
-      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.0.2/9780e21aca13ee94a5c6a4e0b2d4ff9ed67828ce9a548c2d5e488489a8782e7f",
-      "integrity": "sha512-xDL3ECSG63itEOXvqRRRPOxaLlzt9rzcw7T7Jw6VqP+uA9oqx7B5plH8adexdZJ8mkyaLMTQdPQVV2eq3jjaRw=="
+      "version": "0.0.3",
+      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.0.3/7753204060d4b59987f6cdb7905e2bbf1ba6071d9f4dfca77a884fba00924531",
+      "integrity": "sha512-kQ85dKMr60ViL4E5P6jey6cZkGWXrOyiIcjc0NHUWqT5oLAWqCLzdl+zFwsFdOOU1E8hr9PrXHY1BiT1TEUCnw=="
     },
     "@types/babel-types": {
       "version": "7.0.7",
