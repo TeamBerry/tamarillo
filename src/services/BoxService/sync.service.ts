@@ -242,15 +242,13 @@ export class SyncService {
             })
         }
 
-        if (nextVideoIndex === -1) {
-            return null
+        if (nextVideoIndex !== -1) {
+            box.playlist[nextVideoIndex].startTime = transitionTime
+            response.nextVideo = box.playlist[nextVideoIndex]
+
+            // Puts the starting video between the upcoming & played videos
+            box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)
         }
-
-        box.playlist[nextVideoIndex].startTime = transitionTime
-        response.nextVideo = box.playlist[nextVideoIndex]
-
-        // Puts the starting video between the upcoming & played videos
-        box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)
 
         // Updates the box
         response.updatedBox = await BoxSchema
