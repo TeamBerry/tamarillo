@@ -1,5 +1,6 @@
 // Utils imports
 import * as _ from "lodash"
+import moment = require("moment")
 
 // MongoDB & Sockets
 const express = require("express")()
@@ -12,14 +13,12 @@ const syncQueue = new Queue("sync")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
+import { Message, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
-import { SubmissionPayload, CancelPayload } from "./../../models/video-payload.model"
-import { Message, SyncPacket } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
 import syncService from "./sync.service"
-import moment = require("moment")
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -86,16 +85,16 @@ class BoxService {
             /**
              * What to do when you've got a video.
              *
-             * @param {SubmissionPayload} payload the Video Payload
+             * @param {PlaylistItemSubmissionRequest} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on("video", async (payload: SubmissionPayload) => {
+            socket.on("video", async (request: PlaylistItemSubmissionRequest) => {
                 // Emitting feedback to the chat
-                const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: payload.boxToken })
+                const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                 try {
                     // Dispatching request to the Sync Service
-                    const response = await syncService.onVideo(payload)
+                    const response = await syncService.onVideo(request)
 
                     // Emit notification to all chat users that a video has been added by someone
                     this.emitToSocket(recipients, "chat", response.feedback)
@@ -108,42 +107,42 @@ class BoxService {
                         return video.startTime !== null && video.endTime === null
                     })
                     if (currentVideoIndex === -1) {
-                        this.transitionToNextVideo(payload.boxToken)
+                        this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
-                    const recipients: Subscriber[] = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+                    const recipients: Subscriber[] = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
                     const message: Message = new Message({
                         author: "system",
                         // TODO: Extract from the error
                         contents: "This box is closed. Submission is disallowed.",
                         source: "bot",
-                        scope: payload.boxToken,
+                        scope: request.boxToken,
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
             })
 
             // When a user deletes a video from the playlist
-            socket.on("cancel", async (payload: CancelPayload) => {
+            socket.on("cancel", async (request: PlaylistItemCancelRequest) => {
                 try {
-                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken })
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                     // Remove the video from the playlist (_id is sent)
-                    const response = await syncService.onVideoCancel(payload)
+                    const response = await syncService.onVideoCancel(request)
 
                     this.emitToSocket(recipients, 'chat', response.feedback)
 
                     this.emitToSocket(recipients, 'box', response.updatedBox)
                 } catch (error) {
-                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
                     const message: Message = new Message({
                         author: 'system',
                         contents: 'The box is closed. The playlist cannot be changed.',
                         source: 'bot',
-                        scope: payload.boxToken
+                        scope: request.boxToken
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }

@@ -9,11 +9,9 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
+import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
-import { PlaylistItem } from "../../models/playlist-item.model"
-import { SubmissionPayload, CancelPayload } from "../../models/video-payload.model"
 import { Video } from "../../models/video.model"
-import { Message, SyncPacket } from "@teamberry/muscadine"
 
 export class SyncService {
     /**
@@ -46,20 +44,20 @@ export class SyncService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {SubmissionPayload} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     * @param {PlaylistItemSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof SyncService
      */
-    public async onVideo(payload: SubmissionPayload): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideo(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
-            const video = await this.getVideo(payload.link)
+            const video = await this.getVideo(request.link)
 
             // Finding the user who submitted the video
-            const user = await User.findById(payload.userToken)
+            const user = await User.findById(request.userToken)
 
             // Adding it to the playlist of the box
-            const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken)
+            const updatedBox = await this.postToBox(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
@@ -71,7 +69,7 @@ export class SyncService {
             const feedback = new Message({
                 contents: message,
                 source: "bot",
-                scope: payload.boxToken,
+                scope: request.boxToken,
             })
 
             return { feedback, updatedBox }
@@ -84,15 +82,15 @@ export class SyncService {
     /**
      * Removing a video from the playlist of a box.
      *
-     * @param {{ boxToken, userToken, playlistItem }} payload
+     * @param {PlaylistItemCancelRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
      * @memberof SyncService
      */
-    public async onVideoCancel(payload: CancelPayload): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancel(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
-            const user = await User.findById(payload.userToken)
+            const user = await User.findById(request.userToken)
 
-            const box = await BoxSchema.findById(payload.boxToken)
+            const box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
                 throw new Error("The box is closed. The playlist cannot be modifieds.")
@@ -101,9 +99,9 @@ export class SyncService {
             // Pull the video from the paylist
             const updatedBox = await BoxSchema
                 .findByIdAndUpdate(
-                    payload.boxToken,
+                    request.boxToken,
                     {
-                        $pull: { playlist: { _id: payload.item } }
+                        $pull: { playlist: { _id: request.item } }
                     },
                     {
                         new: true
@@ -118,7 +116,7 @@ export class SyncService {
             const feedback = new Message({
                 contents: message,
                 source: 'bot',
-                scope: payload.boxToken
+                scope: request.boxToken
             })
 
             return { feedback, updatedBox }
