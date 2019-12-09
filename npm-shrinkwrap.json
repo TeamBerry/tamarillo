@@ -240,6 +240,11 @@
       "integrity": "sha512-+iTbntw2IZPb/anVDbypzfQa+ay64MW0Zo8aJ8gZPWMMK6/OubMVb6lUPMagqjOPnmtauXnFCACVl3O7ogjeqQ==",
       "dev": true
     },
+    "@teamberry/muscadine": {
+      "version": "0.0.1",
+      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.0.1/cc5a471a90143eea876f8ff8c1a8f2ddff5274e0c5d930bdec1bd635f98c22ee",
+      "integrity": "sha512-Qa6uvB7OpGvDkpJShWF8SqPnqaGq0Uirrj+MaxRngui0Bllfx2epmsamx0opVJZr+1+pACHCCBU5nt1rYOcb6w=="
+    },
     "@types/babel-types": {
       "version": "7.0.7",
       "resolved": "https://registry.npmjs.org/@types/babel-types/-/babel-types-7.0.7.tgz",
