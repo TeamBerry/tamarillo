@@ -3,8 +3,8 @@ const boxQueue = new Queue("box")
 const syncQueue = new Queue("sync")
 
 import { BoxJob } from "../../models/box.job"
-import { Message } from "../../models/message.model"
 import boxService from "./box.service"
+import { Message } from "@teamberry/muscadine"
 
 export class BoxWatcher {
     public listen() {

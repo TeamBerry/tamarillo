@@ -1,6 +1,6 @@
 import { Document, model, Schema } from "mongoose"
 
-import { PlaylistItem } from "./playlist-item.model"
+import { PlaylistItem } from "@teamberry/muscadine"
 
 export class Box {
     public creator: string
