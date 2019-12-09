@@ -11,10 +11,9 @@ const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
 import { Box } from "../../models/box.model"
 import { PlaylistItem } from "../../models/playlist-item.model"
-import { SyncPacket } from "../../models/sync-packet.model"
 import { SubmissionPayload, CancelPayload } from "../../models/video-payload.model"
 import { Video } from "../../models/video.model"
-import { Message } from "@teamberry/muscadine"
+import { Message, SyncPacket } from "@teamberry/muscadine"
 
 export class SyncService {
     /**

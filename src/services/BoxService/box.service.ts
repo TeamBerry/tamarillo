@@ -12,12 +12,11 @@ const syncQueue = new Queue("sync")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { SyncPacket } from "../../models/sync-packet.model"
 import { Subscriber } from "./../../models/subscriber.model"
 import { SubmissionPayload, CancelPayload } from "./../../models/video-payload.model"
+import { Message, SyncPacket } from "@teamberry/muscadine"
 
 // Import services that need to be managed
-import { Message } from "@teamberry/muscadine"
 import chatService from "./chat.service"
 import syncService from "./sync.service"
 import moment = require("moment")
