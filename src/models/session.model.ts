@@ -7,7 +7,6 @@ export interface IAuthSubject {
     }
 }
 
-
 export class Session {
     public bearer: any
     public subject: IAuthSubject

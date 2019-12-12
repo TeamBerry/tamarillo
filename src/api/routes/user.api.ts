@@ -6,7 +6,7 @@ const upload = multer({ dest: 'upload/' })
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.model")
 
-import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
+import { UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
 const auth = require("./../auth.middleware")

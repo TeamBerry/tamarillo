@@ -18,7 +18,6 @@
         "no-debugger": true,
         "no-var-keyword": true,
         "no-trailing-whitespace": true,
-        "no-use-before-declare": true,
         "no-empty": false,
         "no-duplicate-variable": true,
         "no-duplicate-imports": true,

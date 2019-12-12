@@ -5,8 +5,8 @@ import * as express from "express"
 import BoxApi from "./../api/routes/box.api"
 import VideoApi from "./../api/routes/video.api"
 import AuthApi from "./routes/auth.api"
-import UserApi from "./routes/user.api"
 import PlaylistApi from "./routes/playlist.api"
+import UserApi from "./routes/user.api"
 
 class App {
     public app: express.Application

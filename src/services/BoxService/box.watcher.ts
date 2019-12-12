@@ -2,9 +2,9 @@ const Queue = require("bull")
 const boxQueue = new Queue("box")
 const syncQueue = new Queue("sync")
 
+import { Message } from "@teamberry/muscadine"
 import { BoxJob } from "../../models/box.job"
 import boxService from "./box.service"
-import { Message } from "@teamberry/muscadine"
 
 export class BoxWatcher {
     public listen() {
