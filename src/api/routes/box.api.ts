@@ -1,8 +1,8 @@
-import { Request, Response, Router, NextFunction } from "express"
+import { PlaylistItem } from "@teamberry/muscadine"
+import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
-import { UserPlaylistDocument, UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model";
-import { PlaylistItem } from "../../models/playlist-item.model";
+import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const boxActionQueue = new Queue("box-actions")

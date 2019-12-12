@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response, Router } from "express"
+import { Request, Response, Router } from "express"
 
-import { VideoClass, Video } from './../../models/video.model'
+import { Video } from './../../models/video.model'
 
 export class VideoApi {
     public router: Router

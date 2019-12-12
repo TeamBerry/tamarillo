@@ -1,6 +1,6 @@
 import * as _ from "lodash"
 
-import { Message } from "../../models/message.model"
+import { Message } from "@teamberry/muscadine"
 
 class ChatService {
     /**
