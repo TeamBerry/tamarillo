@@ -428,7 +428,7 @@ describe("Sync Service", () => {
         it("Sends null if there's no next video", async () => {
             const response = await syncService.getNextVideo('9cb763b6e72611381ef043e4')
 
-            expect(response).to.equal(null)
+            expect(response.nextVideo).to.equal(null)
         })
 
         it("Get the next video if no video just ended", async () => {
