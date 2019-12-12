@@ -24,7 +24,7 @@ const BoxSchema = require("./../../models/box.model")
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
-*/
+ */
 class BoxService {
     public init() {
         console.log("Manager service initialisation...")
@@ -90,7 +90,7 @@ class BoxService {
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
             socket.on("video", async (request: PlaylistItemSubmissionRequest) => {
                 // Emitting feedback to the chat
-                const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
+                let recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                 try {
                     // Dispatching request to the Sync Service
@@ -111,7 +111,7 @@ class BoxService {
                     }
                 } catch (error) {
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
-                    const recipients: Subscriber[] = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
+                    recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
                     const message: Message = new Message({
                         author: "system",
