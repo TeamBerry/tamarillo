@@ -5,8 +5,8 @@ const mailQueue = new Queue("mail")
 import * as bcrypt from 'bcrypt'
 
 const User = require("./../../models/user.model")
-import authService from "../services/auth.service"
 import { MailJob } from "../../models/mail.job"
+import authService from "../services/auth.service"
 
 const dotenv = require("dotenv")
 dotenv.config()
@@ -127,7 +127,7 @@ export class AuthApi {
             const mailJob: MailJob = {
                 addresses: [mail],
                 variables: {
-                    resetToken: resetToken
+                    resetToken
                 },
                 template: 'password-reset'
             }
