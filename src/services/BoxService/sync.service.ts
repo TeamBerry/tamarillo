@@ -1,3 +1,4 @@
+import arrayMove from 'array-move'
 import * as _ from "lodash"
 import * as moment from "moment"
 const axios = require("axios")
@@ -8,12 +9,9 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
+import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
-import { PlaylistItem } from "../../models/playlist-item.model"
-import { SyncPacket } from "../../models/sync-packet.model"
-import { SubmissionPayload, CancelPayload } from "../../models/video-payload.model"
 import { Video } from "../../models/video.model"
-import { Message } from "./../../models/message.model"
 
 export class SyncService {
     /**
@@ -46,20 +44,20 @@ export class SyncService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {SubmissionPayload} payload The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     * @param {PlaylistItemSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof SyncService
      */
-    public async onVideo(payload: SubmissionPayload): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideo(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
-            const video = await this.getVideo(payload.link)
+            const video = await this.getVideo(request.link)
 
             // Finding the user who submitted the video
-            const user = await User.findById(payload.userToken)
+            const user = await User.findById(request.userToken)
 
             // Adding it to the playlist of the box
-            const updatedBox = await this.postToBox(video, payload.boxToken, payload.userToken)
+            const updatedBox = await this.postToBox(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
@@ -71,7 +69,7 @@ export class SyncService {
             const feedback = new Message({
                 contents: message,
                 source: "bot",
-                scope: payload.boxToken,
+                scope: request.boxToken,
             })
 
             return { feedback, updatedBox }
@@ -84,15 +82,15 @@ export class SyncService {
     /**
      * Removing a video from the playlist of a box.
      *
-     * @param {{ boxToken, userToken, playlistItem }} payload
+     * @param {PlaylistItemCancelRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
      * @memberof SyncService
      */
-    public async onVideoCancel(payload: CancelPayload): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancel(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
-            const user = await User.findById(payload.userToken)
+            const user = await User.findById(request.userToken)
 
-            const box = await BoxSchema.findById(payload.boxToken)
+            const box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
                 throw new Error("The box is closed. The playlist cannot be modifieds.")
@@ -101,14 +99,15 @@ export class SyncService {
             // Pull the video from the paylist
             const updatedBox = await BoxSchema
                 .findByIdAndUpdate(
-                    payload.boxToken,
+                    request.boxToken,
                     {
-                        $pull: { playlist: { _id: payload.item } }
+                        $pull: { playlist: { _id: request.item } }
                     },
                     {
                         new: true
                     }
                 )
+                .populate("creator", "_id name")
                 .populate("playlist.video")
                 .populate("playlist.submitted_by", "_id name")
 
@@ -117,7 +116,7 @@ export class SyncService {
             const feedback = new Message({
                 contents: message,
                 source: 'bot',
-                scope: payload.boxToken
+                scope: request.boxToken
             })
 
             return { feedback, updatedBox }
@@ -158,7 +157,9 @@ export class SyncService {
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
                 { new: true },
-            ).populate("playlist.video")
+            )
+            .populate("creator", "_id name")
+            .populate("playlist.video")
             .populate("playlist.submitted_by", "_id name")
 
         return updatedBox
@@ -204,72 +205,63 @@ export class SyncService {
      */
     public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
-        const response = null
+        const response = {
+            nextVideo: null,
+            updatedBox: null
+        }
 
-        const box: Box = await BoxSchema.findById(boxToken)
+        const box: Box = await BoxSchema
+            .findById(boxToken)
+            .populate("playlist.video")
+            .lean()
 
         // TODO: Find last index to skip ignored videos
         const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => {
             return video.startTime !== null && video.endTime === null
         })
 
-        // A video was playing and just ended
+        // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
-            // Ends the current video, the one that just ended
             box.playlist[currentVideoIndex].endTime = transitionTime
-
-            // Searches for a new one
-            if (currentVideoIndex !== 0) {
-                box.playlist[currentVideoIndex - 1].startTime = transitionTime
-            }
-
-            // Updates the box
-            const updatedBox: Box = await BoxSchema
-                .findOneAndUpdate(
-                    { _id: boxToken },
-                    { $set: { playlist: box.playlist } },
-                    { new: true },
-                )
-                .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
-
-            let nextVideo = null
-            if (currentVideoIndex !== 0) {
-                nextVideo = updatedBox.playlist[currentVideoIndex - 1]
-            }
-
-            return {
-                nextVideo,
-                updatedBox,
-            }
-        } else {
-            // No video was playing before, the playlist was over (which means the service already entered the if condition once but found nothing)
-            const nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
-                return video.startTime === null
-            })
-
-            if (nextVideoIndex !== -1) {
-                box.playlist[nextVideoIndex].startTime = transitionTime
-
-                const updatedBox = await BoxSchema
-                    .findOneAndUpdate(
-                        { _id: boxToken },
-                        { $set: { playlist: box.playlist } },
-                        { new: true },
-                    )
-                    .populate("playlist.video")
-                    .populate("playlist.submitted_by", "_id name")
-
-                const nextVideo = updatedBox.playlist[nextVideoIndex]
-
-                return {
-                    nextVideo,
-                    updatedBox,
-                }
-            }
         }
 
-        return null
+        // Search for a new video
+        let nextVideoIndex = -1
+        if (box.options.random === true) {
+            const availableVideos = box.playlist.filter((video) => {
+                return video.startTime === null
+            }).length
+
+            if (availableVideos > 0) {
+                nextVideoIndex = Math.floor(Math.random() * availableVideos)
+            }
+        } else {
+            // Non-random
+            nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
+                return video.startTime === null
+            })
+        }
+
+        if (nextVideoIndex !== -1) {
+            box.playlist[nextVideoIndex].startTime = transitionTime
+            response.nextVideo = box.playlist[nextVideoIndex]
+
+            // Puts the starting video between the upcoming & played videos
+            box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)
+        }
+
+        // Updates the box
+        response.updatedBox = await BoxSchema
+            .findOneAndUpdate(
+                { _id: boxToken },
+                { $set: { playlist: box.playlist } },
+                { new: true },
+            )
+            .populate("creator", "_id name")
+            .populate("playlist.video")
+            .populate("playlist.submitted_by", "_id name")
+
+        return response
     }
 
     /**

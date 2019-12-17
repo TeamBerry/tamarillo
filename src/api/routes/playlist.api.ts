@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
-import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
+import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
 
 export class PlaylistApi {
@@ -41,7 +41,7 @@ export class PlaylistApi {
     }
 
     public async index(request: Request, response: Response): Promise<Response> {
-        let filters: Partial<{ isPrivate: boolean, user: any }> = { isPrivate: false }
+        const filters: Partial<{ isPrivate: boolean, user: any }> = { isPrivate: false }
 
         // Excluding the user from the search to display only playlists to "discover"
         // The user can go to "My Playlists" to see his own playlists

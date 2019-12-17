@@ -9,6 +9,7 @@
 node_modules
 docs
 certs
+upload
 
 # IDEs and editors
 /.idea

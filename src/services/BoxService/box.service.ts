@@ -1,5 +1,6 @@
 // Utils imports
 import * as _ from "lodash"
+import moment = require("moment")
 
 // MongoDB & Sockets
 const express = require("express")()
@@ -12,20 +13,18 @@ const syncQueue = new Queue("sync")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { SyncPacket } from "../../models/sync-packet.model"
-import { Message } from "./../../models/message.model"
+import { Message, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
-import { SubmissionPayload, CancelPayload } from "./../../models/video-payload.model"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
 import syncService from "./sync.service"
-import moment = require("moment")
+const BoxSchema = require("./../../models/box.model")
 
 /**
  * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
-*/
+ */
 class BoxService {
     public init() {
         console.log("Manager service initialisation...")
@@ -35,7 +34,7 @@ class BoxService {
             // Empty subscribers collection
             await SubscriberSchema.deleteMany({})
 
-            console.log("Socket started; Listening on port boob...")
+            console.log("Socket started; Listening on port 8008...")
         })
 
         io.on("connection", (socket) => {
@@ -86,16 +85,16 @@ class BoxService {
             /**
              * What to do when you've got a video.
              *
-             * @param {SubmissionPayload} payload the Video Payload
+             * @param {PlaylistItemSubmissionRequest} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on("video", async (payload: SubmissionPayload) => {
+            socket.on("video", async (request: PlaylistItemSubmissionRequest) => {
                 // Emitting feedback to the chat
-                const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: payload.boxToken })
+                let recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                 try {
                     // Dispatching request to the Sync Service
-                    const response = await syncService.onVideo(payload)
+                    const response = await syncService.onVideo(request)
 
                     // Emit notification to all chat users that a video has been added by someone
                     this.emitToSocket(recipients, "chat", response.feedback)
@@ -108,42 +107,42 @@ class BoxService {
                         return video.startTime !== null && video.endTime === null
                     })
                     if (currentVideoIndex === -1) {
-                        this.transitionToNextVideo(payload.boxToken)
+                        this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
-                    const recipients: Subscriber[] = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+                    recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
                     const message: Message = new Message({
                         author: "system",
                         // TODO: Extract from the error
                         contents: "This box is closed. Submission is disallowed.",
                         source: "bot",
-                        scope: payload.boxToken,
+                        scope: request.boxToken,
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
             })
 
             // When a user deletes a video from the playlist
-            socket.on("cancel", async (payload: CancelPayload) => {
+            socket.on("cancel", async (request: PlaylistItemCancelRequest) => {
                 try {
-                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: payload.boxToken })
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                     // Remove the video from the playlist (_id is sent)
-                    const response = await syncService.onVideoCancel(payload)
+                    const response = await syncService.onVideoCancel(request)
 
                     this.emitToSocket(recipients, 'chat', response.feedback)
 
                     this.emitToSocket(recipients, 'box', response.updatedBox)
                 } catch (error) {
-                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: payload.userToken, boxToken: payload.boxToken })
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
                     const message: Message = new Message({
                         author: 'system',
                         contents: 'The box is closed. The playlist cannot be changed.',
                         source: 'bot',
-                        scope: payload.boxToken
+                        scope: request.boxToken
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
@@ -171,8 +170,6 @@ class BoxService {
                     boxToken: request.boxToken,
                 })
 
-                console.log("CHAT RECIPIENT ON START: ", chatRecipient)
-
                 try {
                     const response = await syncService.onStart(request.boxToken)
 
@@ -194,7 +191,6 @@ class BoxService {
                     }
 
                     if (chatRecipient) {
-                        console.log("Emit to socket")
                         io.to(chatRecipient.socket).emit("chat", message)
                     }
                 } catch (error) {
@@ -348,46 +344,57 @@ class BoxService {
      */
     public async transitionToNextVideo(boxToken: string) {
         const response = await syncService.getNextVideo(boxToken)
+
         const message: Message = new Message()
         message.scope = boxToken
 
-        if (response) {
-            const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken })
+        const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken })
 
-            // Emit box refresh to all the subscribers
-            _.each(recipients, (recipient: Subscriber) => {
-                if (response.nextVideo) {
-                    const syncPacket: SyncPacket = {
-                        box: boxToken,
-                        item: response.nextVideo,
-                    }
-                    io.to(recipient.socket).emit("sync", syncPacket)
+        if (response.nextVideo) {
+
+            for (const recipient of recipients) {
+                const syncPacket: SyncPacket = {
+                    box: boxToken,
+                    item: response.nextVideo,
                 }
-                io.to(recipient.socket).emit("box", response.updatedBox)
-            })
-
-            if (response.nextVideo) {
-                // Send chat message for subscribers
-                message.contents = "Currently playing: " + response.nextVideo.video.name
-                message.source = "bot"
-
-                // Create a new sync job
-                syncQueue.add(
-                    { boxToken, order: 'next' },
-                    {
-                        priority: 1,
-                        delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
-                        attempts: 5,
-                        removeOnComplete: true
-                    }
-                )
-            } else {
-                message.contents = "The playlist has no upcoming videos."
-                message.source = "system"
+                io.to(recipient.socket).emit("sync", syncPacket)
             }
 
-            this.emitToSocket(recipients, "chat", message)
+            // Send chat message for subscribers
+            message.contents = "Currently playing: " + response.nextVideo.video.name
+            message.source = "bot"
+
+            // Create a new sync job
+            syncQueue.add(
+                { boxToken, order: 'next' },
+                {
+                    priority: 1,
+                    delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
+                    attempts: 5,
+                    removeOnComplete: true
+                }
+            )
+        } else {
+            message.contents = "The playlist has no upcoming videos."
+            message.source = "system"
         }
+
+        for (const recipient of recipients) {
+            io.to(recipient.socket).emit("box", response.updatedBox)
+        }
+
+        this.emitToSocket(recipients, "chat", message)
+    }
+
+    public async sendBoxToSubscribers(boxToken: string) {
+        const box = await BoxSchema.findById(boxToken)
+            .populate("creator", "_id name")
+            .populate("playlist.video")
+            .populate("playlist.submitted_by", "_id name")
+
+        const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken })
+
+        this.emitToSocket(recipients, 'box', box)
     }
 
     /**
@@ -396,13 +403,13 @@ class BoxService {
      * @private
      * @param {Array<Subscriber>} recipients The list of subscribers
      * @param {string} channel The channel to emit on
-     * @param {Message} message The message to send
+     * @param {Message | any} contents The contents to send
      * @memberof BoxService
      */
-    private emitToSocket(recipients: Subscriber[], channel: string, message: Message) {
+    private emitToSocket(recipients: Subscriber[], channel: string, contents: Message | any) {
         recipients.forEach((recipient: Subscriber) => {
-            console.log(`Send message on socket ${recipient.socket}, channel ${channel} for subscribers`)
-            io.to(recipient.socket).emit(channel, message)
+            console.log(`Send contents on socket ${recipient.socket}, channel ${channel} for subscribers`)
+            io.to(recipient.socket).emit(channel, contents)
         })
     }
 

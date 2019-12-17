@@ -5,8 +5,8 @@ const mailQueue = new Queue("mail")
 import * as bcrypt from 'bcrypt'
 
 const User = require("./../../models/user.model")
-import authService from "../services/auth.service"
 import { MailJob } from "../../models/mail.job"
+import authService from "../services/auth.service"
 
 const dotenv = require("dotenv")
 dotenv.config()
@@ -49,7 +49,7 @@ export class AuthApi {
 
         try {
             // Find user in database
-            const user = await User.findOne({ mail }, 'name mail password')
+            const user = await User.findOne({ mail }, 'name mail settings password')
 
             // If password is not correct, send back 401 HTTP error
             if (!user) {
@@ -58,7 +58,6 @@ export class AuthApi {
 
             if (await bcrypt.compare(password, user.password)) {
                 const authResult = authService.createSession(user)
-
 
                 // Sending bearer token
                 return res.status(200).json(authResult)
@@ -128,7 +127,7 @@ export class AuthApi {
             const mailJob: MailJob = {
                 addresses: [mail],
                 variables: {
-                    resetToken: resetToken
+                    resetToken
                 },
                 template: 'password-reset'
             }

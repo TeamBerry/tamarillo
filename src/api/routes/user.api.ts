@@ -1,11 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
+const multer = require('multer')
+const upload = multer({ dest: 'upload/' })
 
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.model")
 
-import { UserPlaylistClass, UserPlaylist } from "../../models/user-playlist.model"
+import { UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
+import uploadService, { MulterFile } from "../services/upload.service"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -26,6 +29,7 @@ export class UserApi {
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
+        this.router.post('/:user/picture', [auth.isAuthorized, upload.single('picture')], this.uploadProfilePicture)
         this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
@@ -35,6 +39,8 @@ export class UserApi {
             if (!matchingUser) {
                 return response.status(404).send("USER_NOT_FOUND")
             }
+
+            response.locals.user = matchingUser
 
             next()
         })
@@ -153,10 +159,15 @@ export class UserApi {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
+            const updateFields = {}
+            Object.keys(settings).map((value, index) => {
+                updateFields[`settings.${value}`] = settings[value]
+            })
+
             await User.findByIdAndUpdate(
                 response.locals.auth.user,
                 {
-                    $set: { settings }
+                    $set: updateFields
                 }
             )
 
@@ -186,6 +197,8 @@ export class UserApi {
         try {
             const boxes = await Box.find({ creator: userId })
                 .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
 
             return response.status(200).send(boxes)
         } catch (error) {
@@ -225,6 +238,47 @@ export class UserApi {
             return response.status(200).send(userPlaylists)
         } catch (error) {
             console.log('ERROR: ', error)
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Uploads a new profile picture for the user
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof UserApi
+     */
+    public async uploadProfilePicture(request: Request, response: Response): Promise<Response> {
+        const user = response.locals.user
+
+        try {
+            if (!request.file) {
+                return response.status(404).send('FILE_NOT_FOUND')
+            }
+
+            const fileToUpload: MulterFile = request.file as MulterFile
+
+            // Uploads file
+            const uploadedFile = await uploadService.storeProfilePicture(user._id, fileToUpload)
+
+            if (!uploadedFile) {
+                return response.status(400).send("CORRUPTED_FILE")
+            }
+
+            console.log(uploadedFile)
+
+            // Updates entity
+            await User.findByIdAndUpdate(
+                user._id,
+                {
+                    $set: { 'settings.picture': uploadedFile }
+                }
+            )
+
+            return response.status(200).send({ file: uploadedFile })
+        } catch (error) {
             return response.status(500).send(error)
         }
     }
