@@ -45,6 +45,8 @@ export class UploadService {
             Body: fileStream
         }).promise()
 
+        fs.unlinkSync(uploadedFile.path)
+
         return fileName
     }
 
