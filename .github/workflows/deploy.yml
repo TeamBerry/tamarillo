@@ -8,6 +8,8 @@ on:
 jobs:
   build:
 
+    name: Test
+
     runs-on: ubuntu-18.04
 
     strategy:
@@ -49,6 +51,9 @@ jobs:
         CI: "true"
 
   deploy:
+    needs: build
+
+    name: Deploy
 
     runs-on: ubuntu-18.04
 
