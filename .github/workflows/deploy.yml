@@ -76,35 +76,11 @@ jobs:
       - name: Copy files
         uses: horochx/deploy-via-scp@v1.0.1
         with:
-          local: dist
+          local: dist package.json npm-shrinkwrap.json processes.json .npmrc
           remote: ${{ secrets.LOCATION }}
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Copy files
-        uses: horochx/deploy-via-scp@v1.0.1
-        with:
-          local: package.json
-          remote: ${{ secrets.LOCATION }}
-          host: ${{ secrets.HOST }}
-          user: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Copy files
-        uses: horochx/deploy-via-scp@v1.0.1
-        with:
-          local: npm-shrinkwrap.json
-          remote: ${{ secrets.LOCATION }}
-          host: ${{ secrets.HOST }}
-          user: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}    
-      - name: Copy files
-        uses: horochx/deploy-via-scp@v1.0.1
-        with:
-          local: processes.json
-          remote: ${{ secrets.LOCATION }}
-          host: ${{ secrets.HOST }}
-          user: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}    
       - name: Install Dependencies & Restart Server
         uses: garygrossgarten/github-action-ssh@v0.3.0
         with:
