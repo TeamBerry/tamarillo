@@ -78,7 +78,7 @@ jobs:
       - name: Copy files
         uses: horochx/deploy-via-scp@v1.0.1
         with:
-          local: dist package.json npm-shrinkwrap.json processes.json
+          local: dist,package.json,npm-shrinkwrap.json,processes.json
           remote: ${{ secrets.LOCATION }}
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
