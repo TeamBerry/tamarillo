@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-
     name: Test
 
     runs-on: ubuntu-18.04
@@ -56,8 +55,6 @@ jobs:
     name: Deploy
 
     runs-on: ubuntu-18.04
-
-    if: github.workflow.test
 
     strategy:
       matrix:
