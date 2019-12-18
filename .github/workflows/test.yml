@@ -38,6 +38,8 @@ jobs:
       run: npm install
     - name: Setup Auth Keys
       run: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -outform PEM -out auth.pub;
+    - name: Lint check
+      run: npm run lint:check
     - name: Run Tests
       run: npm run test
       env:
