@@ -32,7 +32,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Authenticating to Team Berry's GitHub Registry
+    - name: Authenticate to Team Berry's GitHub Registry
       run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.REGISTRY_KEY }}" >> ~/.npmrc
     - name: Install Dependencies
       run: npm install
@@ -62,6 +62,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Setup Auth Keys
         run: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -outform PEM -out auth.pub;
+      - name: Authenticate to Team Berry's GitHub Registry
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.REGISTRY_KEY }}" >> ~/.npmrc
       - name: Install Dependencies & Build App
         run: |
           npm ci
