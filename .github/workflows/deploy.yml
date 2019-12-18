@@ -85,6 +85,7 @@ jobs:
         uses: garygrossgarten/github-action-ssh@v0.3.0
         with:
           command: |
+            cd ${{ secrets.LOCATION }}
             npm ci
             npm restart
           host: ${{ secrets.HOST }}
