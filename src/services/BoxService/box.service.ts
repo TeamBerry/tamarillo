@@ -71,12 +71,10 @@ class BoxService {
                     SubscriberSchema.create(client)
 
                     const message = new Message({
-                        contents: "You are now connected to the box!",
+                        contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
                         source: "system",
                         scope: request.boxToken,
                     })
-
-                    console.log(`Request granted for user ${client.userToken} for box ${client.boxToken}`)
 
                     socket.emit("confirm", message)
                 }
