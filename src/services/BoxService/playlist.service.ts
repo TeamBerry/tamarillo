@@ -243,6 +243,23 @@ export class PlaylistService {
     }
 
     /**
+     * Called if Refresh Mode is enabled.
+     *
+     * Tests if the playlist has more than 10 different videos already played and if there is less than 3 videos
+     * remaining in the upcoming pool.
+     *
+     * If the conditions are satisfied, this method will select one video at random among the pool of already
+     * played videos and will add it to the pool of upcoming videos.
+     *
+     * @private
+     * @param {string} boxToken
+     * @memberof PlaylistService
+     */
+    private async refreshPlaylist(boxToken: string) {
+
+    }
+
+    /**
      * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
      *
      * @param {string} link the unique YouTube ID of the video

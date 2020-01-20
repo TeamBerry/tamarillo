@@ -6,14 +6,14 @@ var mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 import * as _ from 'lodash'
 
-import playlistService from './../../../src/services/BoxService/playlist.service'
+import playlistService from '../../../src/services/BoxService/playlist.service'
 const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
 import { PlaylistItemCancelRequest } from '@teamberry/muscadine'
-import { Video, VideoClass, VideoDocument } from './../../../src/models/video.model'
+import { Video, VideoClass, VideoDocument } from '../../../src/models/video.model'
 
-describe("Sync Service", () => {
+describe.only("Playlist Service", () => {
 
     before(async () => {
         await Box.deleteMany({})
@@ -34,7 +34,11 @@ describe("Sync Service", () => {
             name: 'Test box',
             playlist: [],
             creator: '9ca0df5f86abeb66da97ba5d',
-            open: true
+            open: true,
+            options: {
+                random: true,
+                refresh: false
+            }
         })
 
         await Box.create({
@@ -56,7 +60,8 @@ describe("Sync Service", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             open: false,
             options: {
-                random: true
+                random: true,
+                refresh: false
             }
         })
 
@@ -86,7 +91,11 @@ describe("Sync Service", () => {
                 }
             ],
             creator: '9ca0df5f86abeb66da97ba5d',
-            open: true
+            open: true,
+            options: {
+                random: false,
+                refresh: false
+            }
         })
 
         await Box.create({
@@ -144,33 +153,83 @@ describe("Sync Service", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             open: true,
             options: {
-                random: true
+                random: true,
+                refresh: true
             }
         })
 
-        await Video.create({
-            _id: '9cb81150594b2e75f06ba8fe',
-            link: 'Ivi1e-yCPcI',
-            name: 'Destroid - Annihilate'
-        })
-
-        await Video.create({
-            _id: '9cb81150594b2e75f06ba90a',
-            link: 'j6okxJ1CYJM',
-            name: 'The Piano Before Cynthia'
-        })
-
-        await Video.create({
-            _id: '9cb81150594b2e75f06ba90b',
-            link: 'SeSOzTr_yfA',
-            name: 'The Evil King'
-        })
-
-        await Video.create({
-            _id: '9cb81150594b2e75f06ba90c',
-            link: '0he85BszwL8',
-            name: 'Connected'
-        })
+        await Video.create([
+            {
+                _id: '9cb81150594b2e75f06ba8fe',
+                link: 'Ivi1e-yCPcI',
+                name: 'Destroid - Annihilate'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba900',
+                link: '6OmwKZ9r07o',
+                name: 'ODDS&ENDS',
+            },
+            {
+                _id: '9cb81150594b2e75f06ba90a',
+                link: 'j6okxJ1CYJM',
+                name: 'The Piano Before Cynthia'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba90b',
+                link: 'SeSOzTr_yfA',
+                name: 'The Evil King'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba90c',
+                link: '0he85BszwL8',
+                name: 'Connected'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba90d',
+                link: 'Kn8Vs_kKQMc',
+                name: 'Sand Planet'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba90e',
+                link: 'AvTH7J2shuI',
+                name: 'Two-Faced lovers'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba90f',
+                link: 'UC_qla6FQwM',
+                name: 'Hibikase'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba910',
+                link: 'Z4LiNMCTV20',
+                name: 'Hyper Reality Show'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba911',
+                link: 'hxSg2Ioz3LM',
+                name: 'Hibana'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba912',
+                link: 'uMlv9VWAxko',
+                name: 'Unhappy Refrain'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba913',
+                link: 'aCxGqtDoB04',
+                name: 'Peace Sign'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba914',
+                link: 'bmkY2yc1K7Q',
+                name: 'Te wo'
+            },
+            {
+                _id: '9cb81150594b2e75f06ba915',
+                link: 'ZB75e7vzX0I',
+                name: `World's End Dancehall`
+            }
+        ])
     })
 
     after(async () => {
@@ -455,6 +514,180 @@ describe("Sync Service", () => {
             const playingIndex = _.findIndex(box.playlist, (video) => video.startTime !== null && video.endTime === null)
 
             expect(playingIndex).to.equal(2)
+        })
+    })
+
+    describe("Refresh Mode", () => {
+        it("Does nothing if the playlist still has more than 3 upcoming videos", async () => {
+            await Box.create({
+                _id: '9cb763b6e72611381ef043e8',
+                description: null,
+                lang: 'English',
+                name: 'Box with 5 upcoming videos and 12 different played videos',
+                playlist: [
+                    // UPCOMING: 5 videos
+                    {
+                        _id: '9cb763b6e72611381ef04400',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04401',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04402',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04403',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04404',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    // PLAYING
+                    {
+                        _id: '9cb763b6e72611381ef04405',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    // PASSED
+                    {
+                        _id: '9cb763b6e72611381ef04406',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04407',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04408',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04409',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef0440a',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef0440b',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef0440c',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef0440d',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef0440e',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef0440f',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true,
+                options: {
+                    random: true,
+                    refresh: false
+                }
+            })
+        })
+
+        it("Does nothing if the playlist doesn't have enough past videos", () => {
+
+        })
+
+        it("Adds an already played video to the upcoming list", () => {
+
         })
     })
 })
