@@ -13,29 +13,7 @@ import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissio
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 
-export class SyncService {
-    /**
-     * After the client auth themselves, they need to caught up with the others in the box. It means they will ask for the
-     * current video playing and must have an answer.
-     *
-     * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
-     * a webhook. This is only for in-box requests.
-     *
-     * @param {string} boxToken The token of the box
-     * @returns {Promise<SyncPacket>} The packet for sync
-     * @memberof SyncService
-     */
-    public async onStart(boxToken: string): Promise<SyncPacket> {
-        const response: SyncPacket = { item: null, box: boxToken }
-
-        try {
-            response.item = await this.getCurrentVideo(boxToken)
-            return response
-        } catch (error) {
-            throw error
-        }
-    }
-
+export class PlaylistService {
     /**
      * When recieving a video from an user, the service searches for it in the video database
      * and adds the video to the playlist of the box.
@@ -46,18 +24,18 @@ export class SyncService {
      *
      * @param {PlaylistItemSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    public async onVideo(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoSubmitted(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
-            const video = await this.getVideo(request.link)
+            const video = await this.getVideoDetails(request.link)
 
             // Finding the user who submitted the video
             const user = await User.findById(request.userToken)
 
             // Adding it to the playlist of the box
-            const updatedBox = await this.postToBox(video, request.boxToken, request.userToken)
+            const updatedBox = await this.addVideoToPlaylist(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
@@ -84,9 +62,9 @@ export class SyncService {
      *
      * @param {PlaylistItemCancelRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    public async onVideoCancel(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancelled(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -132,9 +110,9 @@ export class SyncService {
      * @param {string} boxToken The doucment ID of the box
      * @param {string} userToken The document ID of the user who submitted the video
      * @returns
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    public async postToBox(video, boxToken: string, userToken: string) {
+    public async addVideoToPlaylist(video, boxToken: string, userToken: string) {
         const box = await BoxSchema.findById(boxToken)
 
         if (box.open === false) {
@@ -170,7 +148,7 @@ export class SyncService {
      *
      * @param {string} boxToken The document id of the box
      * @returns the video. The structure is the same as a playlist entry
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
     public async getCurrentVideo(boxToken: string) {
         const box = await BoxSchema
@@ -201,7 +179,7 @@ export class SyncService {
      *
      * @param {string} boxToken The document ID of the box
      * @returns JSON of the nextVideo and the updatedBox, or null
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
     public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
@@ -269,9 +247,9 @@ export class SyncService {
      *
      * @param {string} link the unique YouTube ID of the video
      * @returns {any} The video
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    private async getVideo(link: string) {
+    private async getVideoDetails(link: string) {
         let video = await Video.findOne({ link })
 
         try {
@@ -294,5 +272,5 @@ export class SyncService {
     }
 }
 
-const syncService = new SyncService()
-export default syncService
+const playlistService = new PlaylistService()
+export default playlistService

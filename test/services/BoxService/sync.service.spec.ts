@@ -6,12 +6,12 @@ var mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 import * as _ from 'lodash'
 
-import syncService from './../../../src/services/BoxService/sync.service'
+import playlistService from './../../../src/services/BoxService/playlist.service'
 const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
+import { PlaylistItemCancelRequest } from '@teamberry/muscadine'
 import { Video, VideoClass, VideoDocument } from './../../../src/models/video.model'
-import { CancelPayload } from "../../../src/models/video-payload.model"
 
 describe("Sync Service", () => {
 
@@ -187,11 +187,11 @@ describe("Sync Service", () => {
         }
 
         it("Refuses video if the box is closed", async () => {
-            expect(syncService.postToBox(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')).to.eventually.be.rejectedWith('This box is closed. Submission is disallowed.')
+            expect(playlistService.addVideoToPlaylist(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')).to.eventually.be.rejectedWith('This box is closed. Submission is disallowed.')
         })
 
         it("Accepts the video and sends back the updated box", async () => {
-            const updatedBox = await syncService.postToBox(video, '9cb763b6e72611381ef043e4', '9ca0df5f86abeb66da97ba5d')
+            const updatedBox = await playlistService.addVideoToPlaylist(video, '9cb763b6e72611381ef043e4', '9ca0df5f86abeb66da97ba5d')
 
             expect(updatedBox.playlist.length).to.eql(1)
         })
@@ -199,25 +199,25 @@ describe("Sync Service", () => {
 
     describe("Remove video from box", () => {
         it("Refuses video if the box is closed", async () => {
-            const cancelPayload: CancelPayload = {
+            const cancelPayload: PlaylistItemCancelRequest = {
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e9'
             }
 
-            const result = syncService.onVideoCancel(cancelPayload)
+            const result = playlistService.onVideoCancelled(cancelPayload)
 
             expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified.")
         })
 
         it("Removes the video from the playlist", async () => {
-            const cancelPayload: CancelPayload = {
+            const cancelPayload: PlaylistItemCancelRequest = {
                 boxToken: '9cb763b6e72611381ef043e6',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e8'
             }
 
-            await syncService.onVideoCancel(cancelPayload)
+            await playlistService.onVideoCancelled(cancelPayload)
 
             const box = await Box.findById('9cb763b6e72611381ef043e6')
 
@@ -227,13 +227,13 @@ describe("Sync Service", () => {
 
     describe("Get current video", () => {
         it("Returns null when there's no currently playing video", async () => {
-            const currentVideo = await syncService.getCurrentVideo('9cb763b6e72611381ef043e4')
+            const currentVideo = await playlistService.getCurrentVideo('9cb763b6e72611381ef043e4')
 
             expect(currentVideo).to.equal(null)
         })
 
         it("Throws an error if the box is closed", async () => {
-            expect(syncService.getCurrentVideo('9cb763b6e72611381ef043e5')).to.eventually.be.rejectedWith('This box is closed. Video play is disabled.')
+            expect(playlistService.getCurrentVideo('9cb763b6e72611381ef043e5')).to.eventually.be.rejectedWith('This box is closed. Video play is disabled.')
         })
 
         it("Returns the currently playing video", async () => {
@@ -254,7 +254,7 @@ describe("Sync Service", () => {
                 }
             }
 
-            const currentVideo = await syncService.getCurrentVideo('9cb763b6e72611381ef043e6')
+            const currentVideo = await playlistService.getCurrentVideo('9cb763b6e72611381ef043e6')
 
             expect(currentVideo).to.eql(video)
         })
@@ -426,25 +426,25 @@ describe("Sync Service", () => {
         })
 
         it("Sends null if there's no next video", async () => {
-            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e4')
+            const response = await playlistService.getNextVideo('9cb763b6e72611381ef043e4')
 
             expect(response.nextVideo).to.equal(null)
         })
 
         it("Get the next video if no video just ended", async () => {
-            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e6')
+            const response = await playlistService.getNextVideo('9cb763b6e72611381ef043e6')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043e8')
         })
 
         it("Get next video when no video was playing before", async () => {
-            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e5')
+            const response = await playlistService.getNextVideo('9cb763b6e72611381ef043e5')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043e9')
         })
 
         it("Gets the next video in random mode", async () => {
-            const response = await syncService.getNextVideo('9cb763b6e72611381ef043e7')
+            const response = await playlistService.getNextVideo('9cb763b6e72611381ef043e7')
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
