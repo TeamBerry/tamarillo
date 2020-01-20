@@ -11,7 +11,9 @@ export class Box {
     public open: boolean
     public options: {
         // Random: The next video will be picked at random from the playlist
-        random: boolean
+        random: boolean,
+        // Refresh: If there are more than 10 submitted videos and less than 3 upcoming videos, one video at random from the pool of 10 will be added to the list of upcoming videos
+        refresh: boolean
     }
 }
 
@@ -31,7 +33,8 @@ const boxSchema = new Schema(
         }],
         open: Boolean,
         options: {
-            random: { type: Boolean, default: false }
+            random: { type: Boolean, default: false },
+            refresh: { type: Boolean, default: false }
         }
     },
     {
