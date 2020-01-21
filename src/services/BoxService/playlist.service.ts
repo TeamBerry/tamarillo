@@ -259,6 +259,8 @@ export class PlaylistService {
     public async loopPlaylist(box: Box): Promise<Box['playlist']> {
         const playlist = box.playlist
 
+        let newBatch: Array<PlaylistItem> = []
+
         playlist.forEach((item: PlaylistItem) => {
             const submission = {
                 video: item.video,
@@ -266,11 +268,15 @@ export class PlaylistService {
                 endTime: null,
                 ignored: false,
                 submittedAt: new Date(),
-                submitted_by: null,
+                submitted_by: item.submitted_by,
             }
 
-            box.playlist.unshift(submission)
+            newBatch.push(submission)
         })
+
+        newBatch = _.uniqBy(newBatch, 'video')
+
+        box.playlist.unshift(...newBatch)
 
         return box.playlist
     }

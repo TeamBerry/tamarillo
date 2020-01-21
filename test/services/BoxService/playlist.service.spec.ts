@@ -583,7 +583,6 @@ describe.only("Playlist Service", () => {
 
             expect(updatedPlaylist).to.have.lengthOf(10)
 
-            console.log(updatedPlaylist)
             // UPCOMING
             expect(updatedPlaylist[0].video.toString()).to.equal('9cb81150594b2e75f06ba913')
             expect(updatedPlaylist[1].video.toString()).to.equal('9cb81150594b2e75f06ba910')
