@@ -108,6 +108,7 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
+                    console.error(error)
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
                     recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 

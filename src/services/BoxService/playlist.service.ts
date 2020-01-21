@@ -220,6 +220,11 @@ export class PlaylistService {
             })
         }
 
+        // Loop Mode if no more videos are upcoming and the loop is active
+        if (nextVideoIndex === -1 && box.options.loop === true) {
+            box.playlist = await this.loopPlaylist(box)
+        }
+
         if (nextVideoIndex !== -1) {
             box.playlist[nextVideoIndex].startTime = transitionTime
             response.nextVideo = box.playlist[nextVideoIndex]
@@ -243,20 +248,31 @@ export class PlaylistService {
     }
 
     /**
-     * Called if Refresh Mode is enabled.
+     * Called if Loop Mode is enabled.
      *
-     * Tests if the playlist has more than 10 different videos already played and if there is less than 3 videos
-     * remaining in the upcoming pool.
-     *
-     * If the conditions are satisfied, this method will select one video at random among the pool of already
-     * played videos and will add it to the pool of upcoming videos.
+     * If there are no more videos in the upcoming pool, the entire playlist is resubmitted in order
      *
      * @private
-     * @param {string} boxToken
+     * @param {Box} box
      * @memberof PlaylistService
      */
-    private async refreshPlaylist(boxToken: string) {
+    public async loopPlaylist(box: Box): Promise<Box['playlist']> {
+        const playlist = box.playlist
 
+        playlist.forEach((item: PlaylistItem) => {
+            const submission = {
+                video: item.video,
+                startTime: null,
+                endTime: null,
+                ignored: false,
+                submittedAt: new Date(),
+                submitted_by: null,
+            }
+
+            box.playlist.unshift(submission)
+        })
+
+        return box.playlist
     }
 
     /**
@@ -284,6 +300,7 @@ export class PlaylistService {
 
             return video
         } catch (error) {
+            console.error(error)
             throw new Error(error)
         }
     }
