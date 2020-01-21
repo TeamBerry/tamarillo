@@ -203,6 +203,16 @@ export class PlaylistService {
             box.playlist[currentVideoIndex].endTime = transitionTime
         }
 
+        // Test if there are some videos remaining
+        const availableVideos = box.playlist.filter((video) => {
+            return video.startTime === null
+        }).length
+
+        // Loop Mode if no more videos are upcoming and the loop is active
+        if (availableVideos === 0 && box.options.loop === true) {
+            box.playlist = await this.loopPlaylist(box)
+        }
+
         // Search for a new video
         let nextVideoIndex = -1
         if (box.options.random === true) {
@@ -218,11 +228,6 @@ export class PlaylistService {
             nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
                 return video.startTime === null
             })
-        }
-
-        // Loop Mode if no more videos are upcoming and the loop is active
-        if (nextVideoIndex === -1 && box.options.loop === true) {
-            box.playlist = await this.loopPlaylist(box)
         }
 
         if (nextVideoIndex !== -1) {
