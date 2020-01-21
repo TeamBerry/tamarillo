@@ -18,11 +18,11 @@ import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
-import syncService from "./sync.service"
+import playlistService from "./playlist.service"
 const BoxSchema = require("./../../models/box.model")
 
 /**
- * Manager service. The role of this is to manager the other services, like chat and sync, to ensure
+ * Manager service. The role of this is to manage the other services, like chat and playlist, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
  */
 class BoxService {
@@ -91,8 +91,8 @@ class BoxService {
                 let recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                 try {
-                    // Dispatching request to the Sync Service
-                    const response = await syncService.onVideo(request)
+                    // Dispatching request to the Playlist Service
+                    const response = await playlistService.onVideoSubmitted(request)
 
                     // Emit notification to all chat users that a video has been added by someone
                     this.emitToSocket(recipients, "chat", response.feedback)
@@ -108,6 +108,7 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
+                    console.error(error)
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
                     recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
@@ -128,7 +129,7 @@ class BoxService {
                     const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                     // Remove the video from the playlist (_id is sent)
-                    const response = await syncService.onVideoCancel(request)
+                    const response = await playlistService.onVideoCancelled(request)
 
                     this.emitToSocket(recipients, 'chat', response.feedback)
 
@@ -169,7 +170,7 @@ class BoxService {
                 })
 
                 try {
-                    const response = await syncService.onStart(request.boxToken)
+                    const response = await this.onUserJoined(request.boxToken)
 
                     if (response.item !== null) {
                         message.contents = 'Currently playing: "' + response.item.video.name + '"'
@@ -293,6 +294,28 @@ class BoxService {
     }
 
     /**
+     * After the client auth themselves, they need to be caught up with the others in the box. It means they will ask for the
+     * current video playing and must have an answer.
+     *
+     * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
+     * a webhook. This is only for in-box requests.
+     *
+     * @param {string} boxToken The token of the box
+     * @returns {Promise<SyncPacket>} The packet for sync
+     * @memberof BoxService
+     */
+    public async onUserJoined(boxToken: string): Promise<SyncPacket> {
+        const response: SyncPacket = { item: null, box: boxToken }
+
+        try {
+            response.item = await playlistService.getCurrentVideo(boxToken)
+            return response
+        } catch (error) {
+            throw error
+        }
+    }
+
+    /**
      * Removes subscribers of a box. Used especially in the context of a box being destroyed.
      *
      * @param {string} boxToken
@@ -341,7 +364,7 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
-        const response = await syncService.getNextVideo(boxToken)
+        const response = await playlistService.getNextVideo(boxToken)
 
         const message: Message = new Message()
         message.scope = boxToken
