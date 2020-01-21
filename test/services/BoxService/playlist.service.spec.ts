@@ -2,7 +2,7 @@ import * as chai from "chai"
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 const expect = chai.expect
-var mongoose = require('mongoose')
+const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 import * as _ from 'lodash'
 
@@ -11,9 +11,9 @@ const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
 import { PlaylistItemCancelRequest } from '@teamberry/muscadine'
-import { Video, VideoClass, VideoDocument } from '../../../src/models/video.model'
+import { Video } from '../../../src/models/video.model'
 
-describe.only("Playlist Service", () => {
+describe("Playlist Service", () => {
 
     before(async () => {
         await Box.deleteMany({})

@@ -1,11 +1,11 @@
-import * as chai from "chai";
-const expect = chai.expect;
+import * as chai from "chai"
+const expect = chai.expect
 
-import boxService from './../../../src/services/BoxService/box.service';
+import boxService from './../../../src/services/BoxService/box.service'
 
 describe("Box Service", () => {
 
-    const Subscriber = require('./../../../src/models/subscriber.schema');
+    const Subscriber = require('./../../../src/models/subscriber.schema')
 
     describe("Removes subcribers from the box", () => {
         before(async () => {
@@ -15,8 +15,8 @@ describe("Box Service", () => {
                 boxToken: '9cb763b6e72611381ef043e4',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 socket: 'r9jBIR9FBhZ2CeMPAAAA'
-            });
-        });
+            })
+        })
 
         after(async () => {
             await Subscriber.deleteMany(
@@ -25,15 +25,15 @@ describe("Box Service", () => {
                         $in: ['9d1dde9a3fbd2c1146d694d4']
                     }
                 }
-            );
-        });
+            )
+        })
 
         it("Removes subscribers from the box", async () => {
-            await boxService.removeSubscribers('9cb763b6e72611381ef043e4');
+            await boxService.removeSubscribers('9cb763b6e72611381ef043e4')
 
-            const subscribers = await Subscriber.find({ boxToken: '9cb763b6e72611381ef043e4' });
+            const subscribers = await Subscriber.find({ boxToken: '9cb763b6e72611381ef043e4' })
 
-            expect(subscribers).to.be.empty;
-        });
-    });
+            expect(subscribers).to.have.lengthOf(0)
+        })
+    })
 })
