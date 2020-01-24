@@ -517,7 +517,7 @@ describe("Playlist Service", () => {
         })
     })
 
-    describe("Loop Mode", () => {
+    describe.only("Loop Mode", () => {
         it("Loops the playlist when no more videos are upcoming", async () => {
             const box = await Box.create({
                 _id: '9cb763b6e72611381ef043e8',
@@ -581,7 +581,7 @@ describe("Playlist Service", () => {
 
             const updatedPlaylist = await playlistService.loopPlaylist(box)
 
-            expect(updatedPlaylist).to.have.lengthOf(10)
+            expect(updatedPlaylist).to.have.lengthOf(5)
 
             // UPCOMING
             expect(updatedPlaylist[0].video.toString()).to.equal('9cb81150594b2e75f06ba913')
@@ -589,12 +589,6 @@ describe("Playlist Service", () => {
             expect(updatedPlaylist[2].video.toString()).to.equal('9cb81150594b2e75f06ba914')
             expect(updatedPlaylist[3].video.toString()).to.equal('9cb81150594b2e75f06ba8fe')
             expect(updatedPlaylist[4].video.toString()).to.equal('9cb81150594b2e75f06ba90c')
-            // PLAYED
-            expect(updatedPlaylist[5].video.toString()).to.equal('9cb81150594b2e75f06ba913')
-            expect(updatedPlaylist[6].video.toString()).to.equal('9cb81150594b2e75f06ba910')
-            expect(updatedPlaylist[7].video.toString()).to.equal('9cb81150594b2e75f06ba914')
-            expect(updatedPlaylist[8].video.toString()).to.equal('9cb81150594b2e75f06ba8fe')
-            expect(updatedPlaylist[9].video.toString()).to.equal('9cb81150594b2e75f06ba90c')
         })
     })
 })

@@ -281,7 +281,7 @@ export class PlaylistService {
 
         newBatch = _.uniqBy(newBatch, 'video')
 
-        box.playlist.unshift(...newBatch)
+        box.playlist = newBatch
 
         return box.playlist
     }
