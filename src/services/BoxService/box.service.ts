@@ -42,7 +42,7 @@ class BoxService {
             /**
              * When an user joins the box, they will have to auth themselves.
              */
-            socket.on("auth", (request) => {
+            socket.on("auth", async (request) => {
                 const client: Subscriber = {
                     origin: request.origin,
                     boxToken: request.boxToken,
@@ -59,15 +59,10 @@ class BoxService {
                     }
                     console.log("Request denied")
                     socket.emit("denied", message)
-                    // TODO: scan collection
-                    // } else if (_.findIndex(this.subscribers, client) !== -1) {
-                    //     const message = {
-                    //         status: "ERROR_ALREADY_CONNECTED",
-                    //         message: "You are already subscribed to that socket and that type.",
-                    //         scope: request.boxToken
-                    //     };
-                    //     console.log('Request denied because it has already been granted.');
                 } else {
+                    // Cleaning collection to avoid duplicates (safe guard)
+                    await SubscriberSchema.deleteMany({ boxToken: request.boxToken, userToken: request.userToken })
+
                     SubscriberSchema.create(client)
 
                     const message = new Message({
