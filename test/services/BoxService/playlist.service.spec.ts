@@ -517,7 +517,7 @@ describe("Playlist Service", () => {
         })
     })
 
-    describe.only("Loop Mode", () => {
+    describe("Loop Mode", () => {
         it("Loops the playlist when no more videos are upcoming", async () => {
             const box = await Box.create({
                 _id: '9cb763b6e72611381ef043e8',
