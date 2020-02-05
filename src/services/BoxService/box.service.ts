@@ -371,7 +371,7 @@ class BoxService {
                 job.remove()
             }
         })
-        
+
         const response = await playlistService.getNextVideo(boxToken)
 
         const message: Message = new Message()
