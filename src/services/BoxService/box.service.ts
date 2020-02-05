@@ -364,6 +364,14 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
+        const jobs = await syncQueue.getJobs(['delayed'])
+
+        jobs.map((job: Queue.Job) => {
+            if (job.data.boxToken === boxToken) {
+                job.remove()
+            }
+        })
+        
         const response = await playlistService.getNextVideo(boxToken)
 
         const message: Message = new Message()
