@@ -453,6 +453,65 @@ describe("Playlist Service", () => {
                 }
             })
 
+            await Box.create({
+                _id: '9cb763b6e72611381ef043f5',
+                description: 'Box with a video playing',
+                lang: 'English',
+                name: 'Box playing in random mode',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef04400',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: "2019-05-31T09:21:27+0000",
+                        endTime: "2019-05-31T09:21:29+0000",
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f9',
+                        video: '9cb81150594b2e75f06ba90b',
+                        startTime: "2019-05-31T09:21:17+0000",
+                        endTime: "2019-05-31T09:21:27+0000",
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f8',
+                        video: '9cb81150594b2e75f06ba8fe',
+                        startTime: "2019-05-31T09:21:14+0000",
+                        endTime: "2019-05-31T09:21:17+0000",
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f7',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: "2019-05-31T09:21:12+0000",
+                        endTime: "2019-05-31T09:21:14+0000",
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef043f6',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true,
+                options: {
+                    random: true
+                }
+            })
+
             await Video.create({
                 _id: '9cb81150594b2e75f06ba8fe',
                 link: 'Ivi1e-yCPcI',
@@ -514,6 +573,12 @@ describe("Playlist Service", () => {
             const playingIndex = _.findIndex(box.playlist, (video) => video.startTime !== null && video.endTime === null)
 
             expect(playingIndex).to.equal(2)
+        })
+
+        it("Gets the next video in random mode even if it's way at the bottom", async () => {
+            const response = await playlistService.getNextVideo('9cb763b6e72611381ef043f5')
+
+            expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043f6')
         })
     })
 

@@ -218,10 +218,11 @@ export class PlaylistService {
         if (box.options.random === true) {
             const availableVideos = box.playlist.filter((video) => {
                 return video.startTime === null
-            }).length
+            })
 
-            if (availableVideos > 0) {
-                nextVideoIndex = Math.floor(Math.random() * availableVideos)
+            if (availableVideos.length > 0) {
+                const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
+                nextVideoIndex = _.findLastIndex(box.playlist, (video: PlaylistItem) => video._id === nextVideo._id)
             }
         } else {
             // Non-random
