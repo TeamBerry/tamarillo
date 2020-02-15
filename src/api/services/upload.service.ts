@@ -24,6 +24,7 @@ export class UploadService {
         this.s3 = new AWS.S3()
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public async storeProfilePicture(user: string, uploadedFile: MulterFile) {
         if (!uploadedFile) {
             return null
@@ -64,12 +65,10 @@ export class UploadService {
             { type: 'image/jpeg', extension: 'jpg' },
             { type: 'image/svg+xml', extension: 'svg' },
             { type: 'image/tiff', extension: 'tif' },
-            { type: 'image/webp', extension: 'webp' },
+            { type: 'image/webp', extension: 'webp' }
         ]
 
-        const matchingType = typeMap.find((type) => {
-            return type.type === imageType
-        })
+        const matchingType = typeMap.find(type => type.type === imageType)
         return matchingType ? matchingType.extension : null
     }
 }

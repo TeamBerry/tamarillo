@@ -1,15 +1,12 @@
 import arrayMove from 'array-move'
 import * as _ from "lodash"
-import * as moment from "moment"
 const axios = require("axios")
-const mongoose = require("./../../config/connection")
-const querystring = require("querystring")
 const dotenv = require("dotenv")
 dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 
@@ -26,7 +23,7 @@ export class PlaylistService {
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof PlaylistService
      */
-    public async onVideoSubmitted(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoSubmitted(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message; updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
             const video = await this.getVideoDetails(request.link)
@@ -47,7 +44,7 @@ export class PlaylistService {
             const feedback = new Message({
                 contents: message,
                 source: "bot",
-                scope: request.boxToken,
+                scope: request.boxToken
             })
 
             return { feedback, updatedBox }
@@ -64,7 +61,7 @@ export class PlaylistService {
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
      * @memberof PlaylistService
      */
-    public async onVideoCancelled(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancelled(request: PlaylistItemCancelRequest): Promise<{ feedback: Message; updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -89,7 +86,7 @@ export class PlaylistService {
                 .populate("playlist.video")
                 .populate("playlist.submitted_by", "_id name")
 
-            const message: string = `${user.name} has removed a submission from the playlist`
+            const message = `${user.name} has removed a submission from the playlist`
 
             const feedback = new Message({
                 contents: message,
@@ -125,7 +122,7 @@ export class PlaylistService {
             endTime: null,
             ignored: false,
             submittedAt: new Date(),
-            submitted_by: userToken,
+            submitted_by: userToken
         }
 
         box.playlist.unshift(submission)
@@ -134,7 +131,7 @@ export class PlaylistService {
             .findOneAndUpdate(
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
-                { new: true },
+                { new: true }
             )
             .populate("creator", "_id name")
             .populate("playlist.video")
@@ -165,9 +162,7 @@ export class PlaylistService {
             return null
         }
 
-        const currentVideo = _.find(box.playlist, (video) => {
-            return video.startTime !== null && video.endTime === null
-        })
+        const currentVideo = _.find(box.playlist, video => video.startTime !== null && video.endTime === null)
 
         return currentVideo ? currentVideo : null
     }
@@ -181,7 +176,7 @@ export class PlaylistService {
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof PlaylistService
      */
-    public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
+    public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem; updatedBox: Box } | null> {
         const transitionTime = new Date()
         const response = {
             nextVideo: null,
@@ -194,9 +189,7 @@ export class PlaylistService {
             .lean()
 
         // TODO: Find last index to skip ignored videos
-        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => {
-            return video.startTime !== null && video.endTime === null
-        })
+        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
@@ -204,9 +197,7 @@ export class PlaylistService {
         }
 
         // Test if there are some videos remaining
-        const remainingVideos = box.playlist.filter((video) => {
-            return video.startTime === null
-        }).length
+        const remainingVideos = box.playlist.filter(video => video.startTime === null).length
 
         // Loop Mode if no more videos are upcoming and the loop is active
         if (remainingVideos === 0 && box.options.loop === true) {
@@ -216,9 +207,7 @@ export class PlaylistService {
         // Search for a new video
         let nextVideoIndex = -1
         if (box.options.random === true) {
-            const availableVideos = box.playlist.filter((video) => {
-                return video.startTime === null
-            })
+            const availableVideos = box.playlist.filter(video => video.startTime === null)
 
             if (availableVideos.length > 0) {
                 const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
@@ -226,9 +215,7 @@ export class PlaylistService {
             }
         } else {
             // Non-random
-            nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
-                return video.startTime === null
-            })
+            nextVideoIndex = _.findLastIndex(box.playlist, video => video.startTime === null)
         }
 
         if (nextVideoIndex !== -1) {
@@ -244,7 +231,7 @@ export class PlaylistService {
             .findOneAndUpdate(
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
-                { new: true },
+                { new: true }
             )
             .populate("creator", "_id name")
             .populate("playlist.video")
@@ -274,7 +261,7 @@ export class PlaylistService {
                 endTime: null,
                 ignored: false,
                 submittedAt: new Date(),
-                submitted_by: item.submitted_by,
+                submitted_by: item.submitted_by
             }
 
             newBatch.push(submission)

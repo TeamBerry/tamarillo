@@ -37,17 +37,17 @@ class BoxService {
             console.log("Socket started; Listening on port 8008...")
         })
 
-        io.on("connection", (socket) => {
+        io.on("connection", socket => {
             console.log("Connection attempt.")
             /**
              * When an user joins the box, they will have to auth themselves.
              */
-            socket.on("auth", async (request) => {
+            socket.on("auth", async request => {
                 const client: Subscriber = {
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
-                    socket: socket.id,
+                    socket: socket.id
                 }
 
                 // Connection check. If the user is not valid, he's refused
@@ -55,7 +55,7 @@ class BoxService {
                     const message = {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied.",
-                        scope: request.boxToken,
+                        scope: request.boxToken
                     }
                     console.log("Request denied")
                     socket.emit("denied", message)
@@ -68,7 +68,7 @@ class BoxService {
                     const message = new Message({
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
                         source: "system",
-                        scope: request.boxToken,
+                        scope: request.boxToken
                     })
 
                     socket.emit("confirm", message)
@@ -96,9 +96,7 @@ class BoxService {
                     this.emitToSocket(recipients, "box", response.updatedBox)
 
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
-                    const currentVideoIndex = _.findIndex(response.updatedBox.playlist, (video) => {
-                        return video.startTime !== null && video.endTime === null
-                    })
+                    const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
                     if (currentVideoIndex === -1) {
                         this.transitionToNextVideo(request.boxToken)
                     }
@@ -112,7 +110,7 @@ class BoxService {
                         // TODO: Extract from the error
                         contents: "This box is closed. Submission is disallowed.",
                         source: "bot",
-                        scope: request.boxToken,
+                        scope: request.boxToken
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
@@ -155,13 +153,13 @@ class BoxService {
              *  "userToken": the document ID of the user
              * }
              */
-            socket.on("start", async (request: { boxToken: string, userToken: string }) => {
+            socket.on("start", async (request: { boxToken: string; userToken: string }) => {
                 const message: Message = new Message()
                 message.scope = request.boxToken
 
                 const chatRecipient: Subscriber = await SubscriberSchema.findOne({
                     userToken: request.userToken,
-                    boxToken: request.boxToken,
+                    boxToken: request.boxToken
                 })
 
                 try {
@@ -174,7 +172,7 @@ class BoxService {
                         // Get the recipient from the list of subscribers
                         const syncRecipient: Subscriber = await SubscriberSchema.findOne({
                             userToken: request.userToken,
-                            boxToken: request.boxToken,
+                            boxToken: request.boxToken
                         })
 
                         // Emit the response back to the client
@@ -200,14 +198,14 @@ class BoxService {
             /**
              * Every in-box communication regarding video sync between clients will go through this event.
              */
-            socket.on("sync", async (request: { boxToken: string, order: string }) => {
+            socket.on("sync", async (request: { boxToken: string; order: string }) => {
                 switch (request.order) {
-                    case "next": // Go to next video
-                        this.skipVideo(request.boxToken)
-                        break
+                case "next": // Go to next video
+                    this.skipVideo(request.boxToken)
+                    break
 
-                    default:
-                        break
+                default:
+                    break
                 }
             })
 
@@ -235,7 +233,7 @@ class BoxService {
                         const errorMessage = new Message({
                             source: "system",
                             contents: "An error occurred, your message could not be sent.",
-                            scope: message.scope,
+                            scope: message.scope
                         })
 
                         io.to(chatRecipient.socket).emit("chat", errorMessage)
@@ -243,17 +241,17 @@ class BoxService {
                         const dispatchedMessage = new Message({
                             author: {
                                 _id: author._id,
-                                name: author.name,
+                                name: author.name
                             },
                             contents: message.contents,
                             source: message.source,
                             scope: message.scope,
-                            time: message.time,
+                            time: message.time
                         })
 
                         // We find all subscribers to the box (token of the message) for the chat type
                         const chatRecipients: Subscriber[] = await SubscriberSchema.find({
-                            boxToken: message.scope,
+                            boxToken: message.scope
                         })
 
                         // To all of them, we send the message
@@ -263,19 +261,11 @@ class BoxService {
                     const response = new Message({
                         contents: "Your message has been rejected by the server",
                         source: "system",
-                        scope: message.scope,
+                        scope: message.scope
                     })
 
                     io.to(chatRecipient.socket).emit("chat", response)
                 }
-            })
-
-            /**
-             * When the box is updated, it goes through there to be updated in the database and sent
-             * back to all subscribers
-             */
-            socket.on("box", async (box) => {
-
             })
 
             socket.on("disconnect", async () => {
@@ -379,7 +369,7 @@ class BoxService {
             for (const recipient of recipients) {
                 const syncPacket: SyncPacket = {
                     box: boxToken,
-                    item: response.nextVideo,
+                    item: response.nextVideo
                 }
                 io.to(recipient.socket).emit("sync", syncPacket)
             }

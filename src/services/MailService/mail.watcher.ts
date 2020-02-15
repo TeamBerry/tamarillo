@@ -1,7 +1,6 @@
 const Queue = require("bull")
 const mailQueue = new Queue("mail")
 
-import { MailJob } from "../../models/mail.job"
 import mailService from "./mail.service"
 
 /**
@@ -24,16 +23,17 @@ export class MailWatcher {
      *
      * @memberof MailWatcher
      */
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     public listen() {
         // When I detect a "mail" job, I send it to the service
         mailQueue.process((job, done) => {
             mailService
                 .sendMail(job.data)
-                .then((response) => {
+                .then(response => {
                     console.log("mail has been sent.")
                     done(response)
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.error("An error has occured.")
                     done(error)
                 })
