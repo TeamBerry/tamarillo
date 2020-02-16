@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
-import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
+import { UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model"
 const auth = require("./../auth.middleware")
 
 export class PlaylistApi {
