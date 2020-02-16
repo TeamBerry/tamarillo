@@ -14,8 +14,8 @@
         "start": "tsc && pm2 start processes.json",
         "restart": "tsc && pm2 restart processes.json",
         "build": "npm run tsc && npm run emails",
-        "lint:check": "eslint -c .eslintrc.js --ext .ts src",
-        "lint:fix": "eslint -c .eslintrc.js --ext .ts src --fix"
+        "lint:check": "eslint -c .eslintrc.json --ext .ts src",
+        "lint:fix": "eslint -c .eslintrc.json --ext .ts src --fix"
     },
     "repository": {
         "type": "git",
