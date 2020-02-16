@@ -1,4 +1,3 @@
-import * as _ from "lodash"
 import { MailJob } from "../../models/mail.job"
 
 const nodemailer = require("nodemailer")
@@ -33,20 +32,20 @@ class MailService {
             transport = nodemailer.createTransport({
                 ignoreTLS: true,
                 host: "localhost",
-                port: process.env.MAILDEV_PORT || 1025,
+                port: process.env.MAILDEV_PORT || 1025
             })
         }
 
         return new Email({
             message: {
-                from: "no-reply@berrybox.tv",
+                from: "no-reply@berrybox.tv"
             },
             send: true,
-            transport,
+            transport
         }).send({
             template: path.resolve(`dist/services/MailService/emails/${mailJob.template}`),
             message: {
-                to: mailJob.addresses,
+                to: mailJob.addresses
             },
             locals: mailJob.variables
         })
