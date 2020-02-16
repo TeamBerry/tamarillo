@@ -5,12 +5,12 @@ export class UserPlaylistClass {
     public isPrivate?: boolean
     public user?: {
         _id: string
-        name: string
+        name: string,
     }
     public videos: Array<{
         _id: string
         name: string
-        link: string
+        link: string,
     }>
     public createdAt: Date
     public updatedAt: Date
@@ -30,11 +30,11 @@ const userPlaylistSchema = new Schema(
         name: { type: String, required: true },
         isPrivate: { type: Boolean, default: false },
         user: { type: Schema.Types.ObjectId, ref: "User" },
-        videos: [{ type: Schema.Types.ObjectId, ref: "Video" }]
+        videos: [{ type: Schema.Types.ObjectId, ref: "Video" }],
     },
     {
-        timestamps: true
-    }
+        timestamps: true,
+    },
 )
 
 export interface UserPlaylistDocument extends UserPlaylistClass, Document { }

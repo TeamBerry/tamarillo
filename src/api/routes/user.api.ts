@@ -25,10 +25,12 @@ export class UserApi {
         this.router.post("/favorites", this.updateFavorites)
         this.router.patch("/settings", this.patchSettings)
         this.router.post("/", this.store)
+        this.router.put("/:user", this.update)
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
         this.router.post('/:user/picture', [auth.isAuthorized, upload.single('picture')], this.uploadProfilePicture)
+        this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -85,6 +87,10 @@ export class UserApi {
         }
     }
 
+    public update(req: Request, res: Response) {
+
+    }
+
     public async favorites(request: Request, response: Response): Promise<Response> {
         let user
 
@@ -111,7 +117,7 @@ export class UserApi {
      * @memberof UserApi
      */
     public async updateFavorites(request: Request, response: Response): Promise<Response> {
-        const command: { action: 'like' | 'unlike'; target: string } = request.body
+        const command: { action: 'like' | 'unlike', target: string } = request.body
 
         if (_.isEmpty(command)) {
             return response.status(412).send()
@@ -154,7 +160,7 @@ export class UserApi {
             }
 
             const updateFields = {}
-            Object.keys(settings).map(value => {
+            Object.keys(settings).map((value, index) => {
                 updateFields[`settings.${value}`] = settings[value]
             })
 
@@ -169,6 +175,10 @@ export class UserApi {
         } catch (error) {
             return response.status(500).send()
         }
+    }
+
+    public destroy(req: Request, res: Response) {
+
     }
 
     /**
@@ -209,7 +219,7 @@ export class UserApi {
     public async playlists(request: Request, response: Response): Promise<Response> {
         const filters = {
             user: request.params.user,
-            isPrivate: false
+            isPrivate: false,
         }
 
         const decodedToken = response.locals.auth
