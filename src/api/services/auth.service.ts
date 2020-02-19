@@ -56,7 +56,7 @@ export class AuthService {
         return {
             bearer: jwtBearerToken,
             subject: authSubject,
-            expiresIn: tokenExpiration,
+            expiresIn: tokenExpiration
         }
     }
 }

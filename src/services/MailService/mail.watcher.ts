@@ -1,7 +1,6 @@
 const Queue = require("bull")
 const mailQueue = new Queue("mail")
 
-import { MailJob } from "../../models/mail.job"
 import mailService from "./mail.service"
 
 /**
@@ -29,11 +28,11 @@ export class MailWatcher {
         mailQueue.process((job, done) => {
             mailService
                 .sendMail(job.data)
-                .then((response) => {
+                .then(response => {
                     console.log("mail has been sent.")
                     done(response)
                 })
-                .catch((error) => {
+                .catch(error => {
                     console.error("An error has occured.")
                     done(error)
                 })

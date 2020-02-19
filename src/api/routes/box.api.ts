@@ -136,11 +136,11 @@ export class BoxApi {
                         lang,
                         name,
                         options
-                    },
+                    }
                 },
                 {
-                    new: true,
-                },
+                    new: true
+                }
             )
 
             if (!updatedBox) {
@@ -175,11 +175,11 @@ export class BoxApi {
             const closedBox = await Box.findByIdAndUpdate(
                 targetId,
                 {
-                    $set: { open: false },
+                    $set: { open: false }
                 },
                 {
-                    new: true,
-                },
+                    new: true
+                }
             )
 
             if (!closedBox) {
@@ -215,11 +215,11 @@ export class BoxApi {
             const openedBox = await Box.findByIdAndUpdate(
                 targetId,
                 {
-                    $set: { open: true },
+                    $set: { open: true }
                 },
                 {
-                    new: true,
-                },
+                    new: true
+                }
             )
 
             if (!openedBox) {
@@ -387,10 +387,8 @@ export class BoxApi {
 
     public async users(request: Request, response: Response): Promise<Response> {
         try {
-            const subscribersOfBox = (await SubscriberSchema.find({ boxToken: request.params.box }))
-                .map((subscriber) => {
-                    return subscriber.userToken
-                })
+            const subscribersOfBox: Array<string> = (await SubscriberSchema.find({ boxToken: request.params.box, userToken: { $not: /^user-[a-zA-Z0-9]{20}/ } }))
+                .map(subscriber => subscriber.userToken)
 
             const users = await User
                 .find({ _id: { $in: subscribersOfBox } })

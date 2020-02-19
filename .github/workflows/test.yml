@@ -1,16 +1,17 @@
 name: Test
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - 'master'
 
 jobs:
   build:
-
+    name: Check Tests & Lint Rules
     runs-on: ubuntu-18.04
-
     strategy:
       matrix:
         node-version: [10.x, 12.x]
-
     services:
       mongo:
         image: mongo:3.6.14
@@ -25,19 +26,20 @@ jobs:
         ports:
           - 1080:80
           - 1025:25
-
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Authenticating to Team Berry's GitHub Registry
+    - name: Authenticate to Team Berry's GitHub Registry
       run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.REGISTRY_KEY }}" >> ~/.npmrc
     - name: Install Dependencies
       run: npm install
     - name: Setup Auth Keys
       run: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -outform PEM -out auth.pub;
+    - name: Lint check
+      run: npm run lint:check
     - name: Run Tests
       run: npm run test
       env:

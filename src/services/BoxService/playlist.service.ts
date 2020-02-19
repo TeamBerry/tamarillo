@@ -1,41 +1,18 @@
 import arrayMove from 'array-move'
 import * as _ from "lodash"
-import * as moment from "moment"
 const axios = require("axios")
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mongoose = require("./../../config/connection")
-const querystring = require("querystring")
 const dotenv = require("dotenv")
 dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 
-export class SyncService {
-    /**
-     * After the client auth themselves, they need to caught up with the others in the box. It means they will ask for the
-     * current video playing and must have an answer.
-     *
-     * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
-     * a webhook. This is only for in-box requests.
-     *
-     * @param {string} boxToken The token of the box
-     * @returns {Promise<SyncPacket>} The packet for sync
-     * @memberof SyncService
-     */
-    public async onStart(boxToken: string): Promise<SyncPacket> {
-        const response: SyncPacket = { item: null, box: boxToken }
-
-        try {
-            response.item = await this.getCurrentVideo(boxToken)
-            return response
-        } catch (error) {
-            throw error
-        }
-    }
-
+export class PlaylistService {
     /**
      * When recieving a video from an user, the service searches for it in the video database
      * and adds the video to the playlist of the box.
@@ -46,18 +23,18 @@ export class SyncService {
      *
      * @param {PlaylistItemSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    public async onVideo(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoSubmitted(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
-            const video = await this.getVideo(request.link)
+            const video = await this.getVideoDetails(request.link)
 
             // Finding the user who submitted the video
             const user = await User.findById(request.userToken)
 
             // Adding it to the playlist of the box
-            const updatedBox = await this.postToBox(video, request.boxToken, request.userToken)
+            const updatedBox = await this.addVideoToPlaylist(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
@@ -69,7 +46,7 @@ export class SyncService {
             const feedback = new Message({
                 contents: message,
                 source: "bot",
-                scope: request.boxToken,
+                scope: request.boxToken
             })
 
             return { feedback, updatedBox }
@@ -84,9 +61,9 @@ export class SyncService {
      *
      * @param {PlaylistItemCancelRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    public async onVideoCancel(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancelled(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -111,7 +88,7 @@ export class SyncService {
                 .populate("playlist.video")
                 .populate("playlist.submitted_by", "_id name")
 
-            const message: string = `${user.name} has removed a submission from the playlist`
+            const message = `${user.name} has removed a submission from the playlist`
 
             const feedback = new Message({
                 contents: message,
@@ -132,9 +109,9 @@ export class SyncService {
      * @param {string} boxToken The doucment ID of the box
      * @param {string} userToken The document ID of the user who submitted the video
      * @returns
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    public async postToBox(video, boxToken: string, userToken: string) {
+    public async addVideoToPlaylist(video, boxToken: string, userToken: string) {
         const box = await BoxSchema.findById(boxToken)
 
         if (box.open === false) {
@@ -147,7 +124,7 @@ export class SyncService {
             endTime: null,
             ignored: false,
             submittedAt: new Date(),
-            submitted_by: userToken,
+            submitted_by: userToken
         }
 
         box.playlist.unshift(submission)
@@ -156,7 +133,7 @@ export class SyncService {
             .findOneAndUpdate(
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
-                { new: true },
+                { new: true }
             )
             .populate("creator", "_id name")
             .populate("playlist.video")
@@ -170,7 +147,7 @@ export class SyncService {
      *
      * @param {string} boxToken The document id of the box
      * @returns the video. The structure is the same as a playlist entry
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
     public async getCurrentVideo(boxToken: string) {
         const box = await BoxSchema
@@ -187,9 +164,7 @@ export class SyncService {
             return null
         }
 
-        const currentVideo = _.find(box.playlist, (video) => {
-            return video.startTime !== null && video.endTime === null
-        })
+        const currentVideo = _.find(box.playlist, video => video.startTime !== null && video.endTime === null)
 
         return currentVideo ? currentVideo : null
     }
@@ -201,7 +176,7 @@ export class SyncService {
      *
      * @param {string} boxToken The document ID of the box
      * @returns JSON of the nextVideo and the updatedBox, or null
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
     public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
@@ -216,30 +191,33 @@ export class SyncService {
             .lean()
 
         // TODO: Find last index to skip ignored videos
-        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => {
-            return video.startTime !== null && video.endTime === null
-        })
+        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
             box.playlist[currentVideoIndex].endTime = transitionTime
         }
 
+        // Test if there are some videos remaining
+        const remainingVideos = box.playlist.filter(video => video.startTime === null).length
+
+        // Loop Mode if no more videos are upcoming and the loop is active
+        if (remainingVideos === 0 && box.options.loop === true) {
+            box.playlist = await this.loopPlaylist(box)
+        }
+
         // Search for a new video
         let nextVideoIndex = -1
         if (box.options.random === true) {
-            const availableVideos = box.playlist.filter((video) => {
-                return video.startTime === null
-            }).length
+            const availableVideos = box.playlist.filter(video => video.startTime === null)
 
-            if (availableVideos > 0) {
-                nextVideoIndex = Math.floor(Math.random() * availableVideos)
+            if (availableVideos.length > 0) {
+                const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
+                nextVideoIndex = _.findLastIndex(box.playlist, (video: PlaylistItem) => video._id === nextVideo._id)
             }
         } else {
             // Non-random
-            nextVideoIndex = _.findLastIndex(box.playlist, (video) => {
-                return video.startTime === null
-            })
+            nextVideoIndex = _.findLastIndex(box.playlist, video => video.startTime === null)
         }
 
         if (nextVideoIndex !== -1) {
@@ -255,7 +233,7 @@ export class SyncService {
             .findOneAndUpdate(
                 { _id: boxToken },
                 { $set: { playlist: box.playlist } },
-                { new: true },
+                { new: true }
             )
             .populate("creator", "_id name")
             .populate("playlist.video")
@@ -265,13 +243,47 @@ export class SyncService {
     }
 
     /**
+     * Called if Loop Mode is enabled.
+     *
+     * If there are no more videos in the upcoming pool, the entire playlist is resubmitted in order
+     *
+     * @private
+     * @param {Box} box
+     * @memberof PlaylistService
+     */
+    public async loopPlaylist(box: Box): Promise<Box['playlist']> {
+        const playlist = box.playlist
+
+        let newBatch: Array<PlaylistItem> = []
+
+        playlist.forEach((item: PlaylistItem) => {
+            const submission = {
+                video: item.video,
+                startTime: null,
+                endTime: null,
+                ignored: false,
+                submittedAt: new Date(),
+                submitted_by: item.submitted_by
+            }
+
+            newBatch.push(submission)
+        })
+
+        newBatch = _.uniqBy(newBatch, 'video')
+
+        box.playlist = newBatch
+
+        return box.playlist
+    }
+
+    /**
      * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
      *
      * @param {string} link the unique YouTube ID of the video
      * @returns {any} The video
-     * @memberof SyncService
+     * @memberof PlaylistService
      */
-    private async getVideo(link: string) {
+    private async getVideoDetails(link: string) {
         let video = await Video.findOne({ link })
 
         try {
@@ -289,10 +301,11 @@ export class SyncService {
 
             return video
         } catch (error) {
+            console.error(error)
             throw new Error(error)
         }
     }
 }
 
-const syncService = new SyncService()
-export default syncService
+const playlistService = new PlaylistService()
+export default playlistService
