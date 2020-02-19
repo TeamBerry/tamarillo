@@ -291,14 +291,12 @@ export class BoxApi {
 
         try {
             // Return error if the given action does not exist or is not supported
-            if (availableActions.indexOf(actionRequest.action) === -1) {
+            if (!availableActions.includes(actionRequest.action)) {
                 return response.status(412).send()
             }
 
             // Try to find the video
-            const targetVideo = box.playlist.find((item: PlaylistItem) => {
-                return item._id === actionRequest.target
-            })
+            const targetVideo = box.playlist.find((item: PlaylistItem) => item._id === actionRequest.target)
             if (!targetVideo) {
                 return response.status(404).send()
             }
