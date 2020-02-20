@@ -13,7 +13,14 @@ const syncQueue = new Queue("sync")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { Message, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import {
+    Message,
+    PlaylistItemCancelRequest,
+    PlaylistItemSubmissionRequest,
+    SyncPacket,
+    PlaylistItemIgnoreRequest,
+    PlaylistItemUnignoreRequest
+} from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
@@ -112,6 +119,52 @@ class BoxService {
                         source: "bot",
                         scope: request.boxToken
                     })
+                    this.emitToSocket(recipients, "chat", message)
+                }
+            })
+
+            socket.on("ignore", async (request: PlaylistItemIgnoreRequest) => {
+                try {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
+
+                    const response = await playlistService.onVideoIgnored(request)
+
+                    this.emitToSocket(recipients, 'chat', response.feedback)
+
+                    this.emitToSocket(recipients, 'box', response.updatedBox)
+                } catch (error) {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    const message: Message = new Message({
+                        author: 'system',
+                        contents: 'The box is closed. The playlist cannot be modified.',
+                        source: 'bot',
+                        scope: request.boxToken
+                    })
+
+                    this.emitToSocket(recipients, "chat", message)
+                }
+            })
+
+            socket.on("unignore", async (request: PlaylistItemUnignoreRequest) => {
+                try {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
+
+                    const response = await playlistService.onVideoUnignored(request)
+
+                    this.emitToSocket(recipients, 'chat', response.feedback)
+
+                    this.emitToSocket(recipients, 'box', response.updatedBox)
+                } catch (error) {
+                    const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    const message: Message = new Message({
+                        author: 'system',
+                        contents: 'The box is closed. The playlist cannot be modified.',
+                        source: 'bot',
+                        scope: request.boxToken
+                    })
+
                     this.emitToSocket(recipients, "chat", message)
                 }
             })
