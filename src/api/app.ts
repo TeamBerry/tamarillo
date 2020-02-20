@@ -23,7 +23,7 @@ class App {
     private middlewares(): void {
         this.app.use(bodyParser.json({
             limit: "15mb",
-            type: "application/json"
+            type: "application/json",
         }))
     }
 

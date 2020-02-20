@@ -87,7 +87,6 @@ export class UserApi {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public update(req: Request, res: Response) {
 
     }
@@ -161,7 +160,6 @@ export class UserApi {
             }
 
             const updateFields = {}
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             Object.keys(settings).map((value, index) => {
                 updateFields[`settings.${value}`] = settings[value]
             })
@@ -179,7 +177,6 @@ export class UserApi {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public destroy(req: Request, res: Response) {
 
     }
@@ -222,7 +219,7 @@ export class UserApi {
     public async playlists(request: Request, response: Response): Promise<Response> {
         const filters = {
             user: request.params.user,
-            isPrivate: false
+            isPrivate: false,
         }
 
         const decodedToken = response.locals.auth

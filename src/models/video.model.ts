@@ -16,7 +16,7 @@ const videoSchema = new Schema(
     {
         link: String,
         name: String,
-        duration: String
+        duration: String,
     }, {
         timestamps: true
     }

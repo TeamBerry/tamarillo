@@ -3,6 +3,7 @@ const boxQueue = new Queue("box")
 
 import { BoxJob } from "../models/box.job"
 const BoxSchema = require("./../models/box.model")
+const Subscriber = require("./../models/subscriber.schema")
 
 /**
  * CRON script responsible for the deletion of box that have been closed more than 7 days ago.

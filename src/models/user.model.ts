@@ -8,7 +8,7 @@ export class UserClass {
     public favorites: Array<VideoDocument>
     public resetToken: string
     public settings: {
-        theme: 'light' | 'dark'
+        theme: 'light' | 'dark',
         picture: string
     }
 
@@ -38,8 +38,8 @@ const userSchema = new Schema(
         }
     },
     {
-        timestamps: true // Will automatically insert createdAt & updatedAt fields
-    }
+        timestamps: true, // Will automatically insert createdAt & updatedAt fields
+    },
 )
 
 export interface UserDocument extends UserClass, Document { }

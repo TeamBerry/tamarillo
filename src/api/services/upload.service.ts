@@ -64,10 +64,12 @@ export class UploadService {
             { type: 'image/jpeg', extension: 'jpg' },
             { type: 'image/svg+xml', extension: 'svg' },
             { type: 'image/tiff', extension: 'tif' },
-            { type: 'image/webp', extension: 'webp' }
+            { type: 'image/webp', extension: 'webp' },
         ]
 
-        const matchingType = typeMap.find(type => type.type === imageType)
+        const matchingType = typeMap.find((type) => {
+            return type.type === imageType
+        })
         return matchingType ? matchingType.extension : null
     }
 }
