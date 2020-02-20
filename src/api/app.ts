@@ -7,6 +7,7 @@ import VideoApi from "./../api/routes/video.api"
 import AuthApi from "./routes/auth.api"
 import PlaylistApi from "./routes/playlist.api"
 import UserApi from "./routes/user.api"
+import SearchApi from "./routes/search.api"
 
 class App {
     public app: express.Application
@@ -42,6 +43,7 @@ class App {
 
         this.app.use("/auth", AuthApi)
         this.app.use("/playlists", PlaylistApi)
+        this.app.use("/search", SearchApi)
     }
 }
 
