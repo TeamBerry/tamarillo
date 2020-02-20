@@ -277,42 +277,56 @@ export class PlaylistService {
             .populate("playlist.video")
             .lean()
 
-        // TODO: Find last index to skip ignored videos
-        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
-
-        // Ends the current video, the one that just ended
-        if (currentVideoIndex !== -1) {
-            box.playlist[currentVideoIndex].endTime = transitionTime
-        }
-
-        // Test if there are some videos remaining
-        const remainingVideos = box.playlist.filter(video => video.startTime === null).length
-
-        // Loop Mode if no more videos are upcoming and the loop is active
-        if (remainingVideos === 0 && box.options.loop === true) {
-            box.playlist = await this.loopPlaylist(box)
-        }
-
-        // Search for a new video
+        let currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
         let nextVideoIndex = -1
-        if (box.options.random === true) {
-            const availableVideos = box.playlist.filter(video => video.startTime === null)
 
-            if (availableVideos.length > 0) {
-                const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
-                nextVideoIndex = _.findLastIndex(box.playlist, (video: PlaylistItem) => video._id === nextVideo._id)
+        let hasFoundVideo = false
+        let hasNoMoreVideos = false
+
+        while (!hasFoundVideo && !hasNoMoreVideos) {
+            console.log('Finding new video.', hasFoundVideo, nextVideoIndex, currentVideoIndex)
+            // Ends the current video, the one that just ended
+            if (currentVideoIndex !== -1) {
+                box.playlist[currentVideoIndex].endTime = transitionTime
             }
-        } else {
-            // Non-random
-            nextVideoIndex = _.findLastIndex(box.playlist, video => video.startTime === null)
-        }
 
-        if (nextVideoIndex !== -1) {
-            box.playlist[nextVideoIndex].startTime = transitionTime
-            response.nextVideo = box.playlist[nextVideoIndex]
+            // Test if there are some videos remaining
+            const remainingVideos = box.playlist.filter(video => video.startTime === null).length
 
-            // Puts the starting video between the upcoming & played videos
-            box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)
+            // Loop Mode if no more videos are upcoming and the loop is active
+            if (remainingVideos === 0 && box.options.loop === true) {
+                box.playlist = await this.loopPlaylist(box)
+            }
+
+            // Search for a new video
+            if (box.options.random === true) {
+                const availableVideos = box.playlist.filter(video => video.startTime === null)
+
+                if (availableVideos.length > 0) {
+                    const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
+                    nextVideoIndex = _.findLastIndex(box.playlist, (video: PlaylistItem) => video._id === nextVideo._id)
+                }
+            } else {
+                // Non-random
+                nextVideoIndex = _.findLastIndex(box.playlist, video => video.startTime === null)
+            }
+
+            // A video has been found!
+            if (nextVideoIndex !== -1) {
+                box.playlist[nextVideoIndex].startTime = transitionTime
+                response.nextVideo = box.playlist[nextVideoIndex]
+
+                // Puts the starting video between the upcoming & played videos
+                box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)
+                currentVideoIndex = nextVideoIndex
+
+                // Leaves the process if the video is not marked as ignored
+                if (!box.playlist[nextVideoIndex].ignored) {
+                    hasFoundVideo = true
+                }
+            } else {
+                hasNoMoreVideos = true
+            }
         }
 
         // Updates the box
@@ -348,7 +362,7 @@ export class PlaylistService {
                 video: item.video,
                 startTime: null,
                 endTime: null,
-                ignored: false,
+                ignored: item.ignored,
                 submittedAt: new Date(),
                 submitted_by: item.submitted_by
             }

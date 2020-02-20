@@ -574,7 +574,68 @@ describe("Playlist Service", () => {
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: true,
                 options: {
-                    random: true
+                    random: true,
+                    loop: false
+                }
+            })
+
+            await Box.create({
+                _id: '9cb763b6e72611381ef05d01',
+                description: 'Box with a video playing and some ignored',
+                lang: 'English',
+                name: 'Box playing',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef05d06',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05d05',
+                        video: '9cb81150594b2e75f06ba90b',
+                        startTime: null,
+                        endTime: null,
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05d04',
+                        video: '9cb81150594b2e75f06ba8fe',
+                        startTime: null,
+                        endTime: null,
+                        ignored: true,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05d03',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: null,
+                        endTime: null,
+                        ignored: true,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05d02',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: "2019-05-31T09:21:12+0000",
+                        endTime: "2019-05-31T09:21:14+0000",
+                        ignored: false,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true,
+                options: {
+                    random: false,
+                    loop: false
                 }
             })
 
@@ -645,6 +706,225 @@ describe("Playlist Service", () => {
             const response = await playlistService.getNextVideo('9cb763b6e72611381ef043f5')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043f6')
+        })
+
+        describe("Handle skipped videos", () => {
+            before(async () => {
+                await Box.findByIdAndDelete('9cb763b6e72611381ef05d01')
+            })
+
+            it("Passes one ignored video", async () => {
+                await Box.create({
+                    _id: '9cb763b6e72611381ef05d01',
+                    description: 'Box with a video playing and some ignored',
+                    lang: 'English',
+                    name: 'Box playing',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef05d06',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d05',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d04',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d03',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: null,
+                            endTime: null,
+                            ignored: true,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d02',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: "2019-05-31T09:21:14+0000",
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: false,
+                        loop: false
+                    }
+                })
+
+                const response = await playlistService.getNextVideo('9cb763b6e72611381ef05d01')
+
+
+                const box = await Box.findById('9cb763b6e72611381ef05d01')
+
+                const ignoredVideo: PlaylistItem = box.playlist.find(
+                    (item: PlaylistItem) => item._id.toString() === '9cb763b6e72611381ef05d03'
+                )
+
+                expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef05d04')
+                expect(ignoredVideo.startTime).to.not.be.null
+                expect(ignoredVideo.endTime).to.not.be.null
+
+                await Box.findByIdAndDelete('9cb763b6e72611381ef05d01')
+            })
+
+            it("Passes several ignored videos", async () => {
+                await Box.create({
+                    _id: '9cb763b6e72611381ef05d01',
+                    description: 'Box with a video playing and some ignored',
+                    lang: 'English',
+                    name: 'Box playing',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef05d06',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d05',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d04',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            ignored: true,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d03',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: null,
+                            endTime: null,
+                            ignored: true,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d02',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: "2019-05-31T09:21:14+0000",
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: false,
+                        loop: false
+                    }
+                })
+
+                const response = await playlistService.getNextVideo('9cb763b6e72611381ef05d01')
+
+                expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef05d05')
+
+                await Box.findByIdAndDelete('9cb763b6e72611381ef05d01')
+            })
+
+            it("Passes ignored videos in random mode", async () => {
+                await Box.create({
+                    _id: '9cb763b6e72611381ef05d01',
+                    description: 'Box with a video playing and some ignored',
+                    lang: 'English',
+                    name: 'Box playing',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef05d06',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d05',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d04',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: "2019-05-31T09:21:14+0000",
+                            endTime: "2019-05-31T09:23:27+0000",
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d03',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: null,
+                            endTime: null,
+                            ignored: true,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef05d02',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: "2019-05-31T09:21:14+0000",
+                            ignored: false,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false
+                    }
+                })
+
+                const response = await playlistService.getNextVideo('9cb763b6e72611381ef05d01')
+
+                expect(['9cb763b6e72611381ef05d06', '9cb763b6e72611381ef05d05'].includes(response.nextVideo._id.toString())).to.be.true
+
+                await Box.findByIdAndDelete('9cb763b6e72611381ef05d01')
+            })
         })
     })
 
