@@ -8,7 +8,14 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest } from "@teamberry/muscadine"
+import {
+    Message,
+    PlaylistItem,
+    PlaylistItemCancelRequest,
+    PlaylistItemSubmissionRequest,
+    PlaylistItemIgnoreRequest,
+    PlaylistItemUnignoreRequest
+} from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 
@@ -56,6 +63,86 @@ export class PlaylistService {
         }
     }
 
+    public async onVideoIgnored(request: PlaylistItemIgnoreRequest): Promise<{ feedback: Message, updatedBox: any }> {
+        try {
+            const user = await User.findById(request.userToken)
+
+            const box = await BoxSchema.findById(request.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The playlist cannot be modified.")
+            }
+
+            const updatedBox = await BoxSchema
+                .findOneAndUpdate(
+                    { '_id': request.boxToken, 'playlist._id': request.item },
+                    {
+                        $set: { 'playlist.$.ignored': true }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+
+            const targetVideo: PlaylistItem = updatedBox.playlist.find(
+                (item: PlaylistItem) => item._id.toString() === request.item
+            )
+
+            const feedback = new Message({
+                contents: `${user.name} has marked the video '${targetVideo.video.name}' for skip.`,
+                source: 'bot',
+                scope: request.boxToken
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
+    public async onVideoUnignored(request: PlaylistItemUnignoreRequest): Promise<{ feedback: Message, updatedBox: any }> {
+        try {
+            const user = await User.findById(request.userToken)
+
+            const box = await BoxSchema.findById(request.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The playlist cannot be modified.")
+            }
+
+            const updatedBox = await BoxSchema
+                .findOneAndUpdate(
+                    { '_id': request.boxToken, 'playlist._id': request.item },
+                    {
+                        $set: { 'playlist.$.ignored': false }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+
+            const targetVideo: PlaylistItem = updatedBox.playlist.find(
+                (item: PlaylistItem) => item._id.toString() === request.item
+            )
+
+            const feedback = new Message({
+                contents: `${user.name} has reinstated the video '${targetVideo.video.name}' in the playlist.`,
+                source: 'bot',
+                scope: request.boxToken
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
     /**
      * Removing a video from the playlist of a box.
      *
@@ -70,7 +157,7 @@ export class PlaylistService {
             const box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
-                throw new Error("The box is closed. The playlist cannot be modifieds.")
+                throw new Error("The box is closed. The playlist cannot be modified.")
             }
 
             // Pull the video from the paylist

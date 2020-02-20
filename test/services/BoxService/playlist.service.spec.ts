@@ -10,7 +10,7 @@ import playlistService from '../../../src/services/BoxService/playlist.service'
 const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
-import { PlaylistItemCancelRequest } from '@teamberry/muscadine'
+import { PlaylistItemCancelRequest, PlaylistItemIgnoreRequest, PlaylistItem } from '@teamberry/muscadine'
 import { Video } from '../../../src/models/video.model'
 
 describe("Playlist Service", () => {
@@ -256,7 +256,73 @@ describe("Playlist Service", () => {
         })
     })
 
-    describe("Remove video from box", () => {
+    describe("Ignore / Reinstate video from playlist", () => {
+        describe("Ignores a video", () => {
+            it("Refuses request if the box is closed", async () => {
+                const ignoreRequest: PlaylistItemIgnoreRequest = {
+                    boxToken: '9cb763b6e72611381ef043e5',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    item: '9cb763b6e72611381ef043e9'
+                }
+
+                const result = playlistService.onVideoIgnored(ignoreRequest)
+
+                expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified")
+            })
+
+            it("Marks the video as ignored", async () => {
+                const ignoreRequest: PlaylistItemIgnoreRequest = {
+                    boxToken: '9cb763b6e72611381ef043e6',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    item: '9cb763b6e72611381ef043e8'
+                }
+
+                const result = await playlistService.onVideoIgnored(ignoreRequest)
+
+                const box = await Box.findById('9cb763b6e72611381ef043e6')
+
+                const targetVideo: PlaylistItem = box.playlist.find(
+                    item => item._id.toString() === '9cb763b6e72611381ef043e8'
+                )
+
+                expect(targetVideo.ignored).to.be.true
+            })
+        })
+
+        describe("Reinstates a video", () => {
+            it("Refuses request if the box is closed", async () => {
+                const unignoreRequest: PlaylistItemIgnoreRequest = {
+                    boxToken: '9cb763b6e72611381ef043e5',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    item: '9cb763b6e72611381ef043e9'
+                }
+
+                const result = playlistService.onVideoUnignored(unignoreRequest)
+
+                expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified")
+            })
+
+            it("Unmarks the video as ignored", async () => {
+                const unignoreRequest: PlaylistItemIgnoreRequest = {
+                    boxToken: '9cb763b6e72611381ef043e6',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    item: '9cb763b6e72611381ef043e8'
+                }
+
+                const result = await playlistService.onVideoUnignored(unignoreRequest)
+
+                const box = await Box.findById('9cb763b6e72611381ef043e6')
+
+                const targetVideo: PlaylistItem = box.playlist.find(
+                    item => item._id.toString() === '9cb763b6e72611381ef043e8'
+                )
+
+                expect(targetVideo.ignored).to.be.false
+            })
+        })
+    })
+
+    describe("Remove video from playlist", () => {
         it("Refuses video if the box is closed", async () => {
             const cancelPayload: PlaylistItemCancelRequest = {
                 boxToken: '9cb763b6e72611381ef043e5',
