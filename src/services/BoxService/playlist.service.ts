@@ -122,7 +122,6 @@ export class PlaylistService {
             video: video._id,
             startTime: null,
             endTime: null,
-            ignored: false,
             submittedAt: new Date(),
             submitted_by: userToken
         }
@@ -190,7 +189,6 @@ export class PlaylistService {
             .populate("playlist.video")
             .lean()
 
-        // TODO: Find last index to skip ignored videos
         const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
@@ -261,7 +259,6 @@ export class PlaylistService {
                 video: item.video,
                 startTime: null,
                 endTime: null,
-                ignored: false,
                 submittedAt: new Date(),
                 submitted_by: item.submitted_by
             }

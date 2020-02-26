@@ -337,7 +337,6 @@ describe("Box API", () => {
                         video: '9bc72f3d7edc6312d0ef2e47',
                         startTime: "2018-05-20T16:51:29.934+0000",
                         endTime: "2019-07-11T08:53:53.415+0000",
-                        ignored: false,
                         submittedAt: "2019-07-11T08:51:29.885+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -345,7 +344,6 @@ describe("Box API", () => {
                         video: '9bc72f3d7edc6312d0ef2e48',
                         startTime: "2019-07-11T08:53:53.415+0000",
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-07-11T08:51:29.886+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
@@ -364,7 +362,6 @@ describe("Box API", () => {
                         video: '9bc72f3d7edc6312d0ef2e47',
                         startTime: "2018-05-20T16:51:29.934+0000",
                         endTime: "2019-07-11T08:53:53.415+0000",
-                        ignored: false,
                         submittedAt: "2019-07-11T08:51:29.885+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -372,7 +369,6 @@ describe("Box API", () => {
                         video: '9bc72f3d7edc6312d0ef2e48',
                         startTime: "2019-07-11T08:53:53.415+0000",
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-07-11T08:51:29.886+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -380,7 +376,6 @@ describe("Box API", () => {
                         video: '9bc72f3d7edc6312d0ef2e47',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-07-11T08:51:29.887+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
