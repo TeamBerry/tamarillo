@@ -28,8 +28,7 @@ const boxSchema = new Schema(
             video: { type: Schema.Types.ObjectId, ref: "Video" },
             submitted_by: { type: Schema.Types.ObjectId, ref: "User" },
             startTime: Date,
-            endTime: Date,
-            ignored: Boolean // Indicates if the video has to be ignored by the autoplay. False by deafult
+            endTime: Date
         }],
         open: Boolean,
         options: {

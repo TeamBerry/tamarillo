@@ -52,7 +52,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90a',
                     startTime: null,
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 }
@@ -76,7 +75,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90a',
                     startTime: null,
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 },
@@ -85,7 +83,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90a',
                     startTime: "2019-05-31T09:19:44+0000",
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 }
@@ -109,7 +106,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90c',
                     startTime: null,
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 },
@@ -118,7 +114,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90b',
                     startTime: null,
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 },
@@ -127,7 +122,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba8fe',
                     startTime: null,
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 },
@@ -136,7 +130,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90a',
                     startTime: "2019-05-31T09:21:12+0000",
                     endTime: null,
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 },
@@ -145,7 +138,6 @@ describe("Playlist Service", () => {
                     video: '9cb81150594b2e75f06ba90c',
                     startTime: "2019-05-31T09:19:44+0000",
                     endTime: "2019-05-31T09:21:12+0000",
-                    ignored: false,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d'
                 }
@@ -305,7 +297,6 @@ describe("Playlist Service", () => {
                 },
                 startTime: new Date("2019-05-31T09:19:44+0000"),
                 endTime: null,
-                ignored: false,
                 submittedAt: new Date("2019-05-31T09:19:41+0000"),
                 submitted_by: {
                     _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
@@ -353,7 +344,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90a',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
@@ -376,7 +366,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90a',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -385,7 +374,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90a',
                         startTime: "2019-05-31T09:19:44+0000",
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
@@ -405,7 +393,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90c',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -414,7 +401,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90b',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -423,7 +409,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba8fe',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -432,7 +417,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90a',
                         startTime: "2019-05-31T09:21:12+0000",
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -441,7 +425,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90c',
                         startTime: "2019-05-31T09:19:44+0000",
                         endTime: "2019-05-31T09:21:12+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
@@ -464,7 +447,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90c',
                         startTime: "2019-05-31T09:21:27+0000",
                         endTime: "2019-05-31T09:21:29+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -473,7 +455,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90b',
                         startTime: "2019-05-31T09:21:17+0000",
                         endTime: "2019-05-31T09:21:27+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -482,7 +463,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba8fe',
                         startTime: "2019-05-31T09:21:14+0000",
                         endTime: "2019-05-31T09:21:17+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -491,7 +471,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90a',
                         startTime: "2019-05-31T09:21:12+0000",
                         endTime: "2019-05-31T09:21:14+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -500,7 +479,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90c',
                         startTime: null,
                         endTime: null,
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
@@ -595,7 +573,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba913',
                         startTime: "2019-05-31T09:34:03+0000",
                         endTime: "2019-05-31T09:37:43+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:45+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -604,7 +581,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba910',
                         startTime: "2019-05-31T09:28:11+0000",
                         endTime: "2019-05-31T09:34:03+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:44+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -613,7 +589,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba914',
                         startTime: "2019-05-31T09:25:36+0000",
                         endTime: "2019-05-31T09:28:11+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:43+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -622,7 +597,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba8fe',
                         startTime: "2019-05-31T09:23:12+0000",
                         endTime: "2019-05-31T09:25:36+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:42+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     },
@@ -631,7 +605,6 @@ describe("Playlist Service", () => {
                         video: '9cb81150594b2e75f06ba90c',
                         startTime: "2019-05-31T09:19:41+0000",
                         endTime: "2019-05-31T09:23:12+0000",
-                        ignored: false,
                         submittedAt: "2019-05-31T09:19:41+0000",
                         submitted_by: '9ca0df5f86abeb66da97ba5d'
                     }
