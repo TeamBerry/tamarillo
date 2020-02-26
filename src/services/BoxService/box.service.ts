@@ -13,7 +13,7 @@ const syncQueue = new Queue("sync")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { Message, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
@@ -65,10 +65,11 @@ class BoxService {
 
                     SubscriberSchema.create(client)
 
-                    const message = new Message({
+                    const message: FeedbackMessage = new FeedbackMessage({
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
                         source: "system",
-                        scope: request.boxToken
+                        scope: request.boxToken,
+                        feedbackType: 'success'
                     })
 
                     socket.emit("confirm", message)
@@ -105,12 +106,13 @@ class BoxService {
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
                     recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
-                    const message: Message = new Message({
+                    const message: FeedbackMessage = new FeedbackMessage({
                         author: "system",
                         // TODO: Extract from the error
                         contents: "This box is closed. Submission is disallowed.",
                         source: "bot",
-                        scope: request.boxToken
+                        scope: request.boxToken,
+                        feedbackType: 'error'
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
@@ -130,11 +132,12 @@ class BoxService {
                 } catch (error) {
                     const recipients: Array<Subscriber> = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
-                    const message: Message = new Message({
+                    const message: FeedbackMessage = new FeedbackMessage({
                         author: 'system',
                         contents: 'The box is closed. The playlist cannot be changed.',
                         source: 'bot',
-                        scope: request.boxToken
+                        scope: request.boxToken,
+                        feedbackType: 'error'
                     })
                     this.emitToSocket(recipients, "chat", message)
                 }
@@ -154,8 +157,9 @@ class BoxService {
              * }
              */
             socket.on("start", async (request: { boxToken: string, userToken: string }) => {
-                const message: Message = new Message()
+                const message: FeedbackMessage = new FeedbackMessage()
                 message.scope = request.boxToken
+                message.feedbackType = 'info'
 
                 const chatRecipient: Subscriber = await SubscriberSchema.findOne({
                     userToken: request.userToken,
@@ -230,15 +234,16 @@ class BoxService {
                     const author = await User.findById(message.author)
 
                     if (!author) {
-                        const errorMessage = new Message({
+                        const errorMessage: FeedbackMessage = new FeedbackMessage({
                             source: "system",
                             contents: "An error occurred, your message could not be sent.",
-                            scope: message.scope
+                            scope: message.scope,
+                            feedbackType: 'error'
                         })
 
                         io.to(chatRecipient.socket).emit("chat", errorMessage)
                     } else {
-                        const dispatchedMessage = new Message({
+                        const dispatchedMessage: Message = new Message({
                             author: {
                                 _id: author._id,
                                 name: author.name
@@ -258,10 +263,11 @@ class BoxService {
                         this.emitToSocket(chatRecipients, "chat", dispatchedMessage)
                     }
                 } else {
-                    const response = new Message({
+                    const response = new FeedbackMessage({
                         contents: "Your message has been rejected by the server",
                         source: "system",
-                        scope: message.scope
+                        scope: message.scope,
+                        feedbackType: 'error'
                     })
 
                     io.to(chatRecipient.socket).emit("chat", response)
@@ -368,8 +374,9 @@ class BoxService {
 
         const response = await playlistService.getNextVideo(boxToken)
 
-        const message: Message = new Message()
+        const message: FeedbackMessage = new FeedbackMessage()
         message.scope = boxToken
+        message.feedbackType = 'info'
 
         const recipients: Subscriber[] = await SubscriberSchema.find({ boxToken })
 

@@ -8,7 +8,7 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest } from "@teamberry/muscadine"
+import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, FeedbackMessage } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 
@@ -43,10 +43,11 @@ export class PlaylistService {
                 message = 'The video "' + video.name + '" has been added to the playlist'
             }
 
-            const feedback = new Message({
+            const feedback = new FeedbackMessage({
                 contents: message,
                 source: "bot",
-                scope: request.boxToken
+                scope: request.boxToken,
+                feedbackType: 'info'
             })
 
             return { feedback, updatedBox }
@@ -90,10 +91,11 @@ export class PlaylistService {
 
             const message = `${user.name} has removed a submission from the playlist`
 
-            const feedback = new Message({
+            const feedback = new FeedbackMessage({
                 contents: message,
                 source: 'bot',
-                scope: request.boxToken
+                scope: request.boxToken,
+                feedbackType: 'info'
             })
 
             return { feedback, updatedBox }
