@@ -1,0 +1,8 @@
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+ignore:
+  - '.github'
+  - 'dist/'
+  - 'node_modules/'
+  - 'test/'
