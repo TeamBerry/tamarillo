@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
-import { UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model"
+const axios = require("axios")
+
+import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
+import { Video } from "../../models/video.model"
 const auth = require("./../auth.middleware")
 
 export class PlaylistApi {
@@ -21,6 +24,10 @@ export class PlaylistApi {
         this.router.post("/", this.store)
         this.router.put("/:playlist", this.update)
         this.router.delete("/:playlist", this.destroy)
+
+        // Manipulate videos in playlists
+        this.router.post("/:playlist/videos", this.addVideoToPlaylist)
+        this.router.delete("/:playlist/videos/:video", this.removeVideoFromPlaylist)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -180,6 +187,93 @@ export class PlaylistApi {
             const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.param.playlist)
 
             return response.status(200).send(deletedPlaylist)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Adds a video to an existing playlist
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>} The updated playlist is sent back
+     * @memberof PlaylistApi
+     */
+    public async addVideoToPlaylist(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+        const playlist: UserPlaylistClass = response.locals.playlist
+
+        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+            return response.status(401).send('UNAUTHORIZED')
+        }
+
+        try {
+            let video = request.body.videoId || null
+
+            if (!video) {
+                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=${request.body.videoLink}&key=${process.env.YOUTUBE_API_KEY}`)
+
+                const youtubeResponse = youtubeRequest.data
+
+                video = (await Video.create({
+                    link: request.body.videoLink,
+                    name: youtubeResponse.items[0].snippet.title,
+                    duration: youtubeResponse.items[0].contentDetails.duration
+                }))._id
+            }
+
+            const updatedPlaylist: UserPlaylistDocument = await UserPlaylist
+                .findByIdAndUpdate(
+                    request.params.playlist,
+                    {
+                        $push: { videos: video }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate("user", "name")
+                .populate("videos", "name link")
+
+
+            return response.status(200).send(updatedPlaylist)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    /**
+     * Removes a video from a playlist
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>} The updated playlist
+     * @memberof PlaylistApi
+     */
+    public async removeVideoFromPlaylist(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+        const playlist: UserPlaylistClass = response.locals.playlist
+
+        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+            return response.status(401).send('UNAUTHORIZED')
+        }
+
+        try {
+            const updatedPlaylist: UserPlaylistDocument = await UserPlaylist
+                .findByIdAndUpdate(
+                    request.params.playlist,
+                    {
+                        $pull: { videos: request.params.video }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate("user", "name")
+                .populate("videos", "name link")
+
+            return response.status(200).send(updatedPlaylist)
         } catch (error) {
             return response.status(500).send(error)
         }

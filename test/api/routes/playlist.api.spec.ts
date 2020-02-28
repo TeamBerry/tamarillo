@@ -9,7 +9,7 @@ import { AuthApi } from './../../../src/api/routes/auth.api'
 const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
-import { Video } from './../../../src/models/video.model'
+import { Video, VideoDocument } from './../../../src/models/video.model'
 import authService from "../../../src/api/services/auth.service"
 
 describe("Playlists API", () => {
@@ -22,17 +22,9 @@ describe("Playlists API", () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
         expressApp.use('/', PlaylistApi)
 
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
-        })
-
-        await UserPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a', '8da1e01fda34eb8c1b9db470'] },
-        })
-
-        await Video.deleteMany({
-            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
-        })
+        await User.deleteMany({})
+        await UserPlaylist.deleteMany({})
+        await Video.deleteMany({})
 
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
@@ -87,6 +79,30 @@ describe("Playlists API", () => {
         })
 
         await UserPlaylist.create({
+            _id: "8da1e01fda34eb8c1b9db471",
+            name: "WiP Playlist 3",
+            isPrivate: true,
+            user: "9ca0df5f86abeb66da97ba5d",
+            videos: [],
+        })
+
+        await UserPlaylist.create({
+            _id: "8da1e01fda34eb8c1b9db472",
+            name: "WiP Playlist 4",
+            isPrivate: true,
+            user: "9ca0df5f86abeb66da97ba5d",
+            videos: [],
+        })
+
+        await UserPlaylist.create({
+            _id: "8da1e01fda34eb8c1b9db473",
+            name: "WiP Playlist 5",
+            isPrivate: true,
+            user: "9ca0df5f86abeb66da97ba5d",
+            videos: ['9bc72f3d7edc6312d0ef2e48'],
+        })
+
+        await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db470",
             name: "Playlist by someone else",
             isPrivate: false,
@@ -96,17 +112,9 @@ describe("Playlists API", () => {
     })
 
     after(async () => {
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
-        })
-
-        await UserPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f', '8da1e01fda34eb8c1b9db46a', '8da1e01fda34eb8c1b9db470'] },
-        })
-
-        await Video.deleteMany({
-            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
-        })
+        await User.deleteMany({})
+        await UserPlaylist.deleteMany({})
+        await Video.deleteMany({})
     })
 
     describe("Lists playlists", () => {
@@ -268,7 +276,7 @@ describe("Playlists API", () => {
                 })
                 .expect(200)
                 .then((response) => {
-                    const updatedPlaylist: UserPlaylistClass = response.body
+                    const updatedPlaylist: UserPlaylistDocument = response.body
 
                     expect(updatedPlaylist.name).to.equal("WiP Playlist 2")
                     expect(updatedPlaylist.videos).to.deep.equal([{
@@ -292,7 +300,7 @@ describe("Playlists API", () => {
                 })
                 .expect(200)
                 .then((response) => {
-                    const updatedPlaylist: UserPlaylistClass = response.body
+                    const updatedPlaylist: UserPlaylistDocument = response.body
 
                     expect(updatedPlaylist.name).to.equal("WiP Playlist 2 Modified")
                     expect(updatedPlaylist.videos).to.deep.equal([{
@@ -300,6 +308,113 @@ describe("Playlists API", () => {
                         name: 'Second Video',
                         link: 'aC9d3edD3e2'
                     }])
+                })
+        })
+    })
+
+    describe("Adds a video from a playlist", () => {
+        it("Sends a 401 if the JWT is not provided", () => {
+            return supertest(expressApp)
+                .post("/8da1e01fda34eb8c1b9db46f/videos")
+                .send({
+                    video: '9bc72f3d7edc6312d0ef2e47'
+                })
+                .expect(401)
+        })
+
+        it("Sends a 401 if the JWT is invalid (not the owner)", () => {
+            return supertest(expressApp)
+                .post("/8da1e01fda34eb8c1b9db46f/videos")
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .send({
+                    videoId: '9bc72f3d7edc6312d0ef2e48'
+                })
+                .expect(401)
+        })
+
+        it("Sends a 404 if the playlist does not exist", () => {
+            return supertest(expressApp)
+                .post("/9da1e01fda34eb8c1b9db46f/videos")
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({
+                    video: '9bc72f3d7edc6312d0ef2e48'
+                })
+                .expect(404, 'PLAYLIST_NOT_FOUND')
+        })
+
+        it("Sends a 200 and adds the video to the playlist", () => {
+            return supertest(expressApp)
+                .post("/8da1e01fda34eb8c1b9db471/videos")
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({
+                    videoId: '9bc72f3d7edc6312d0ef2e48'
+                })
+                .expect(200)
+                .then((response) => {
+                    const updatedPlaylist: UserPlaylistDocument = response.body
+
+                    expect(updatedPlaylist.videos).to.have.lengthOf(1)
+                    expect(updatedPlaylist.videos).to.deep.equal([{
+                        _id: '9bc72f3d7edc6312d0ef2e48',
+                        name: 'Second Video',
+                        link: 'aC9d3edD3e2'
+                    }])
+                })
+        })
+
+        it("Sends a 200, creates the video and adds it to the playlist", () => {
+            return supertest(expressApp)
+                .post("/8da1e01fda34eb8c1b9db472/videos")
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({
+                    videoLink: 'UC_qla6FQwM'
+                })
+                .expect(200)
+                .then(async (response) => {
+                    const updatedPlaylist: UserPlaylistDocument = response.body
+
+                    expect(updatedPlaylist.videos).to.have.lengthOf(1)
+                    expect(updatedPlaylist.videos[0].name).to.equal('[MV] REOL - ヒビカセ / Hibikase')
+                    expect(updatedPlaylist.videos[0].link).to.equal('UC_qla6FQwM')
+
+                    const newVideo: VideoDocument = await Video.findOne({ link: 'UC_qla6FQwM' })
+                    expect(newVideo.name).to.equal('[MV] REOL - ヒビカセ / Hibikase')
+                    expect(newVideo.duration).to.equal('PT4M16S')
+                    expect(newVideo.link).to.equal('UC_qla6FQwM')
+                })
+        })
+    })
+
+    describe("Removes a video from a playlist", () => {
+        it("Sends a 401 if the JWT is not provided", () => {
+            return supertest(expressApp)
+                .delete("/8da1e01fda34eb8c1b9db46e/videos/9bc72f3d7edc6312d0ef2e48")
+                .expect(401)
+        })
+
+        it("Sends a 401 if the JWT is invalid (not the owner)", () => {
+            return supertest(expressApp)
+                .delete("/8da1e01fda34eb8c1b9db46e/videos/9bc72f3d7edc6312d0ef2e48")
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(401)
+        })
+
+        it("Sends a 404 if the playlist does not exist", () => {
+            return supertest(expressApp)
+                .delete("/9da1e01fda34eb8c1b9db46e/videos/9bc72f3d7edc6312d0ef2e48")
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(404)
+        })
+
+        it("Sends a 200 and removes the video from the playlist", () => {
+            return supertest(expressApp)
+                .delete("/8da1e01fda34eb8c1b9db473/videos/9bc72f3d7edc6312d0ef2e48")
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const updatedPlaylist: UserPlaylistDocument = response.body
+
+                    expect(updatedPlaylist.videos).to.have.lengthOf(0)
                 })
         })
     })
