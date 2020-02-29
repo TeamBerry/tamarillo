@@ -10,6 +10,11 @@
         "src/**/*.ts"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "migrations",
+        "migrate-mongo-config.js",
+        "test/**/*.ts"
     ]
+
+
 }
