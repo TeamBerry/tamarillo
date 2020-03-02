@@ -188,7 +188,7 @@ export class PlaylistApi {
         }
 
         try {
-            const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.param.playlist)
+            const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.params.playlist)
 
             return response.status(200).send(deletedPlaylist)
         } catch (error) {

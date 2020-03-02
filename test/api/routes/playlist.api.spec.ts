@@ -450,6 +450,11 @@ describe("Playlists API", () => {
                 .delete('/8da1e01fda34eb8c1b9db46f')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
+                .then(async (response) => {
+                    const deletedPlaylist = await UserPlaylist.findById('8da1e01fda34eb8c1b9db46f')
+
+                    expect(deletedPlaylist).to.not.exist
+                })
         })
     })
 })
