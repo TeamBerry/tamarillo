@@ -183,6 +183,10 @@ export class PlaylistApi {
             return response.status(401).send('UNAUTHORIZED')
         }
 
+        if (!playlist.isDeletable) {
+            return response.status(403).send('NOT_PERMITTED')
+        }
+
         try {
             const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.param.playlist)
 

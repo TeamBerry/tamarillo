@@ -68,6 +68,7 @@ describe("Playlists API", () => {
             isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: ['9bc72f3d7edc6312d0ef2e47'],
+            isDeletable: true
         })
 
         await UserPlaylist.create({
@@ -84,6 +85,7 @@ describe("Playlists API", () => {
             isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
+            isDeletable: true
         })
 
         await UserPlaylist.create({
@@ -92,14 +94,16 @@ describe("Playlists API", () => {
             isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
+            isDeletable: true
         })
 
         await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db473",
-            name: "WiP Playlist 5",
+            name: "Favorites",
             isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: ['9bc72f3d7edc6312d0ef2e48'],
+            isDeletable: false
         })
 
         await UserPlaylist.create({
@@ -107,7 +111,8 @@ describe("Playlists API", () => {
             name: "Playlist by someone else",
             isPrivate: false,
             user: "9ca0df5f86abeb66da97ba5f",
-            videos: []
+            videos: [],
+            isDeletable: true
         })
     })
 
@@ -431,6 +436,13 @@ describe("Playlists API", () => {
                 .delete('/8da1e01fda34eb8c1b9db47f')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(404, 'PLAYLIST_NOT_FOUND')
+        })
+
+        it("Sends a 403 if trying to a delete an undeletable playlist", () => {
+            return supertest(expressApp)
+                .delete('/8da1e01fda34eb8c1b9db473')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(403, 'NOT_PERMITTED')
         })
 
         it("Sends a 200 with the deleted playlist", () => {
