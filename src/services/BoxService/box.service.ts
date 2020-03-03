@@ -18,7 +18,7 @@ import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
-import playlistService from "./playlist.service"
+import queueService from "./queue.service"
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -88,7 +88,7 @@ class BoxService {
 
                 try {
                     // Dispatching request to the Playlist Service
-                    const response = await playlistService.onVideoSubmitted(request)
+                    const response = await queueService.onVideoSubmitted(request)
 
                     // Emit notification to all chat users that a video has been added by someone
                     this.emitToSocket(recipients, "chat", response.feedback)
@@ -118,13 +118,44 @@ class BoxService {
                 }
             })
 
+            socket.on("playlist", async (request: { playlistId: string, userToken: string, boxToken: string }) => {
+                let recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
+
+                try {
+                    const response = await queueService.onPlaylistSubmitted(request)
+
+                    this.emitToSocket(recipients, "chat", response.feedback)
+
+                    this.emitToSocket(recipients, "box", response.updatedBox)
+
+                    // If the playlist was over before the submission of the new video, the manager service relaunches the play
+                    const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
+                    if (currentVideoIndex === -1) {
+                        this.transitionToNextVideo(request.boxToken)
+                    }
+                } catch (error) {
+                    console.error(error)
+
+                    recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    const message: FeedbackMessage = new FeedbackMessage({
+                        author: "system",
+                        contents: "Your playlist could not be submitted.",
+                        source: "bot",
+                        scope: request.boxToken,
+                        feedbackType: "error"
+                    })
+                    this.emitToSocket(recipients, "chat", message)
+                }
+            })
+
             // When a user deletes a video from the playlist
             socket.on("cancel", async (request: PlaylistItemCancelRequest) => {
                 try {
                     const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                     // Remove the video from the playlist (_id is sent)
-                    const response = await playlistService.onVideoCancelled(request)
+                    const response = await queueService.onVideoCancelled(request)
 
                     this.emitToSocket(recipients, 'chat', response.feedback)
 
@@ -204,12 +235,12 @@ class BoxService {
              */
             socket.on("sync", async (request: { boxToken: string, order: string }) => {
                 switch (request.order) {
-                case "next": // Go to next video
-                    this.skipVideo(request.boxToken)
-                    break
+                    case "next": // Go to next video
+                        this.skipVideo(request.boxToken)
+                        break
 
-                default:
-                    break
+                    default:
+                        break
                 }
             })
 
@@ -308,7 +339,7 @@ class BoxService {
         const response: SyncPacket = { item: null, box: boxToken }
 
         try {
-            response.item = await playlistService.getCurrentVideo(boxToken)
+            response.item = await queueService.getCurrentVideo(boxToken)
             return response
         } catch (error) {
             throw error
@@ -372,7 +403,7 @@ class BoxService {
             }
         })
 
-        const response = await playlistService.getNextVideo(boxToken)
+        const response = await queueService.getNextVideo(boxToken)
 
         const message: FeedbackMessage = new FeedbackMessage()
         message.scope = boxToken

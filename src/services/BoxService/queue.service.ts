@@ -11,8 +11,9 @@ const User = require("./../../models/user.model")
 import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, FeedbackMessage } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
+import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
 
-export class PlaylistService {
+export class QueueService {
     /**
      * When recieving a video from an user, the service searches for it in the video database
      * and adds the video to the playlist of the box.
@@ -34,7 +35,7 @@ export class PlaylistService {
             const user = await User.findById(request.userToken)
 
             // Adding it to the playlist of the box
-            const updatedBox = await this.addVideoToPlaylist(video, request.boxToken, request.userToken)
+            const updatedBox = await this.addVideoToQueue(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
@@ -57,6 +58,25 @@ export class PlaylistService {
         }
     }
 
+    public async onPlaylistSubmitted(request: { playlistId: string, userToken: string, boxToken: string }): Promise<{ feedback: Message, updatedBox: any }> {
+        try {
+            // Get the playlist
+            const playlist = await UserPlaylist.findById(request.playlistId)
+
+            const user = await User.findById(request.userToken)
+
+            const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
+
+            const feedback = new FeedbackMessage({
+                contents: `${user.name} has added the playlist ${playlist.name} to the queue.`
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw Error(error)
+        }
+    }
+
     /**
      * Removing a video from the playlist of a box.
      *
@@ -71,7 +91,7 @@ export class PlaylistService {
             const box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
-                throw new Error("The box is closed. The playlist cannot be modifieds.")
+                throw new Error("The box is closed. The playlist cannot be modified.")
             }
 
             // Pull the video from the paylist
@@ -105,15 +125,15 @@ export class PlaylistService {
     }
 
     /**
-     * Adds the obtained video to the playlist of the box
+     * Adds the obtained video to the queue of the box
      *
-     * @param {any} video The video to add to the playlist
+     * @param {any} video The video to add to the queue
      * @param {string} boxToken The doucment ID of the box
      * @param {string} userToken The document ID of the user who submitted the video
      * @returns
      * @memberof PlaylistService
      */
-    public async addVideoToPlaylist(video, boxToken: string, userToken: string) {
+    public async addVideoToQueue(video, boxToken: string, userToken: string) {
         const box = await BoxSchema.findById(boxToken)
 
         if (box.open === false) {
@@ -133,6 +153,48 @@ export class PlaylistService {
         const updatedBox = await BoxSchema
             .findOneAndUpdate(
                 { _id: boxToken },
+                { $set: { playlist: box.playlist } },
+                { new: true }
+            )
+            .populate("creator", "_id name")
+            .populate("playlist.video")
+            .populate("playlist.submitted_by", "_id name")
+
+        return updatedBox
+    }
+
+    /**
+     * Adds a playlist to the queue of the box
+     *
+     * @param {UserPlaylistDocument} playlist
+     * @param {string} boxToken
+     * @param {string} userToken
+     * @returns
+     * @memberof QueueService
+     */
+    public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string) {
+
+        const box = await BoxSchema.findById(boxToken)
+
+        if (!box.open) {
+            throw new Error("This box is closed. Submission is disallowed.")
+        }
+
+        console.log(playlist);
+
+        (playlist.videos as unknown as Array<string>).forEach((video: string) => {
+            box.playlist.unshift({
+                video,
+                startTime: null,
+                endTime: null,
+                submittedAt: new Date(),
+                submitted_by: userToken
+            })
+        })
+
+        const updatedBox = await BoxSchema
+            .findByIdAndUpdate(
+                boxToken,
                 { $set: { playlist: box.playlist } },
                 { new: true }
             )
@@ -190,6 +252,10 @@ export class PlaylistService {
             .findById(boxToken)
             .populate("playlist.video")
             .lean()
+
+        if (!box) {
+            return null
+        }
 
         const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
 
@@ -306,5 +372,5 @@ export class PlaylistService {
     }
 }
 
-const playlistService = new PlaylistService()
-export default playlistService
+const queueService = new QueueService()
+export default queueService
