@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt'
 const User = require("./../../models/user.model")
 import { MailJob } from "../../models/mail.job"
 import authService from "../services/auth.service"
+import { UserPlaylist } from "../../models/user-playlist.model"
 
 const dotenv = require("dotenv")
 dotenv.config()
@@ -86,6 +87,14 @@ export class AuthApi {
                 mail,
                 password: hashedPassword,
                 name
+            })
+
+            // Create Favorites playlist
+            await UserPlaylist.create({
+                name: 'Favorites',
+                isPrivate: false,
+                user: createdUser._id,
+                isDeletable: false
             })
 
             const mailJob: MailJob = {

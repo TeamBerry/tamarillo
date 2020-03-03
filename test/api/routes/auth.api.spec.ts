@@ -6,6 +6,7 @@ import * as supertest from "supertest"
 const expect = chai.expect
 
 import AuthApi from './../../../src/api/routes/auth.api'
+import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 const User = require('./../../../src/models/user.model')
 
 describe("Auth API", () => {
@@ -108,6 +109,24 @@ describe("Auth API", () => {
                     const user = await User.findOne({ mail: 'blue@pokemon.com' })
 
                     expect(user.password).to.not.equal('Ratticate')
+                })
+        })
+
+        it("Creates a 'favorites' playlist, undeletable, for the user", async () => {
+            return supertest(expressApp)
+                .post('/signup')
+                .send({ mail: 'green@pokemon.com', password: 'Venusaur' })
+                .expect(200)
+                .then(async () => {
+                    const user = await User.findOne({ mail: 'green@pokemon.com' })
+
+                    const favoritesPlaylist: UserPlaylistDocument = await UserPlaylist.findOne({ user: user._id })
+
+                    expect(favoritesPlaylist.name).to.equal('Favorites')
+                    expect(favoritesPlaylist.isPrivate).to.equal(false)
+                    expect(favoritesPlaylist.user.toString()).to.equal(user._id.toString())
+                    expect(favoritesPlaylist.videos).to.have.lengthOf(0)
+                    expect(favoritesPlaylist.isDeletable).to.be.false
                 })
         })
     })
