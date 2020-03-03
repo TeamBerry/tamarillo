@@ -302,6 +302,24 @@ describe("Queue Service", () => {
     })
 
     describe("Submit playlist to the box", () => {
+        // onPlaylistSubmitted
+        it("Refuses playlist if the playlist does not exist", async () => {
+            try {
+                await queueService.onPlaylistSubmitted({ playlistId: '9da1e01fda34eb8c1b9db46e', boxToken: '9cb763b6e72611381ef043e4', userToken: '9ca0df5f86abeb66da97ba5d' })
+            } catch (error) {
+                expect(error.message).to.equal("The playlist could not be found. The submission has been rejected.")
+            }
+        })
+
+        it("Refuses playlist if the user does not exist", async () => {
+            try {
+                await queueService.onPlaylistSubmitted({ playlistId: '8da1e01fda34eb8c1b9db46e', boxToken: '9cb763b6e72611381ef043e4', userToken: '8ca0df5f86abeb66da97ba5d' })
+            } catch (error) {
+                expect(error.message).to.equal("No user was found. The submission has been rejected.")
+            }
+        })
+
+        // Add Playlist to Queue
         it("Refuses playlist if the box is closed", async () => {
             const userPlaylist: UserPlaylistDocument = await UserPlaylist.findById('8da1e01fda34eb8c1b9db46e')
             try {
@@ -310,6 +328,7 @@ describe("Queue Service", () => {
                 expect(error.message).to.equal("This box is closed. Submission is disallowed.")
             }
         })
+
 
         it("Accepts playlist and sends back the updated box", async () => {
             const userPlaylist: UserPlaylistDocument = await UserPlaylist.findById('8da1e01fda34eb8c1b9db46e')

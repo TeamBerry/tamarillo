@@ -63,7 +63,15 @@ export class QueueService {
             // Get the playlist
             const playlist = await UserPlaylist.findById(request.playlistId)
 
+            if (!playlist) {
+                throw new Error('The playlist could not be found. The submission has been rejected.')
+            }
+
             const user = await User.findById(request.userToken)
+
+            if (!user) {
+                throw new Error('No user was found. The submission has been rejected.')
+            }
 
             const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
 
@@ -73,7 +81,7 @@ export class QueueService {
 
             return { feedback, updatedBox }
         } catch (error) {
-            throw Error(error)
+            throw Error(error.message)
         }
     }
 
