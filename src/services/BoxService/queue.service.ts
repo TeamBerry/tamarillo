@@ -39,9 +39,9 @@ export class QueueService {
             let message: string
 
             if (user) {
-                message = user.name + ' has added the video "' + video.name + '" to the playlist.'
+                message = `${user.name} has added the video "${video.name}" to the playlist.`
             } else {
-                message = 'The video "' + video.name + '" has been added to the playlist'
+                message = `The video "${video.name}" has been added to the playlist.`
             }
 
             const feedback = new FeedbackMessage({
@@ -54,7 +54,7 @@ export class QueueService {
             return { feedback, updatedBox }
         } catch (error) {
             // If the box is closed, the error is sent back to the socket method.
-            throw Error(error)
+            throw new Error(error.message)
         }
     }
 
@@ -357,6 +357,10 @@ export class QueueService {
 
                 const youtubeResponse = youtubeRequest.data
 
+                if (youtubeResponse.items.length === 0) {
+                    throw Error('The link does not match any video.')
+                }
+
                 video = await Video.create({
                     link,
                     name: youtubeResponse.items[0].snippet.title,
@@ -366,8 +370,7 @@ export class QueueService {
 
             return video
         } catch (error) {
-            console.error(error)
-            throw new Error(error)
+            throw new Error(error.message)
         }
     }
 }

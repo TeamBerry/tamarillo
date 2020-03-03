@@ -102,7 +102,6 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
-                    console.error(error)
                     // TODO: Only one user is the target in all cases, but the emitToSocket method only accepts an array...
                     recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
@@ -134,8 +133,6 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
-                    console.error(error)
-
                     recipients = await SubscriberSchema.find({ userToken: request.userToken, boxToken: request.boxToken })
 
                     const message: FeedbackMessage = new FeedbackMessage({
@@ -303,15 +300,6 @@ class BoxService {
 
                     io.to(chatRecipient.socket).emit("chat", response)
                 }
-            })
-
-            /**
-             * When the box is updated, it goes through there to be updated in the database and sent
-             * back to all subscribers
-             */
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            socket.on("box", async box => {
-
             })
 
             socket.on("disconnect", async () => {

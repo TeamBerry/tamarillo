@@ -263,14 +263,41 @@ describe("Queue Service", () => {
             name: 'Destroid - Annihilate'
         }
 
+        // On Video submission
+        it("Refuses the submission if the video does not exist", async () => {
+            try {
+                await queueService.onVideoSubmitted({ link: 'notFound', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
+            } catch (error) {
+                expect(error.message).to.equal("The link does not match any video.")
+            }
+        })
+
+        // Add video to queue
         it("Refuses video if the box is closed", async () => {
-            expect(queueService.addVideoToQueue(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')).to.eventually.be.rejectedWith('This box is closed. Submission is disallowed.')
+            try {
+                await queueService.addVideoToQueue(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
+            } catch (error) {
+                expect(error.message).to.equal('This box is closed. Submission is disallowed.')
+            }
         })
 
         it("Accepts the video and sends back the updated box", async () => {
             const updatedBox = await queueService.addVideoToQueue(video, '9cb763b6e72611381ef043e4', '9ca0df5f86abeb66da97ba5d')
 
             expect(updatedBox.playlist.length).to.eql(1)
+        })
+
+        // Feedback
+        it("Sends message with user name if user exists", async () => {
+            const { feedback, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
+
+            expect(feedback.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the playlist.`)
+        })
+
+        it("Sends generic message if the submitter is the system (no user given)", async () => {
+            const { feedback, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: null, boxToken: '9cb763b6e72611381ef043e4' })
+
+            expect(feedback.contents).to.equal(`The video "Destroid - Annihilate" has been added to the playlist.`)
         })
     })
 
