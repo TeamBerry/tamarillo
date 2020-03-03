@@ -329,7 +329,6 @@ describe("Queue Service", () => {
             }
         })
 
-
         it("Accepts playlist and sends back the updated box", async () => {
             const userPlaylist: UserPlaylistDocument = await UserPlaylist.findById('8da1e01fda34eb8c1b9db46e')
             const updatedBox = await queueService.addPlaylistToQueue(userPlaylist, '9cb763b6e72611381ef043e8', '9ca0df5f86abeb66da97ba5d')

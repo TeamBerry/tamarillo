@@ -76,7 +76,10 @@ export class QueueService {
             const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
 
             const feedback = new FeedbackMessage({
-                contents: `${user.name} has added the playlist ${playlist.name} to the queue.`
+                contents: `${user.name} has added the playlist "${playlist.name}" to the queue.`,
+                source: "bot",
+                scope: request.boxToken,
+                feedbackType: 'info'
             })
 
             return { feedback, updatedBox }
