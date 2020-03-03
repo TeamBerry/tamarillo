@@ -8,7 +8,7 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, FeedbackMessage } from "@teamberry/muscadine"
+import { Message, QueueItem, QueueItemCancelRequest, VideoSubmissionRequest, FeedbackMessage, PlaylistSubmissionRequest } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
@@ -22,11 +22,11 @@ export class QueueService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {PlaylistItemSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     * @param {VideoSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof PlaylistService
      */
-    public async onVideoSubmitted(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
             const video = await this.getVideoDetails(request.link)
@@ -58,7 +58,7 @@ export class QueueService {
         }
     }
 
-    public async onPlaylistSubmitted(request: { playlistId: string, userToken: string, boxToken: string }): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Get the playlist
             const playlist = await UserPlaylist.findById(request.playlistId)
@@ -80,11 +80,11 @@ export class QueueService {
     /**
      * Removing a video from the playlist of a box.
      *
-     * @param {PlaylistItemCancelRequest} request
+     * @param {QueueItemCancelRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
      * @memberof PlaylistService
      */
-    public async onVideoCancelled(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancelled(request: QueueItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -241,7 +241,7 @@ export class QueueService {
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof PlaylistService
      */
-    public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
+    public async getNextVideo(boxToken: string): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
         const response = {
             nextVideo: null,
@@ -257,7 +257,7 @@ export class QueueService {
             return null
         }
 
-        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
+        const currentVideoIndex = _.findIndex(box.playlist, (video: QueueItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
@@ -279,7 +279,7 @@ export class QueueService {
 
             if (availableVideos.length > 0) {
                 const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
-                nextVideoIndex = _.findLastIndex(box.playlist, (video: PlaylistItem) => video._id === nextVideo._id)
+                nextVideoIndex = _.findLastIndex(box.playlist, (video: QueueItem) => video._id === nextVideo._id)
             }
         } else {
             // Non-random
@@ -320,9 +320,9 @@ export class QueueService {
     public async loopPlaylist(box: Box): Promise<Box['playlist']> {
         const playlist = box.playlist
 
-        let newBatch: Array<PlaylistItem> = []
+        let newBatch: Array<QueueItem> = []
 
-        playlist.forEach((item: PlaylistItem) => {
+        playlist.forEach((item: QueueItem) => {
             const submission = {
                 video: item.video,
                 startTime: null,

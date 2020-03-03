@@ -1,4 +1,4 @@
-import { PlaylistItem } from "@teamberry/muscadine"
+import { QueueItem } from "@teamberry/muscadine"
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
@@ -317,9 +317,9 @@ export class BoxApi {
         }
 
         try {
-            box.playlist.forEach((playlistItem: PlaylistItem) => {
+            box.playlist.forEach((queueItem: QueueItem) => {
                 // If the playlist doesn't have the video, we add it to the playlist
-                const { video }: PlaylistItem['video'] = playlistItem
+                const { video }: QueueItem['video'] = queueItem
                 if (_.findIndex(inputPlaylist.videos, { _id: video._id }) === -1) {
                     inputPlaylist.videos.push({
                         _id: video._id,

@@ -1,13 +1,13 @@
 import { model, Schema } from "mongoose"
 
-import { PlaylistItem } from "@teamberry/muscadine"
+import { QueueItem } from "@teamberry/muscadine"
 
 export class Box {
     public creator: string
     public description: string
     public lang: string
     public name: string
-    public playlist: Array<PlaylistItem>
+    public playlist: Array<QueueItem>
     public open: boolean
     public options: {
         // Random: The next video will be picked at random from the playlist

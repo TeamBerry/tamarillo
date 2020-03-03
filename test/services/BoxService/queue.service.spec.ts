@@ -10,7 +10,7 @@ import queueService from '../../../src/services/BoxService/queue.service'
 const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
-import { PlaylistItemCancelRequest } from '@teamberry/muscadine'
+import { QueueItemCancelRequest } from '@teamberry/muscadine'
 import { Video } from '../../../src/models/video.model'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 
@@ -294,7 +294,7 @@ describe("Queue Service", () => {
 
     describe("Remove video from box", () => {
         it("Refuses video if the box is closed", async () => {
-            const cancelPayload: PlaylistItemCancelRequest = {
+            const cancelPayload: QueueItemCancelRequest = {
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e9'
@@ -306,7 +306,7 @@ describe("Queue Service", () => {
         })
 
         it("Removes the video from the playlist", async () => {
-            const cancelPayload: PlaylistItemCancelRequest = {
+            const cancelPayload: QueueItemCancelRequest = {
                 boxToken: '9cb763b6e72611381ef043e6',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e8'

@@ -19,44 +19,44 @@ export class BoxWatcher {
                 feedbackType: 'info'
             })
             switch (subject) {
-            case "close":
-                // Build message
-                message.contents = `This box has just been closed. Video play and submission have been disabled.
+                case "close":
+                    // Build message
+                    message.contents = `This box has just been closed. Video play and submission have been disabled.
                     Please exit this box.`
 
-                // Alert subscribers
-                boxService.alertSubscribers(boxToken, message)
-                break
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message)
+                    break
 
-            case "open":
-                // Build message
-                message.contents = "This box has been reopened. Video play and submissions have been reenabled."
+                case "open":
+                    // Build message
+                    message.contents = "This box has been reopened. Video play and submissions have been reenabled."
 
-                // Alert subscribers
-                boxService.alertSubscribers(boxToken, message)
-                break
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message)
+                    break
 
-            case "destroy":
-                message.contents = `This box is being destroyed following an extended period of inactivity or a decision
+                case "destroy":
+                    message.contents = `This box is being destroyed following an extended period of inactivity or a decision
                 of its creator. All systems have been deactivated and cannot be restored. Please exit this box.`
 
-                // Alert subscribers
-                boxService.alertSubscribers(boxToken, message)
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message)
 
-                // Remove subscribers
-                boxService.removeSubscribers(boxToken)
-                break
+                    // Remove subscribers
+                    boxService.removeSubscribers(boxToken)
+                    break
 
-            case "update":
-                message.contents = "This box has just been updated."
+                case "update":
+                    message.contents = "This box has just been updated."
 
-                boxService.alertSubscribers(boxToken, message)
+                    boxService.alertSubscribers(boxToken, message)
 
-                boxService.sendBoxToSubscribers(boxToken)
-                break
+                    boxService.sendBoxToSubscribers(boxToken)
+                    break
 
-            default:
-                break
+                default:
+                    break
             }
 
             done()

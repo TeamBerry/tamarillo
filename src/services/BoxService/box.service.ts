@@ -13,7 +13,7 @@ const syncQueue = new Queue("sync")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { Message, FeedbackMessage, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemCancelRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
@@ -79,10 +79,10 @@ class BoxService {
             /**
              * What to do when you've got a video.
              *
-             * @param {PlaylistItemSubmissionRequest} payload the Video Payload
+             * @param {VideoSubmissionRequest} payload the Video Payload
              */
             // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
-            socket.on("video", async (request: PlaylistItemSubmissionRequest) => {
+            socket.on("video", async (request: VideoSubmissionRequest) => {
                 // Emitting feedback to the chat
                 let recipients: Subscriber[] = await SubscriberSchema.find({ boxToken: request.boxToken })
 
@@ -118,7 +118,7 @@ class BoxService {
                 }
             })
 
-            socket.on("playlist", async (request: { playlistId: string, userToken: string, boxToken: string }) => {
+            socket.on("playlist", async (request: PlaylistSubmissionRequest) => {
                 let recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
 
                 try {
@@ -150,7 +150,7 @@ class BoxService {
             })
 
             // When a user deletes a video from the playlist
-            socket.on("cancel", async (request: PlaylistItemCancelRequest) => {
+            socket.on("cancel", async (request: QueueItemCancelRequest) => {
                 try {
                     const recipients: Array<Subscriber> = await SubscriberSchema.find({ boxToken: request.boxToken })
 
