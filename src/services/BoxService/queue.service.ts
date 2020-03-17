@@ -8,11 +8,12 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, PlaylistItem, PlaylistItemCancelRequest, PlaylistItemSubmissionRequest } from "@teamberry/muscadine"
+import { Message, QueueItem, QueueItemCancelRequest, VideoSubmissionRequest, FeedbackMessage, PlaylistSubmissionRequest } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
+import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
 
-export class PlaylistService {
+export class QueueService {
     /**
      * When recieving a video from an user, the service searches for it in the video database
      * and adds the video to the playlist of the box.
@@ -21,11 +22,11 @@ export class PlaylistService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
-     * @param {PlaylistItemSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
+     * @param {VideoSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedback: any, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof PlaylistService
      */
-    public async onVideoSubmitted(request: PlaylistItemSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
             const video = await this.getVideoDetails(request.link)
@@ -34,43 +35,74 @@ export class PlaylistService {
             const user = await User.findById(request.userToken)
 
             // Adding it to the playlist of the box
-            const updatedBox = await this.addVideoToPlaylist(video, request.boxToken, request.userToken)
+            const updatedBox = await this.addVideoToQueue(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
-                message = user.name + ' has added the video "' + video.name + '" to the playlist.'
+                message = `${user.name} has added the video "${video.name}" to the playlist.`
             } else {
-                message = 'The video "' + video.name + '" has been added to the playlist'
+                message = `The video "${video.name}" has been added to the playlist.`
             }
 
-            const feedback = new Message({
+            const feedback = new FeedbackMessage({
                 contents: message,
                 source: "bot",
-                scope: request.boxToken
+                scope: request.boxToken,
+                feedbackType: 'info'
             })
 
             return { feedback, updatedBox }
         } catch (error) {
             // If the box is closed, the error is sent back to the socket method.
-            throw Error(error)
+            throw new Error(error.message)
+        }
+    }
+
+    public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedback: Message, updatedBox: any }> {
+        try {
+            // Get the playlist
+            const playlist = await UserPlaylist.findById(request.playlistId)
+
+            if (!playlist) {
+                throw new Error('The playlist could not be found. The submission has been rejected.')
+            }
+
+            const user = await User.findById(request.userToken)
+
+            if (!user) {
+                throw new Error('No user was found. The submission has been rejected.')
+            }
+
+            const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
+
+            const feedback = new FeedbackMessage({
+                contents: `${user.name} has added the playlist "${playlist.name}" to the queue.`,
+                source: "bot",
+                scope: request.boxToken,
+                feedbackType: 'info'
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw Error(error.message)
         }
     }
 
     /**
      * Removing a video from the playlist of a box.
      *
-     * @param {PlaylistItemCancelRequest} request
+     * @param {QueueItemCancelRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
      * @memberof PlaylistService
      */
-    public async onVideoCancelled(request: PlaylistItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancelled(request: QueueItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
             const box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
-                throw new Error("The box is closed. The playlist cannot be modifieds.")
+                throw new Error("The box is closed. The playlist cannot be modified.")
             }
 
             // Pull the video from the paylist
@@ -90,10 +122,11 @@ export class PlaylistService {
 
             const message = `${user.name} has removed a submission from the playlist`
 
-            const feedback = new Message({
+            const feedback = new FeedbackMessage({
                 contents: message,
                 source: 'bot',
-                scope: request.boxToken
+                scope: request.boxToken,
+                feedbackType: 'info'
             })
 
             return { feedback, updatedBox }
@@ -103,15 +136,15 @@ export class PlaylistService {
     }
 
     /**
-     * Adds the obtained video to the playlist of the box
+     * Adds the obtained video to the queue of the box
      *
-     * @param {any} video The video to add to the playlist
+     * @param {any} video The video to add to the queue
      * @param {string} boxToken The doucment ID of the box
      * @param {string} userToken The document ID of the user who submitted the video
      * @returns
      * @memberof PlaylistService
      */
-    public async addVideoToPlaylist(video, boxToken: string, userToken: string) {
+    public async addVideoToQueue(video, boxToken: string, userToken: string) {
         const box = await BoxSchema.findById(boxToken)
 
         if (box.open === false) {
@@ -122,7 +155,6 @@ export class PlaylistService {
             video: video._id,
             startTime: null,
             endTime: null,
-            ignored: false,
             submittedAt: new Date(),
             submitted_by: userToken
         }
@@ -132,6 +164,48 @@ export class PlaylistService {
         const updatedBox = await BoxSchema
             .findOneAndUpdate(
                 { _id: boxToken },
+                { $set: { playlist: box.playlist } },
+                { new: true }
+            )
+            .populate("creator", "_id name")
+            .populate("playlist.video")
+            .populate("playlist.submitted_by", "_id name")
+
+        return updatedBox
+    }
+
+    /**
+     * Adds a playlist to the queue of the box
+     *
+     * @param {UserPlaylistDocument} playlist
+     * @param {string} boxToken
+     * @param {string} userToken
+     * @returns
+     * @memberof QueueService
+     */
+    public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string) {
+
+        const box = await BoxSchema.findById(boxToken)
+
+        if (!box.open) {
+            throw new Error("This box is closed. Submission is disallowed.")
+        }
+
+        console.log(playlist);
+
+        (playlist.videos as unknown as Array<string>).forEach((video: string) => {
+            box.playlist.unshift({
+                video,
+                startTime: null,
+                endTime: null,
+                submittedAt: new Date(),
+                submitted_by: userToken
+            })
+        })
+
+        const updatedBox = await BoxSchema
+            .findByIdAndUpdate(
+                boxToken,
                 { $set: { playlist: box.playlist } },
                 { new: true }
             )
@@ -178,7 +252,7 @@ export class PlaylistService {
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof PlaylistService
      */
-    public async getNextVideo(boxToken: string): Promise<{ nextVideo: PlaylistItem, updatedBox: Box } | null> {
+    public async getNextVideo(boxToken: string): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
         const response = {
             nextVideo: null,
@@ -190,8 +264,11 @@ export class PlaylistService {
             .populate("playlist.video")
             .lean()
 
-        // TODO: Find last index to skip ignored videos
-        const currentVideoIndex = _.findIndex(box.playlist, (video: PlaylistItem) => video.startTime !== null && video.endTime === null)
+        if (!box) {
+            return null
+        }
+
+        const currentVideoIndex = _.findIndex(box.playlist, (video: QueueItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
@@ -213,7 +290,7 @@ export class PlaylistService {
 
             if (availableVideos.length > 0) {
                 const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
-                nextVideoIndex = _.findLastIndex(box.playlist, (video: PlaylistItem) => video._id === nextVideo._id)
+                nextVideoIndex = _.findLastIndex(box.playlist, (video: QueueItem) => video._id === nextVideo._id)
             }
         } else {
             // Non-random
@@ -254,14 +331,13 @@ export class PlaylistService {
     public async loopPlaylist(box: Box): Promise<Box['playlist']> {
         const playlist = box.playlist
 
-        let newBatch: Array<PlaylistItem> = []
+        let newBatch: Array<QueueItem> = []
 
-        playlist.forEach((item: PlaylistItem) => {
+        playlist.forEach((item: QueueItem) => {
             const submission = {
                 video: item.video,
                 startTime: null,
                 endTime: null,
-                ignored: false,
                 submittedAt: new Date(),
                 submitted_by: item.submitted_by
             }
@@ -292,6 +368,10 @@ export class PlaylistService {
 
                 const youtubeResponse = youtubeRequest.data
 
+                if (youtubeResponse.items.length === 0) {
+                    throw Error('The link does not match any video.')
+                }
+
                 video = await Video.create({
                     link,
                     name: youtubeResponse.items[0].snippet.title,
@@ -301,11 +381,10 @@ export class PlaylistService {
 
             return video
         } catch (error) {
-            console.error(error)
-            throw new Error(error)
+            throw new Error(error.message)
         }
     }
 }
 
-const playlistService = new PlaylistService()
-export default playlistService
+const queueService = new QueueService()
+export default queueService

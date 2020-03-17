@@ -2,7 +2,7 @@ const Queue = require("bull")
 const boxQueue = new Queue("box")
 const syncQueue = new Queue("sync")
 
-import { Message } from "@teamberry/muscadine"
+import { FeedbackMessage } from "@teamberry/muscadine"
 import { BoxJob } from "../../models/box.job"
 import boxService from "./box.service"
 
@@ -12,67 +12,51 @@ export class BoxWatcher {
             const { boxToken, subject }: BoxJob = job.data
 
             // Do things depending on the subject
-            let message: Message
+            const message: FeedbackMessage = new FeedbackMessage({
+                author: 'system',
+                source: 'bot',
+                scope: boxToken,
+                feedbackType: 'info'
+            })
             switch (subject) {
-            case "close":
-                // Build message
-                message = new Message({
-                    author: "system",
-                    contents: `This box has just been closed. Video play and submission have been disabled.
-                        Please exit this box.`,
-                    source: "bot",
-                    scope: boxToken
-                })
+                case "close":
+                    // Build message
+                    message.contents = `This box has just been closed. Video play and submission have been disabled.
+                    Please exit this box.`
 
-                // Alert subscribers
-                boxService.alertSubscribers(boxToken, message)
-                break
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message)
+                    break
 
-            case "open":
-                // Build message
-                message = new Message({
-                    author: "system",
-                    contents: "This box has been reopened. Video play and submissions have been reenabled.",
-                    source: "bot",
-                    scope: boxToken
-                })
+                case "open":
+                    // Build message
+                    message.contents = "This box has been reopened. Video play and submissions have been reenabled."
 
-                // Alert subscribers
-                boxService.alertSubscribers(boxToken, message)
-                break
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message)
+                    break
 
-            case "destroy":
-                // Build message
-                message = new Message({
-                    author: "system",
-                    contents: `This box is being destroyed following an extended period of inactivity or a decision
-                        of its creator. All systems have been deactivated and cannot be restored. Please exit this box.`,
-                    source: "bot",
-                    scope: boxToken
-                })
+                case "destroy":
+                    message.contents = `This box is being destroyed following an extended period of inactivity or a decision
+                of its creator. All systems have been deactivated and cannot be restored. Please exit this box.`
 
-                // Alert subscribers
-                boxService.alertSubscribers(boxToken, message)
+                    // Alert subscribers
+                    boxService.alertSubscribers(boxToken, message)
 
-                // Remove subscribers
-                boxService.removeSubscribers(boxToken)
-                break
+                    // Remove subscribers
+                    boxService.removeSubscribers(boxToken)
+                    break
 
-            case "update":
-                message = new Message({
-                    author: "system",
-                    contents: `This box has just been updated.`,
-                    source: "bot",
-                    scope: boxToken
-                })
+                case "update":
+                    message.contents = "This box has just been updated."
 
-                boxService.alertSubscribers(boxToken, message)
+                    boxService.alertSubscribers(boxToken, message)
 
-                boxService.sendBoxToSubscribers(boxToken)
-                break
+                    boxService.sendBoxToSubscribers(boxToken)
+                    break
 
-            default:
-                break
+                default:
+                    break
             }
 
             done()

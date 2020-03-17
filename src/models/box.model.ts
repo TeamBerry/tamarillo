@@ -1,13 +1,13 @@
 import { model, Schema } from "mongoose"
 
-import { PlaylistItem } from "@teamberry/muscadine"
+import { QueueItem } from "@teamberry/muscadine"
 
 export class Box {
     public creator: string
     public description: string
     public lang: string
     public name: string
-    public playlist: Array<PlaylistItem>
+    public playlist: Array<QueueItem>
     public open: boolean
     public options: {
         // Random: The next video will be picked at random from the playlist
@@ -28,8 +28,7 @@ const boxSchema = new Schema(
             video: { type: Schema.Types.ObjectId, ref: "Video" },
             submitted_by: { type: Schema.Types.ObjectId, ref: "User" },
             startTime: Date,
-            endTime: Date,
-            ignored: Boolean // Indicates if the video has to be ignored by the autoplay. False by deafult
+            endTime: Date
         }],
         open: Boolean,
         options: {

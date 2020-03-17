@@ -76,7 +76,7 @@ jobs:
       - name: Copy files
         uses: horochx/deploy-via-scp@v1.0.1
         with:
-          local: dist package.json npm-shrinkwrap.json processes.json .npmrc
+          local: dist package.json npm-shrinkwrap.json processes.json .npmrc migrate-mongo-config.js migrations
           remote: ${{ secrets.LOCATION }}
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}

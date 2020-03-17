@@ -14,6 +14,7 @@ export class UserPlaylistClass {
     }>
     public createdAt: Date
     public updatedAt: Date
+    public isDeletable: boolean
 
     constructor(data: UserPlaylistClass) {
         this.name = data.name || null
@@ -22,6 +23,7 @@ export class UserPlaylistClass {
         this.isPrivate = data.isPrivate || false
         this.createdAt = data.createdAt || null
         this.updatedAt = data.updatedAt || null
+        this.isDeletable = data.isDeletable || true
     }
 }
 
@@ -30,7 +32,8 @@ const userPlaylistSchema = new Schema(
         name: { type: String, required: true },
         isPrivate: { type: Boolean, default: false },
         user: { type: Schema.Types.ObjectId, ref: "User" },
-        videos: [{ type: Schema.Types.ObjectId, ref: "Video" }]
+        videos: [{ type: Schema.Types.ObjectId, ref: "Video" }],
+        isDeletable: { type: Boolean, default: true }
     },
     {
         timestamps: true

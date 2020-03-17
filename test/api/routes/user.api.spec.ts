@@ -51,8 +51,16 @@ describe("User API", () => {
             settings: {
                 theme: 'light',
                 picture: '9ca0df5f86abeb66da97ba5d-picture'
-            },
-            favorites: []
+            }
+        })
+
+        await UserPlaylist.create({
+            _id: "8da1e01fda34eb8c1b9db46c",
+            name: "Favorites",
+            isPrivate: false,
+            user: "9ca0df5f86abeb66da97ba5d",
+            videos: [],
+            isDeletable: false
         })
 
         await User.create({
@@ -63,8 +71,16 @@ describe("User API", () => {
             settings: {
                 theme: 'dark',
                 picture: 'default-picture'
-            },
-            favorites: ['9bc72f3d7edc6312d0ef2e48']
+            }
+        })
+
+        await UserPlaylist.create({
+            _id: "8da1e01fda34eb8c1b9db46d",
+            name: "Favorites",
+            isPrivate: false,
+            user: "9ca0df5f86abeb66da97ba5e",
+            videos: ['9bc72f3d7edc6312d0ef2e48'],
+            isDeletable: false
         })
 
         ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
@@ -167,31 +183,6 @@ describe("User API", () => {
                     expect(favorites[0].name).to.equal('Second Video')
                 })
         })
-
-        it("Returns an enmpty array when search gives off nothing", () => {
-            return supertest(expressApp)
-                .get('/favorites?title=piano')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .expect(200)
-                .then((response) => {
-                    const favorites = response.body
-
-                    expect(favorites).to.have.lengthOf(0)
-                })
-        })
-
-        it("Searches through favorites by title", () => {
-            return supertest(expressApp)
-                .get('/favorites?title=video')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .expect(200)
-                .then((response) => {
-                    const favorites = response.body
-
-                    expect(favorites).to.have.lengthOf(1)
-                    expect(favorites[0].name).to.equal('Second Video')
-                })
-        })
     })
 
     describe("Updating their favorites", () => {
@@ -217,10 +208,10 @@ describe("User API", () => {
                     .send({ action: 'like', target: '9bc72f3d7edc6312d0ef2e47' })
                     .expect(200)
                     .then(async () => {
-                        const user = await User.findById('9ca0df5f86abeb66da97ba5d')
+                        const favorites = await UserPlaylist.findOne({ user: '9ca0df5f86abeb66da97ba5d', name: 'Favorites' })
 
-                        expect(user.favorites).to.have.lengthOf(1)
-                        expect(user.favorites[0].toString()).to.equal('9bc72f3d7edc6312d0ef2e47')
+                        expect(favorites.videos).to.have.lengthOf(1)
+                        expect(favorites.videos[0].toString()).to.equal('9bc72f3d7edc6312d0ef2e47')
                     })
             })
         })
@@ -247,9 +238,9 @@ describe("User API", () => {
                     .send({ action: 'unlike', target: '9bc72f3d7edc6312d0ef2e48' })
                     .expect(200)
                     .then(async () => {
-                        const user = await User.findById('9ca0df5f86abeb66da97ba5e')
+                        const favorites = await UserPlaylist.findOne({ user: '9ca0df5f86abeb66da97ba5e', name: 'Favorites' })
 
-                        expect(user.favorites).to.have.lengthOf(0)
+                        expect(favorites.videos).to.have.lengthOf(0)
                     })
             })
         })
@@ -299,7 +290,7 @@ describe("User API", () => {
                 .then((response) => {
                     const playlists: UserPlaylistClass[] = response.body
 
-                    expect(playlists).to.have.lengthOf(1)
+                    expect(playlists).to.have.lengthOf(2)
                 })
         })
 
@@ -311,7 +302,7 @@ describe("User API", () => {
                 .then((response) => {
                     const playlists: UserPlaylistClass[] = response.body
 
-                    expect(playlists).to.have.lengthOf(2)
+                    expect(playlists).to.have.lengthOf(3)
                 })
         })
     })

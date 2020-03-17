@@ -6,7 +6,7 @@ const upload = multer({ dest: 'upload/' })
 const User = require("./../../models/user.model")
 const Box = require("./../../models/box.model")
 
-import { UserPlaylist, UserPlaylistClass } from "../../models/user-playlist.model"
+import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
 const auth = require("./../auth.middleware")
@@ -92,21 +92,21 @@ export class UserApi {
 
     }
 
+    /**
+     * Gets the contents of the 'Favorites' playlist
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof UserApi
+     */
     public async favorites(request: Request, response: Response): Promise<Response> {
-        let user
+        const favorites = await UserPlaylist
+            .findOne({ user: response.locals.auth.user, name: 'Favorites' })
+            .populate("user", "name")
+            .populate("videos", "name link")
 
-        if (request.query.title) {
-            user = await User.findById(response.locals.auth.user)
-                .populate({
-                    path: 'favorites',
-                    match: { name: { $regex: request.query.title, $options: "i" } }
-                })
-        } else {
-            user = await User.findById(response.locals.auth.user)
-                .populate('favorites')
-        }
-
-        return response.status(200).send(user.favorites)
+        return response.status(200).send(favorites.videos)
     }
 
     /**
@@ -128,25 +128,26 @@ export class UserApi {
             let query = {}
 
             if (command.action === 'like') {
-                query = { $push: { favorites: command.target } }
+                query = { $push: { videos: command.target } }
             } else {
-                query = { $pull: { favorites: command.target } }
+                query = { $pull: { videos: command.target } }
             }
 
             if (!await Video.exists({ _id: command.target })) {
                 return response.status(404).send('VIDEO_NOT_FOUND')
             }
 
-            const updatedUser = await User.findByIdAndUpdate(
-                response.locals.auth.user,
+            const updatedFavorites: UserPlaylistDocument = await UserPlaylist.findOneAndUpdate(
+                { name: 'Favorites', user: response.locals.auth.user },
                 query,
                 {
                     new: true
                 }
             )
-                .populate("favorites")
+                .populate("user", "name")
+                .populate("videos", "name link")
 
-            return response.status(200).send(updatedUser.favorites)
+            return response.status(200).send(updatedFavorites)
         } catch (error) {
             return response.status(500).send(error)
         }
