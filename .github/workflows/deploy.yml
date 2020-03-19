@@ -41,7 +41,7 @@ jobs:
     - name: Lint check
       run: npm run lint:check
     - name: Run Tests
-      run: npm run test
+      run: export YOUTUBE_API_KEY=${{ secrets.TEST_YOUTUBE_API_KEY }} && npm run test
       env:
         CI: "true"
   deploy:
