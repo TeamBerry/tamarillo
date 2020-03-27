@@ -73,6 +73,12 @@ class BoxService {
                     })
 
                     socket.emit("confirm", message)
+
+                    if (client.origin === 'Cranberry') {
+                        socket.emit('bootstrap', {
+                            boxKey: process.env.CRANBERRY_KEY
+                        })
+                    }
                 }
             })
 
