@@ -598,13 +598,13 @@ describe("Box API", () => {
         before(async () => {
             await SubscriberSchema.create([
                 {
-                    origin: "BERRYBOX PNEUMA",
+                    origin: "Blueberry",
                     boxToken: '9cb763b6e72611381ef043e4',
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     socket: ''
                 },
                 {
-                    origin: "BERRYBOX PNEUMA",
+                    origin: "Blueberry",
                     boxToken: '9cb763b6e72611381ef043e7',
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     socket: ''
