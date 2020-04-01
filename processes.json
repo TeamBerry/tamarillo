@@ -8,15 +8,6 @@
         "min_uptime": 3000
     },
     {
-        "script": "dist/services/BoxService/box.watcher.js",
-        "name": "boquila.watcher",
-        "watch": false,
-        "exec_mode": "cluster",
-        "instances": 1,
-        "max_restarts": 5,
-        "min_uptime": 3000
-    },
-    {
         "script": "dist/api/index.js",
         "args": [
             "-p",
