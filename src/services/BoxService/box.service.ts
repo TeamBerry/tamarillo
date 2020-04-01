@@ -320,7 +320,8 @@ class BoxService {
                     Please exit this box.`
 
                     // Alert subscribers
-                    this.alertSubscribers(boxToken, message)
+                    io.in(boxToken).emit('chat', message)
+
                     break
 
                 case "open":
@@ -328,7 +329,8 @@ class BoxService {
                     message.contents = "This box has been reopened. Video play and submissions have been reenabled."
 
                     // Alert subscribers
-                    this.alertSubscribers(boxToken, message)
+                    io.in(boxToken).emit('chat', message)
+
                     break
 
                 case "destroy":
@@ -336,16 +338,16 @@ class BoxService {
                 of its creator. All systems have been deactivated and cannot be restored. Please exit this box.`
 
                     // Alert subscribers
-                    this.alertSubscribers(boxToken, message)
+                    io.in(boxToken).emit('chat', message)
 
                     // Remove subscribers
-                    this.removeSubscribers(boxToken)
+                    SubscriberSchema.deleteMany({ boxToken })
                     break
 
                 case "update":
                     message.contents = "This box has just been updated."
 
-                    this.alertSubscribers(boxToken, message)
+                    io.in(boxToken).emit('chat', message)
 
                     this.sendBoxToSubscribers(boxToken)
                     break
@@ -389,27 +391,6 @@ class BoxService {
         } catch (error) {
             throw error
         }
-    }
-
-    /**
-     * Removes subscribers of a box. Used especially in the context of a box being destroyed.
-     *
-     * @param {string} boxToken
-     * @memberof BoxService
-     */
-    public async removeSubscribers(boxToken: string) {
-        await SubscriberSchema.deleteMany({ boxToken })
-    }
-
-    /**
-     * Alerts all the chat subscribers of a box
-     *
-     * @param {string} boxToken
-     * @param {Message} message
-     * @memberof BoxService
-     */
-    public async alertSubscribers(boxToken: string, message: Message) {
-        io.in(boxToken).emit('chat', message)
     }
 
     /**
