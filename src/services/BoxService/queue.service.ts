@@ -46,7 +46,7 @@ export class QueueService {
 
             const feedback = new FeedbackMessage({
                 contents: message,
-                source: "bot",
+                source: "system",
                 scope: request.boxToken,
                 feedbackType: 'info'
             })
@@ -77,7 +77,7 @@ export class QueueService {
 
             const feedback = new FeedbackMessage({
                 contents: `${user.name} has added the playlist "${playlist.name}" to the queue.`,
-                source: "bot",
+                source: "system",
                 scope: request.boxToken,
                 feedbackType: 'info'
             })
@@ -124,7 +124,7 @@ export class QueueService {
 
             const feedback = new FeedbackMessage({
                 contents: message,
-                source: 'bot',
+                source: 'system',
                 scope: request.boxToken,
                 feedbackType: 'info'
             })

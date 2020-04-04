@@ -120,7 +120,7 @@ class BoxService {
                         author: "system",
                         // TODO: Extract from the error
                         contents: "This box is closed. Submission is disallowed.",
-                        source: "bot",
+                        source: "system",
                         scope: request.boxToken,
                         feedbackType: 'error'
                     })
@@ -145,7 +145,7 @@ class BoxService {
                     const message: FeedbackMessage = new FeedbackMessage({
                         author: "system",
                         contents: "Your playlist could not be submitted.",
-                        source: "bot",
+                        source: "system",
                         scope: request.boxToken,
                         feedbackType: "error"
                     })
@@ -165,7 +165,7 @@ class BoxService {
                     const message: FeedbackMessage = new FeedbackMessage({
                         author: 'system',
                         contents: 'The box is closed. The playlist cannot be changed.',
-                        source: 'bot',
+                        source: 'system',
                         scope: request.boxToken,
                         feedbackType: 'error'
                     })
@@ -201,7 +201,7 @@ class BoxService {
 
                     if (response.item !== null) {
                         message.contents = 'Currently playing: "' + response.item.video.name + '"'
-                        message.source = "bot"
+                        message.source = "system"
 
                         // Emit the response back to the client
                         socket.emit("sync", response)
@@ -309,7 +309,7 @@ class BoxService {
             // Do things depending on the subject
             const message: FeedbackMessage = new FeedbackMessage({
                 author: 'system',
-                source: 'bot',
+                source: 'system',
                 scope: boxToken,
                 feedbackType: 'info'
             })
@@ -442,7 +442,7 @@ class BoxService {
 
             // Send chat message for subscribers
             message.contents = "Currently playing: " + response.nextVideo.video.name
-            message.source = "bot"
+            message.source = "system"
 
             // Create a new sync job
             syncQueue.add(
