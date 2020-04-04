@@ -32,21 +32,21 @@ export class AuthApi {
     /**
      * Logs the user in and creates his session
      *
-     * @param {Request} req The request, which body must contain the mail and password parameters
-     * @param {Response} res The response
+     * @param {Request} request The request, which body must contain the mail and password parameters
+     * @param {Response} response The response
      * @returns {Promise<Response>} A valid session or of one the following errors:
      * - 412 'MISSING_CREDENTIALS' if the request body is incompolete
      * - 401 'INVALID_CREDENTIALS' if the credentials do not match any user
      * - 500 Server Error if anything else happens
      * @memberof AuthApi
      */
-    public async login(req: Request, res: Response): Promise<Response> {
-        const mail = req.body.mail
-        const password = req.body.password
-
-        if (!mail || !password) {
-            return res.status(412).send("MISSING_CREDENTIALS")
+    public async login(request: Request, response: Response): Promise<Response> {
+        if (!request.body.mail || !request.body.password) {
+            return response.status(412).send("MISSING_CREDENTIALS")
         }
+
+        const mail = request.body.mail.toLowerCase()
+        const password = request.body.password
 
         try {
             // Find user in database
@@ -54,20 +54,20 @@ export class AuthApi {
 
             // If password is not correct, send back 401 HTTP error
             if (!user) {
-                return res.status(401).send("INVALID_CREDENTIALS") // Unauthorized
+                return response.status(401).send("INVALID_CREDENTIALS") // Unauthorized
             }
 
-            if (await bcrypt.compare(password, user.password)) {
-                const authResult = authService.createSession(user)
-
-                // Sending bearer token
-                return res.status(200).json(authResult)
-            } else {
-                return res.status(401).send("INVALID_CREDENTIALS")
+            if (!await bcrypt.compare(password, user.password)) {
+                return response.status(401).send("INVALID_CREDENTIALS")
             }
+
+            const authResult = authService.createSession(user)
+
+            // Sending bearer token
+            return response.status(200).json(authResult)
         } catch (error) {
             console.log(error)
-            return res.status(500).send(error)
+            return response.status(500).send(error)
         }
     }
 
