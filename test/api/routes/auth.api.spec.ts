@@ -76,6 +76,18 @@ describe("Auth API", () => {
                 .send(credentials)
                 .expect(200)
         })
+
+        it("Accepts the login - case insensitivity on mail", () => {
+            const credentials = {
+                mail: 'AsH@pOKEmon.COM',
+                password: 'Pikachu'
+            }
+
+            return supertest(expressApp)
+                .post("/login")
+                .send(credentials)
+                .expect(200)
+        })
     })
 
     describe("Signup", () => {
