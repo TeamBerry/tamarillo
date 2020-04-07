@@ -262,6 +262,7 @@ export class QueueService {
         const box: Box = await BoxSchema
             .findById(boxToken)
             .populate("playlist.video")
+            .populate("playlist.submitted_by", "_id name")
             .lean()
 
         if (!box) {
