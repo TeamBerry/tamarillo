@@ -386,6 +386,7 @@ describe("Queue Service", () => {
                 },
                 startTime: new Date("2019-05-31T09:19:44+0000"),
                 endTime: null,
+                isPreselected: false,
                 submittedAt: new Date("2019-05-31T09:19:41+0000"),
                 submitted_by: {
                     _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
@@ -526,6 +527,61 @@ describe("Queue Service", () => {
             })
 
             await Box.create({
+                _id: '9cb763b6e72611381ef04500',
+                description: 'Box with a video playing and a preselected track',
+                lang: 'English',
+                name: 'Box playing in random mode',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef04505',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04504',
+                        video: '9cb81150594b2e75f06ba90b',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d',
+                        isPreselected: true
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04503',
+                        video: '9cb81150594b2e75f06ba8fe',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04502',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: "2019-05-31T09:21:12+0000",
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef04501',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: "2019-05-31T09:19:44+0000",
+                        endTime: "2019-05-31T09:21:12+0000",
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true,
+                options: {
+                    random: true
+                }
+            })
+
+            await Box.create({
                 _id: '9cb763b6e72611381ef043f5',
                 description: 'Box with a video playing',
                 lang: 'English',
@@ -646,6 +702,12 @@ describe("Queue Service", () => {
             const response = await queueService.getNextVideo('9cb763b6e72611381ef043f5')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043f6')
+        })
+
+        it('Gets the preselected track if it exists', async () => {
+            const response = await queueService.getNextVideo('9cb763b6e72611381ef04500')
+
+            expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef04504')
         })
     })
 

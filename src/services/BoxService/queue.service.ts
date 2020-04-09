@@ -151,12 +151,13 @@ export class QueueService {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        const submission = {
+        const submission: QueueItem = {
             video: video._id,
             startTime: null,
             endTime: null,
             submittedAt: new Date(),
-            submitted_by: userToken
+            submitted_by: userToken,
+            isPreselected: false
         }
 
         box.playlist.unshift(submission)
@@ -286,20 +287,29 @@ export class QueueService {
 
         // Search for a new video
         let nextVideoIndex = -1
-        if (box.options.random === true) {
-            const availableVideos = box.playlist.filter(video => video.startTime === null)
 
-            if (availableVideos.length > 0) {
-                const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
-                nextVideoIndex = _.findLastIndex(box.playlist, (video: QueueItem) => video._id === nextVideo._id)
-            }
+        // Look for a preselected track
+        const preselectedTrackIndex = box.playlist.findIndex(video => video.isPreselected)
+        if (preselectedTrackIndex !== -1) {
+            nextVideoIndex = preselectedTrackIndex
         } else {
-            // Non-random
-            nextVideoIndex = _.findLastIndex(box.playlist, video => video.startTime === null)
+            // Look for a track, either randomly or not
+            if (box.options.random === true) {
+                const availableVideos = box.playlist.filter(video => video.startTime === null)
+
+                if (availableVideos.length > 0) {
+                    const nextVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)]
+                    nextVideoIndex = _.findLastIndex(box.playlist, (video: QueueItem) => video._id === nextVideo._id)
+                }
+            } else {
+                // Non-random
+                nextVideoIndex = _.findLastIndex(box.playlist, video => video.startTime === null)
+            }
         }
 
         if (nextVideoIndex !== -1) {
             box.playlist[nextVideoIndex].startTime = transitionTime
+            box.playlist[nextVideoIndex].isPreselected = false
             response.nextVideo = box.playlist[nextVideoIndex]
 
             // Puts the starting video between the upcoming & played videos
