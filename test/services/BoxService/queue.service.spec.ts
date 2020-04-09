@@ -365,6 +365,82 @@ describe("Queue Service", () => {
         })
     })
 
+    describe('Preselect a video', () => {
+        it('Refuses the order if the box is closed', async () => {
+            const preselectRequest: QueueItemCancelRequest = {
+                boxToken: '9cb763b6e72611381ef043e5',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043e9'
+            }
+
+            const result = queueService.onVideoPreselected(preselectRequest)
+
+            expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified.")
+        })
+
+        it('Preselects a video if no other video is preselected', async () => {
+            const preselectRequest: QueueItemCancelRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f4'
+            }
+
+            const result = queueService.onVideoPreselected(preselectRequest)
+
+            const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+            const preselectedVideo = box.playlist.find(video => video.isPreselected)
+
+            expect(preselectedVideo._id).to.equal('9cb763b6e72611381ef043f4')
+        })
+
+        it('Preselects a video and unselects the preselected one if it is different', async () => {
+            queueService.onVideoPreselected({
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f4'
+            })
+
+            queueService.onVideoPreselected({
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f3'
+            })
+
+            const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+            const previousSelectedVideo = box.playlist.filter(video => video._id === '9cb763b6e72611381ef043f4')
+            expect(previousSelectedVideo.isPreselected).to.equal(false)
+
+            const preselectedVideo = box.playlist.filter(video => video.isPreselected)
+            expect(preselectedVideo).to.have.lengthOf(1)
+
+            expect(preselectedVideo[0]._id).to.equal('9cb763b6e72611381ef043f3')
+        })
+
+        it('Unselects a video if it is the one preselected', async () => {
+            queueService.onVideoPreselected({
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f4'
+            })
+
+            queueService.onVideoPreselected({
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f4'
+            })
+
+            const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+            const previousSelectedVideo = box.playlist.filter(video => video._id === '9cb763b6e72611381ef043f4')
+            expect(previousSelectedVideo.isPreselected).to.equal(false)
+
+            const preselectedVideo = box.playlist.filter(video => video.isPreselected)
+            expect(preselectedVideo).to.have.lengthOf(0)
+        })
+    })
+
     describe("Get current video", () => {
         it("Returns null when there's no currently playing video", async () => {
             const currentVideo = await queueService.getCurrentVideo('9cb763b6e72611381ef043e4')
