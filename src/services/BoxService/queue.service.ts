@@ -135,6 +135,67 @@ export class QueueService {
         }
     }
 
+    public async onVideoPreselected(request: QueueItemCancelRequest): Promise<{ feedback: FeedbackMessage, updatedBox: any }>{
+        try {
+            const user = await User.findById(request.userToken)
+
+            const box = await BoxSchema.findById(request.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The playlist cannot be modified.")
+            }
+
+            const alreadySelectedVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video.isPreselected)
+            const targetVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video._id.toString() === request.item)
+
+            // Before we do anything, securities:
+            // - The target video has to exist
+            // - The target video has to not be either playing or passed
+            if (targetVideoIndex === -1) {
+                throw new Error("The video you selected could not be found.")
+            }
+
+            if (box.playlist[targetVideoIndex].startTime !== null) {
+                if (box.playlist[targetVideoIndex].endTime !== null) {
+                    throw new Error("The video you selected has already been played.")
+                } else {
+                    throw new Error("The video you selected is currently playing.")
+                }
+            }
+
+            // Unselect already selected track if it exists
+            if (alreadySelectedVideoIndex !== -1) {
+                box.playlist[alreadySelectedVideoIndex].isPreselected = false
+            }
+
+            // Preselect new track if it's not the same as the one that just got deselected
+            if (alreadySelectedVideoIndex !== targetVideoIndex) {
+                box.playlist[targetVideoIndex].isPreselected = true
+            }
+
+            const updatedBox = await BoxSchema
+                .findByIdAndUpdate(
+                    request.boxToken,
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                )
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+
+            const feedback = new FeedbackMessage({
+                contents: `${user.name} has preselected the video "${updatedBox.playlist[targetVideoIndex].video.name}". It will be the next video to play.`,
+                source: 'system',
+                scope: request.boxToken,
+                feedbackType: 'info'
+            })
+
+            return { feedback, updatedBox }
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
     /**
      * Adds the obtained video to the queue of the box
      *
@@ -350,7 +411,8 @@ export class QueueService {
                 startTime: null,
                 endTime: null,
                 submittedAt: new Date(),
-                submitted_by: item.submitted_by
+                submitted_by: item.submitted_by,
+                isPreselected: false
             }
 
             newBatch.push(submission)

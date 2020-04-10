@@ -55,7 +55,8 @@ describe("Queue Service", () => {
                     startTime: null,
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 }
             ],
             creator: '9ca0df5f86abeb66da97ba5d',
@@ -78,7 +79,8 @@ describe("Queue Service", () => {
                     startTime: null,
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 },
                 {
                     _id: '9cb763b6e72611381ef043e7',
@@ -86,7 +88,8 @@ describe("Queue Service", () => {
                     startTime: "2019-05-31T09:19:44+0000",
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 }
             ],
             creator: '9ca0df5f86abeb66da97ba5d',
@@ -109,7 +112,8 @@ describe("Queue Service", () => {
                     startTime: null,
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 },
                 {
                     _id: '9cb763b6e72611381ef043f3',
@@ -117,7 +121,8 @@ describe("Queue Service", () => {
                     startTime: null,
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 },
                 {
                     _id: '9cb763b6e72611381ef043f2',
@@ -125,7 +130,8 @@ describe("Queue Service", () => {
                     startTime: null,
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 },
                 {
                     _id: '9cb763b6e72611381ef043f1',
@@ -133,7 +139,8 @@ describe("Queue Service", () => {
                     startTime: "2019-05-31T09:21:12+0000",
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 },
                 {
                     _id: '9cb763b6e72611381ef043f0',
@@ -141,7 +148,8 @@ describe("Queue Service", () => {
                     startTime: "2019-05-31T09:19:44+0000",
                     endTime: "2019-05-31T09:21:12+0000",
                     submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
                 }
             ],
             creator: '9ca0df5f86abeb66da97ba5d',
@@ -373,9 +381,53 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043e9'
             }
 
-            const result = queueService.onVideoPreselected(preselectRequest)
+            try {
+                await queueService.onVideoPreselected(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The box is closed. The playlist cannot be modified.")
+            }
+        })
 
-            expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified.")
+        it('Refuses if the video does not exist in the playlist', async () => {
+            const preselectRequest: QueueItemCancelRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '8cb763b6e72611381ef043f4'
+            }
+
+            try {
+                await queueService.onVideoPreselected(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The video you selected could not be found.")
+            }
+        })
+
+        it('Refuses if the video is playing', async () => {
+            const preselectRequest: QueueItemCancelRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f1'
+            }
+
+            try {
+                await queueService.onVideoPreselected(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The video you selected is currently playing.")
+            }
+        })
+
+        it('Refuses if the video has been played', async () => {
+            const preselectRequest: QueueItemCancelRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f0'
+            }
+
+            try {
+                await queueService.onVideoPreselected(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The video you selected has already been played.")
+            }
         })
 
         it('Preselects a video if no other video is preselected', async () => {
@@ -385,23 +437,24 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             }
 
-            const result = queueService.onVideoPreselected(preselectRequest)
+            const result = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
-            const preselectedVideo = box.playlist.find(video => video.isPreselected)
+            const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
 
-            expect(preselectedVideo._id).to.equal('9cb763b6e72611381ef043f4')
+            expect(preselectedVideo.isPreselected).to.equal(true)
+            expect(result.feedback.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
         })
 
         it('Preselects a video and unselects the preselected one if it is different', async () => {
-            queueService.onVideoPreselected({
+            await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            queueService.onVideoPreselected({
+            await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f3'
@@ -409,23 +462,23 @@ describe("Queue Service", () => {
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
-            const previousSelectedVideo = box.playlist.filter(video => video._id === '9cb763b6e72611381ef043f4')
+            const previousSelectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
             expect(previousSelectedVideo.isPreselected).to.equal(false)
 
             const preselectedVideo = box.playlist.filter(video => video.isPreselected)
             expect(preselectedVideo).to.have.lengthOf(1)
 
-            expect(preselectedVideo[0]._id).to.equal('9cb763b6e72611381ef043f3')
+            expect(preselectedVideo[0]._id.toString()).to.equal('9cb763b6e72611381ef043f3')
         })
 
         it('Unselects a video if it is the one preselected', async () => {
-            queueService.onVideoPreselected({
+            await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            queueService.onVideoPreselected({
+            await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'
@@ -433,7 +486,7 @@ describe("Queue Service", () => {
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
-            const previousSelectedVideo = box.playlist.filter(video => video._id === '9cb763b6e72611381ef043f4')
+            const previousSelectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
             expect(previousSelectedVideo.isPreselected).to.equal(false)
 
             const preselectedVideo = box.playlist.filter(video => video.isPreselected)
