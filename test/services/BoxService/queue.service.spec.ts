@@ -478,11 +478,13 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            await queueService.onVideoPreselected({
+            const result = await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'
             })
+
+            expect(result.feedback.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 

@@ -171,14 +171,18 @@ export class QueueService {
                 }
             }
 
+            let contents = ''
+
             // Unselect already selected video if it exists
             if (alreadySelectedVideoIndex !== -1) {
                 box.playlist[alreadySelectedVideoIndex].isPreselected = false
+                contents = `${user.name} has removed the preselection on "$OLD_VIDEO$".`
             }
 
             // Preselect new video if it's not the same as the one that just got deselected
             if (alreadySelectedVideoIndex !== targetVideoIndex) {
                 box.playlist[targetVideoIndex].isPreselected = true
+                contents = `${user.name} has preselected the video "$NEW_VIDEO$". It will be the next video to play.`
             }
 
             const updatedBox = await BoxSchema
@@ -191,8 +195,17 @@ export class QueueService {
                 .populate("playlist.video")
                 .populate("playlist.submitted_by", "_id name")
 
+            // Feedback messages
+            if (contents.includes('$OLD_VIDEO$')) {
+                contents = contents.replace(/\$OLD_VIDEO\$/gm, `${updatedBox.playlist[alreadySelectedVideoIndex].video.name}`)
+            }
+
+            if (contents.includes('$NEW_VIDEO$')) {
+                contents = contents.replace(/\$NEW_VIDEO\$/gm, `${updatedBox.playlist[targetVideoIndex].video.name}`)
+            }
+
             const feedback = new FeedbackMessage({
-                contents: `${user.name} has preselected the video "${updatedBox.playlist[targetVideoIndex].video.name}". It will be the next video to play.`,
+                contents,
                 source: 'system',
                 scope: request.boxToken,
                 feedbackType: 'info'
