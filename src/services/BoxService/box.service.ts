@@ -14,7 +14,7 @@ const boxQueue = new Queue("box")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { Message, FeedbackMessage, QueueItemCancelRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
@@ -154,7 +154,7 @@ class BoxService {
             })
 
             // When a user deletes a video from the playlist
-            socket.on("cancel", async (request: QueueItemCancelRequest) => {
+            socket.on("cancel", async (request: QueueItemActionRequest) => {
                 try {
                     // Remove the video from the playlist (_id is sent)
                     const response = await queueService.onVideoCancelled(request)
@@ -165,6 +165,25 @@ class BoxService {
                     const message: FeedbackMessage = new FeedbackMessage({
                         author: 'system',
                         contents: 'The box is closed. The playlist cannot be changed.',
+                        source: 'system',
+                        scope: request.boxToken,
+                        feedbackType: 'error'
+                    })
+                    socket.emit("chat", message)
+                }
+            })
+
+            // When an user preselects / unselects a video
+            socket.on("preselect", async (request: QueueItemActionRequest) => {
+                try {
+                    const response = await queueService.onVideoPreselected(request)
+
+                    io.in(request.boxToken).emit("chat", response.feedback)
+                    io.in(request.boxToken).emit("box", response.updatedBox)
+                } catch (error) {
+                    const message: FeedbackMessage = new FeedbackMessage({
+                        author: 'system',
+                        contents: error.message,
                         source: 'system',
                         scope: request.boxToken,
                         feedbackType: 'error'
