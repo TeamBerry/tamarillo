@@ -173,6 +173,25 @@ class BoxService {
                 }
             })
 
+            // When an user preselects / unselects a video
+            socket.on("preselect", async (request: QueueItemActionRequest) => {
+                try {
+                    const response = await queueService.onVideoPreselected(request)
+
+                    io.in(request.boxToken).emit("chat", response.feedback)
+                    io.in(request.boxToken).emit("box", response.updatedBox)
+                } catch (error) {
+                    const message: FeedbackMessage = new FeedbackMessage({
+                        author: 'system',
+                        contents: error.message,
+                        source: 'system',
+                        scope: request.boxToken,
+                        feedbackType: 'error'
+                    })
+                    socket.emit("chat", message)
+                }
+            })
+
             /**
              * After the client auth themselves, they need to be caught up with the others in the box. It means they will ask for the
              * current video playing and must have an answer.
