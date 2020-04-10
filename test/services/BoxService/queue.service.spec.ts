@@ -657,7 +657,7 @@ describe("Queue Service", () => {
 
             await Box.create({
                 _id: '9cb763b6e72611381ef04500',
-                description: 'Box with a video playing and a preselected track',
+                description: 'Box with a video playing and a preselected video',
                 lang: 'English',
                 name: 'Box playing in random mode',
                 playlist: [
@@ -833,7 +833,7 @@ describe("Queue Service", () => {
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043f6')
         })
 
-        it('Gets the preselected track if it exists', async () => {
+        it('Gets the preselected video if it exists', async () => {
             const response = await queueService.getNextVideo('9cb763b6e72611381ef04500')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef04504')

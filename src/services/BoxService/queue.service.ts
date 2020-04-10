@@ -171,12 +171,12 @@ export class QueueService {
                 }
             }
 
-            // Unselect already selected track if it exists
+            // Unselect already selected video if it exists
             if (alreadySelectedVideoIndex !== -1) {
                 box.playlist[alreadySelectedVideoIndex].isPreselected = false
             }
 
-            // Preselect new track if it's not the same as the one that just got deselected
+            // Preselect new video if it's not the same as the one that just got deselected
             if (alreadySelectedVideoIndex !== targetVideoIndex) {
                 box.playlist[targetVideoIndex].isPreselected = true
             }
@@ -357,12 +357,12 @@ export class QueueService {
         // Search for a new video
         let nextVideoIndex = -1
 
-        // Look for a preselected track
-        const preselectedTrackIndex = box.playlist.findIndex(video => video.isPreselected)
-        if (preselectedTrackIndex !== -1) {
-            nextVideoIndex = preselectedTrackIndex
+        // Look for a preselected video
+        const preselectedVideoIndex = box.playlist.findIndex(video => video.isPreselected)
+        if (preselectedVideoIndex !== -1) {
+            nextVideoIndex = preselectedVideoIndex
         } else {
-            // Look for a track, either randomly or not
+            // Look for a video, either randomly or not
             if (box.options.random === true) {
                 const availableVideos = box.playlist.filter(video => video.startTime === null)
 
