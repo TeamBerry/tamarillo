@@ -10,7 +10,7 @@ import queueService from '../../../src/services/BoxService/queue.service'
 const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
-import { QueueItemCancelRequest } from '@teamberry/muscadine'
+import { QueueItemActionRequest } from '@teamberry/muscadine'
 import { Video } from '../../../src/models/video.model'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 
@@ -347,7 +347,7 @@ describe("Queue Service", () => {
 
     describe("Remove video from box", () => {
         it("Refuses video if the box is closed", async () => {
-            const cancelPayload: QueueItemCancelRequest = {
+            const cancelPayload: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e9'
@@ -359,7 +359,7 @@ describe("Queue Service", () => {
         })
 
         it("Removes the video from the playlist", async () => {
-            const cancelPayload: QueueItemCancelRequest = {
+            const cancelPayload: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e6',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e8'
@@ -375,7 +375,7 @@ describe("Queue Service", () => {
 
     describe('Preselect a video', () => {
         it('Refuses the order if the box is closed', async () => {
-            const preselectRequest: QueueItemCancelRequest = {
+            const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e9'
@@ -389,7 +389,7 @@ describe("Queue Service", () => {
         })
 
         it('Refuses if the video does not exist in the playlist', async () => {
-            const preselectRequest: QueueItemCancelRequest = {
+            const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '8cb763b6e72611381ef043f4'
@@ -403,7 +403,7 @@ describe("Queue Service", () => {
         })
 
         it('Refuses if the video is playing', async () => {
-            const preselectRequest: QueueItemCancelRequest = {
+            const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f1'
@@ -417,7 +417,7 @@ describe("Queue Service", () => {
         })
 
         it('Refuses if the video has been played', async () => {
-            const preselectRequest: QueueItemCancelRequest = {
+            const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f0'
@@ -431,7 +431,7 @@ describe("Queue Service", () => {
         })
 
         it('Preselects a video if no other video is preselected', async () => {
-            const preselectRequest: QueueItemCancelRequest = {
+            const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'

@@ -14,7 +14,7 @@ const boxQueue = new Queue("box")
 // Models
 const User = require("./../../models/user.model")
 const SubscriberSchema = require("./../../models/subscriber.schema")
-import { Message, FeedbackMessage, QueueItemCancelRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
@@ -154,7 +154,7 @@ class BoxService {
             })
 
             // When a user deletes a video from the playlist
-            socket.on("cancel", async (request: QueueItemCancelRequest) => {
+            socket.on("cancel", async (request: QueueItemActionRequest) => {
                 try {
                     // Remove the video from the playlist (_id is sent)
                     const response = await queueService.onVideoCancelled(request)

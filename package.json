@@ -28,7 +28,7 @@
     },
     "homepage": "https://github.com/TeamBerry/tamarillo#readme",
     "dependencies": {
-        "@teamberry/muscadine": "^0.5.0",
+        "@teamberry/muscadine": "^0.5.1",
         "array-move": "^2.2.1",
         "aws-sdk": "^2.653.0",
         "axios": "^0.19.2",

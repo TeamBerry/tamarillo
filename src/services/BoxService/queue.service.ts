@@ -8,7 +8,7 @@ dotenv.config()
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, QueueItem, QueueItemCancelRequest, VideoSubmissionRequest, FeedbackMessage, PlaylistSubmissionRequest } from "@teamberry/muscadine"
+import { Message, QueueItem, QueueItemActionRequest, VideoSubmissionRequest, FeedbackMessage, PlaylistSubmissionRequest } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
@@ -91,11 +91,11 @@ export class QueueService {
     /**
      * Removing a video from the playlist of a box.
      *
-     * @param {QueueItemCancelRequest} request
+     * @param {QueueItemActionRequest} request
      * @returns {Promise<{ feedback: Message, updatedBox: any }>}
      * @memberof PlaylistService
      */
-    public async onVideoCancelled(request: QueueItemCancelRequest): Promise<{ feedback: Message, updatedBox: any }> {
+    public async onVideoCancelled(request: QueueItemActionRequest): Promise<{ feedback: Message, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -135,7 +135,15 @@ export class QueueService {
         }
     }
 
-    public async onVideoPreselected(request: QueueItemCancelRequest): Promise<{ feedback: FeedbackMessage, updatedBox: any }>{
+    /**
+     * Preselects a video in the queue. The preselected video will be the next one to be played regardless of
+     * all the other parameters of the box
+     *
+     * @param {QueueItemActionRequest} request
+     * @returns {Promise<{ feedback: FeedbackMessage, updatedBox: any }>}
+     * @memberof QueueService
+     */
+    public async onVideoPreselected(request: QueueItemActionRequest): Promise<{ feedback: FeedbackMessage, updatedBox: any }>{
         try {
             const user = await User.findById(request.userToken)
 
