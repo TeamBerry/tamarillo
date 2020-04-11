@@ -87,7 +87,7 @@ jobs:
           command: |
             cd ${{ secrets.LOCATION }}
             npm ci
-            npm restart
+            npm restart:prod
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
