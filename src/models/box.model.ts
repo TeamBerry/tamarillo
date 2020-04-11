@@ -28,7 +28,8 @@ const boxSchema = new Schema(
             video: { type: Schema.Types.ObjectId, ref: "Video" },
             submitted_by: { type: Schema.Types.ObjectId, ref: "User" },
             startTime: Date,
-            endTime: Date
+            endTime: Date,
+            isPreselected: { type: Boolean, default: false }
         }],
         open: Boolean,
         options: {
