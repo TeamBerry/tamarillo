@@ -67,7 +67,7 @@ class BoxService {
 
                     const message: FeedbackMessage = new FeedbackMessage({
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
-                        source: "system",
+                        source: "feedback",
                         scope: request.boxToken,
                         feedbackType: 'success'
                     })
@@ -181,14 +181,13 @@ class BoxService {
                     io.in(request.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
                     const message: FeedbackMessage = new FeedbackMessage({
-                        author: 'system',
+                        author: null,
                         contents: error.message,
-                        source: 'system',
+                        source: 'feedback',
                         scope: request.boxToken,
                         feedbackType: 'error'
                     })
                     socket.emit("chat", message)
-                    socket.emit("feedback", message)
                 }
             })
 
@@ -276,14 +275,13 @@ class BoxService {
 
                     if (!author) {
                         const errorMessage: FeedbackMessage = new FeedbackMessage({
-                            source: "system",
+                            source: "feedback",
                             contents: "An error occurred, your message could not be sent.",
                             scope: message.scope,
                             feedbackType: 'error'
                         })
 
                         socket.emit("chat", errorMessage)
-                        socket.emit("feedback", errorMessage)
                     } else {
                         const dispatchedMessage: Message = new Message({
                             author: {
@@ -302,13 +300,12 @@ class BoxService {
                 } else {
                     const response = new FeedbackMessage({
                         contents: "Your message has been rejected by the server",
-                        source: "system",
+                        source: "feedback",
                         scope: message.scope,
                         feedbackType: 'error'
                     })
 
                     socket.emit("chat", response)
-                    socket.emit('feedback', response)
                 }
             })
 
