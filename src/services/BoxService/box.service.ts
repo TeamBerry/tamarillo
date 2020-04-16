@@ -13,9 +13,8 @@ const boxQueue = new Queue("box")
 
 // Models
 const User = require("./../../models/user.model")
-const SubscriberSchema = require("./../../models/subscriber.schema")
+import { SubscriberDocument, SubscriberClass, Subscriber } from "../../models/subscriber.model"
 import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
-import { Subscriber } from "./../../models/subscriber.model"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -34,7 +33,7 @@ class BoxService {
         // Start listening on port 8008.
         http.listen(8008, async () => {
             // Empty subscribers collection
-            await SubscriberSchema.deleteMany({})
+            await Subscriber.deleteMany({})
 
             console.log("Socket started; Listening on port 8008...")
         })
@@ -45,12 +44,12 @@ class BoxService {
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on("auth", async request => {
-                const client: Subscriber = {
+                const client: SubscriberClass = new SubscriberClass({
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
                     socket: socket.id
-                }
+                })
 
                 // Connection check. If the user is not valid, he's refused
                 if (!request.boxToken) {
@@ -62,9 +61,9 @@ class BoxService {
                     socket.emit("denied", message)
                 } else {
                     // Cleaning collection to avoid duplicates (safe guard)
-                    await SubscriberSchema.deleteMany({ boxToken: request.boxToken, userToken: request.userToken })
+                    await Subscriber.deleteMany({ boxToken: request.boxToken, userToken: request.userToken })
 
-                    SubscriberSchema.create(client)
+                    Subscriber.create(client)
 
                     const message: FeedbackMessage = new FeedbackMessage({
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
@@ -189,6 +188,7 @@ class BoxService {
                         feedbackType: 'error'
                     })
                     socket.emit("chat", message)
+                    socket.emit("feedback", message)
                 }
             })
 
@@ -210,7 +210,7 @@ class BoxService {
                 message.scope = request.boxToken
                 message.feedbackType = 'info'
 
-                const chatRecipient: Subscriber = await SubscriberSchema.findOne({
+                const chatRecipient: SubscriberDocument = await Subscriber.findOne({
                     userToken: request.userToken,
                     boxToken: request.boxToken
                 })
@@ -283,6 +283,7 @@ class BoxService {
                         })
 
                         socket.emit("chat", errorMessage)
+                        socket.emit("feedback", errorMessage)
                     } else {
                         const dispatchedMessage: Message = new Message({
                             author: {
@@ -307,13 +308,14 @@ class BoxService {
                     })
 
                     socket.emit("chat", response)
+                    socket.emit('feedback', response)
                 }
             })
 
             socket.on("disconnect", async () => {
                 console.log('LEAVING: ', socket.id)
                 try {
-                    await SubscriberSchema.deleteOne({ socket: socket.id })
+                    await Subscriber.deleteOne({ socket: socket.id })
                 } catch (error) {
                     // Graceful catch (silent)
                 }
@@ -360,7 +362,7 @@ class BoxService {
                     io.in(boxToken).emit('chat', message)
 
                     // Remove subscribers
-                    SubscriberSchema.deleteMany({ boxToken })
+                    Subscriber.deleteMany({ boxToken })
                     break
 
                 case "update":
