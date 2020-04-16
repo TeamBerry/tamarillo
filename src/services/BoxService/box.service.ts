@@ -208,6 +208,7 @@ class BoxService {
                 const message: FeedbackMessage = new FeedbackMessage()
                 message.scope = request.boxToken
                 message.feedbackType = 'info'
+                message.source = 'feedback'
 
                 const chatRecipient: SubscriberDocument = await Subscriber.findOne({
                     userToken: request.userToken,
@@ -219,13 +220,12 @@ class BoxService {
 
                     if (response.item !== null) {
                         message.contents = 'Currently playing: "' + response.item.video.name + '"'
-                        message.source = "system"
 
                         // Emit the response back to the client
                         socket.emit("sync", response)
                     } else {
                         message.contents = "No video is currently playing in the box."
-                        message.source = "system"
+                        message.feedbackType = 'warning'
                     }
 
                     if (chatRecipient) {
@@ -234,7 +234,7 @@ class BoxService {
                 } catch (error) {
                     // Emit the box closed message to the recipient
                     message.contents = "This box is closed. Video play is disabled."
-                    message.source = "system"
+                    message.feedbackType = 'warning'
                     if (chatRecipient) {
                         socket.emit("chat", message)
                     }
