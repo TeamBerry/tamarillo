@@ -1,14 +1,17 @@
 import arrayMove from 'array-move'
 import * as _ from "lodash"
 const axios = require("axios")
+import moment = require("moment")
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mongoose = require("./../../config/connection")
 const dotenv = require("dotenv")
 dotenv.config()
+import * as Queue from 'bull'
+const syncQueue = new Queue("sync")
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { Message, QueueItem, QueueItemActionRequest, VideoSubmissionRequest, FeedbackMessage, PlaylistSubmissionRequest } from "@teamberry/muscadine"
+import { Message, QueueItem, QueueItemActionRequest, VideoSubmissionRequest, FeedbackMessage, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
@@ -131,7 +134,7 @@ export class QueueService {
 
             return { feedback, updatedBox }
         } catch (error) {
-            throw new Error(error)
+            throw new Error(error.message)
         }
     }
 
@@ -150,7 +153,7 @@ export class QueueService {
             const box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
-                throw new Error("The box is closed. The playlist cannot be modified.")
+                throw new Error("The box is closed. The queue cannot be modified.")
             }
 
             const alreadySelectedVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video.isPreselected)
@@ -212,6 +215,34 @@ export class QueueService {
             })
 
             return { feedback, updatedBox }
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
+    public async onVideoForcePlayed(request: QueueItemActionRequest) {
+        try {
+            const box = await BoxSchema.findById(request.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The queue cannot be modified.")
+            }
+
+            const targetVideoIndex = box.playlist.findIndex(video => video._id.toString() === request.item)
+
+            if (targetVideoIndex === -1) {
+                throw new Error('The video you selected could not be found.')
+            }
+
+            if (box.playlist[targetVideoIndex].startTime !== null) {
+                if (box.playlist[targetVideoIndex].endTime !== null) {
+                    throw new Error("The video you selected has already been played.")
+                } else {
+                    throw new Error("The video you selected is currently playing.")
+                }
+            }
+
+            return this.transitionToNextVideo(request.boxToken, request.item)
         } catch (error) {
             throw new Error(error.message)
         }
@@ -335,7 +366,7 @@ export class QueueService {
      * @returns JSON of the nextVideo and the updatedBox, or null
      * @memberof PlaylistService
      */
-    public async getNextVideo(boxToken: string): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
+    public async getNextVideo(boxToken: string, targetVideo?: string): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
         const response = {
             nextVideo: null,
@@ -370,8 +401,14 @@ export class QueueService {
         // Search for a new video
         let nextVideoIndex = -1
 
+        let preselectedVideoIndex = -1
+        if (targetVideo){
+            preselectedVideoIndex = box.playlist.findIndex(video => video._id.toString() === targetVideo)
+        } else {
+            preselectedVideoIndex = box.playlist.findIndex(video => video.isPreselected)
+        }
+
         // Look for a preselected video
-        const preselectedVideoIndex = box.playlist.findIndex(video => video.isPreselected)
         if (preselectedVideoIndex !== -1) {
             nextVideoIndex = preselectedVideoIndex
         } else {
@@ -444,6 +481,49 @@ export class QueueService {
         box.playlist = newBatch
 
         return box.playlist
+    }
+
+    public async transitionToNextVideo(boxToken: string, targetVideo?: string): Promise<{syncPacket: SyncPacket, feedbackMessage: FeedbackMessage, updatedBox: Box}> {
+        const jobs = await syncQueue.getJobs(['delayed'])
+
+        jobs.map((job: Queue.Job) => {
+            if (job.data.boxToken === boxToken) {
+                job.remove()
+            }
+        })
+
+        const response = await queueService.getNextVideo(boxToken, targetVideo)
+
+        const message: FeedbackMessage = new FeedbackMessage()
+        message.scope = boxToken
+        message.feedbackType = 'info'
+        message.source = "system"
+        message.contents = 'The playlist has no upcoming videos.'
+
+        if (response.nextVideo) {
+            // Send chat message for subscribers
+            message.contents = "Currently playing: " + response.nextVideo.video.name
+
+            // Create a new sync job
+            syncQueue.add(
+                { boxToken, order: 'next' },
+                {
+                    priority: 1,
+                    delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
+                    attempts: 5,
+                    removeOnComplete: true
+                }
+            )
+        }
+
+        return {
+            syncPacket: {
+                box: boxToken,
+                item: response.nextVideo
+            },
+            feedbackMessage: message,
+            updatedBox: response.updatedBox
+        }
     }
 
     /**

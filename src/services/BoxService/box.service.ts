@@ -1,6 +1,5 @@
 // Utils imports
 import * as _ from "lodash"
-import moment = require("moment")
 
 // MongoDB & Sockets
 const express = require("express")()
@@ -163,7 +162,7 @@ class BoxService {
                 } catch (error) {
                     const message: FeedbackMessage = new FeedbackMessage({
                         author: 'system',
-                        contents: 'The box is closed. The playlist cannot be changed.',
+                        contents: error.message,
                         source: 'system',
                         scope: request.boxToken,
                         feedbackType: 'error'
@@ -188,6 +187,25 @@ class BoxService {
                         feedbackType: 'error'
                     })
                     socket.emit("chat", message)
+                }
+            })
+
+            socket.on('forcePlay', async (request: QueueItemActionRequest) => {
+                try {
+                    const {syncPacket, updatedBox, feedbackMessage} = await queueService.onVideoForcePlayed(request)
+
+                    io.in(request.boxToken).emit("sync", syncPacket)
+                    io.in(request.boxToken).emit("box", updatedBox)
+                    io.in(request.boxToken).emit("chat", feedbackMessage)
+                } catch (error) {
+                    const message: FeedbackMessage = new FeedbackMessage({
+                        author: null,
+                        contents: error.message,
+                        source: 'feedback',
+                        scope: request.boxToken,
+                        feedbackType: 'error'
+                    })
+                    socket.emit('chat', message)
                 }
             })
 
@@ -247,7 +265,7 @@ class BoxService {
             socket.on("sync", async (request: { boxToken: string, order: string }) => {
                 switch (request.order) {
                     case "next": // Go to next video
-                        this.skipVideo(request.boxToken)
+                        this.transitionToNextVideo(request.boxToken)
                         break
 
                     default:
@@ -412,23 +430,6 @@ class BoxService {
     }
 
     /**
-     * Skips a video
-     *
-     * @param {string} boxToken
-     * @memberof BoxService
-     */
-    public async skipVideo(boxToken: string) {
-        const jobs = await syncQueue.getJobs(['delayed'])
-
-        jobs.map((job: Queue.Job) => {
-            if (job.data.boxToken === boxToken) {
-                job.remove()
-            }
-        })
-        this.transitionToNextVideo(boxToken)
-    }
-
-    /**
      * Method called when the video ends; gets the next video in the playlist and sends it
      * to all subscribers in the box
      *
@@ -437,48 +438,11 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
-        const jobs = await syncQueue.getJobs(['delayed'])
+        const {syncPacket, updatedBox, feedbackMessage} = await queueService.transitionToNextVideo(boxToken)
 
-        jobs.map((job: Queue.Job) => {
-            if (job.data.boxToken === boxToken) {
-                job.remove()
-            }
-        })
-
-        const response = await queueService.getNextVideo(boxToken)
-
-        const message: FeedbackMessage = new FeedbackMessage()
-        message.scope = boxToken
-        message.feedbackType = 'info'
-
-        if (response.nextVideo) {
-            const syncPacket: SyncPacket = {
-                box: boxToken,
-                item: response.nextVideo
-            }
-            io.in(boxToken).emit("sync", syncPacket)
-
-            // Send chat message for subscribers
-            message.contents = "Currently playing: " + response.nextVideo.video.name
-            message.source = "system"
-
-            // Create a new sync job
-            syncQueue.add(
-                { boxToken, order: 'next' },
-                {
-                    priority: 1,
-                    delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
-                    attempts: 5,
-                    removeOnComplete: true
-                }
-            )
-        } else {
-            message.contents = "The playlist has no upcoming videos."
-            message.source = "system"
-        }
-
-        io.in(boxToken).emit("box", response.updatedBox)
-        io.in(boxToken).emit("chat", message)
+        io.in(boxToken).emit("sync", syncPacket)
+        io.in(boxToken).emit("box", updatedBox)
+        io.in(boxToken).emit("chat", feedbackMessage)
     }
 
     public async sendBoxToSubscribers(boxToken: string) {

@@ -161,6 +161,66 @@ describe("Queue Service", () => {
         })
 
         await Box.create({
+            _id: '9cb763b6e72611381ef053e7',
+            description: 'Box with a video playing and a preselected track',
+            lang: 'English',
+            name: 'Box playing in random mode',
+            playlist: [
+                {
+                    _id: '9cb763b6e72611381ef053f4',
+                    video: '9cb81150594b2e75f06ba90c',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef053f3',
+                    video: '9cb81150594b2e75f06ba90b',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef053f2',
+                    video: '9cb81150594b2e75f06ba8fe',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: true
+                },
+                {
+                    _id: '9cb763b6e72611381ef053f1',
+                    video: '9cb81150594b2e75f06ba90a',
+                    startTime: "2019-05-31T09:21:12+0000",
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef053f0',
+                    video: '9cb81150594b2e75f06ba90c',
+                    startTime: "2019-05-31T09:19:44+0000",
+                    endTime: "2019-05-31T09:21:12+0000",
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false
+                }
+            ],
+            creator: '9ca0df5f86abeb66da97ba5d',
+            open: true,
+            options: {
+                random: true,
+                refresh: true
+            }
+        })
+
+        await Box.create({
             _id: '9cb763b6e72611381ef043e8',
             description: null,
             lang: 'English',
@@ -353,9 +413,13 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043e9'
             }
 
-            const result = queueService.onVideoCancelled(cancelPayload)
+            try {
+                await queueService.onVideoCancelled(cancelPayload)
+            } catch (error) {
+                expect(error.message).to.equal("The box is closed. The playlist cannot be modified.")
 
-            expect(result).to.be.rejectedWith("The box is closed. The playlist cannot be modified.")
+            }
+
         })
 
         it("Removes the video from the playlist", async () => {
@@ -384,7 +448,7 @@ describe("Queue Service", () => {
             try {
                 await queueService.onVideoPreselected(preselectRequest)
             } catch (error) {
-                expect(error.message).to.equal("The box is closed. The playlist cannot be modified.")
+                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
             }
         })
 
@@ -496,6 +560,83 @@ describe("Queue Service", () => {
         })
     })
 
+    describe('Force play a video', () => {
+        it('Refuses the order if the box is closed', async () => {
+            const forcePlayRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef043e5',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043e9'
+            }
+
+            try {
+                await queueService.onVideoForcePlayed(forcePlayRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
+            }
+        })
+
+        it('Refuses if the video does not exist in the playlist', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '8cb763b6e72611381ef043f4'
+            }
+
+            try {
+                await queueService.onVideoForcePlayed(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The video you selected could not be found.")
+            }
+        })
+
+        it('Refuses if the video is already playing', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f1'
+            }
+
+            try {
+                await queueService.onVideoForcePlayed(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The video you selected is currently playing.")
+            }
+        })
+
+        it('Refuses if the video has already been played', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f0'
+            }
+
+            try {
+                await queueService.onVideoForcePlayed(preselectRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The video you selected has already been played.")
+            }
+        })
+
+        it('Plays the designated track, even if there is a preselected track', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef053e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef053f3'
+            }
+
+            const result = await queueService.onVideoForcePlayed(preselectRequest)
+
+            const box = await Box.findById('9cb763b6e72611381ef053e7')
+
+            const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef053f2')
+            const playingVideo = box.playlist.find(video => video.startTime !== null)
+
+            expect(preselectedVideo.isPreselected).to.equal(true)
+            expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef053f3')
+            expect(result.feedbackMessage.contents).to.equal(`Currently playing: The Evil King`)
+        })
+    })
+
     describe("Get current video", () => {
         it("Returns null when there's no currently playing video", async () => {
             const currentVideo = await queueService.getCurrentVideo('9cb763b6e72611381ef043e4')
@@ -504,7 +645,12 @@ describe("Queue Service", () => {
         })
 
         it("Throws an error if the box is closed", async () => {
-            expect(queueService.getCurrentVideo('9cb763b6e72611381ef043e5')).to.eventually.be.rejectedWith('This box is closed. Video play is disabled.')
+            try {
+                await queueService.getCurrentVideo('9cb763b6e72611381ef043e5')
+            } catch (error) {
+                expect(error.message).to.equal('This box is closed. Video play is disabled.')
+
+            }
         })
 
         it("Returns the currently playing video", async () => {
@@ -766,6 +912,61 @@ describe("Queue Service", () => {
                 }
             })
 
+            await Box.create({
+                _id: '9cb763b6e72611381ef05500',
+                description: 'Box with a video playing and a preselected video',
+                lang: 'English',
+                name: 'Box playing in random mode',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef05505',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05504',
+                        video: '9cb81150594b2e75f06ba90b',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d',
+                        isPreselected: true
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05503',
+                        video: '9cb81150594b2e75f06ba8fe',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05502',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: "2019-05-31T09:21:12+0000",
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    },
+                    {
+                        _id: '9cb763b6e72611381ef05501',
+                        video: '9cb81150594b2e75f06ba90c',
+                        startTime: "2019-05-31T09:19:44+0000",
+                        endTime: "2019-05-31T09:21:12+0000",
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d'
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: true,
+                options: {
+                    random: true
+                }
+            })
+
             await Video.create({
                 _id: '9cb81150594b2e75f06ba8fe',
                 link: 'Ivi1e-yCPcI',
@@ -839,6 +1040,12 @@ describe("Queue Service", () => {
             const response = await queueService.getNextVideo('9cb763b6e72611381ef04500')
 
             expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef04504')
+        })
+
+        it('Gets the selected video (overwrite by forcePlay)', async () => {
+            const response = await queueService.getNextVideo('9cb763b6e72611381ef05500', '9cb763b6e72611381ef05503')
+
+            expect(response.nextVideo._id.toString()).to.equal('9cb763b6e72611381ef05503')
         })
     })
 
