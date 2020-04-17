@@ -265,6 +265,14 @@ class BoxService {
             socket.on("sync", async (request: { boxToken: string, order: string }) => {
                 switch (request.order) {
                     case "next": // Go to next video
+                        // Clean jobs to avoid a "double skip"
+                        const jobs = await syncQueue.getJobs(['delayed'])
+
+                        jobs.map((job: Queue.Job) => {
+                            if (job.data.boxToken === request.boxToken) {
+                                job.remove()
+                            }
+                        })
                         this.transitionToNextVideo(request.boxToken)
                         break
 
