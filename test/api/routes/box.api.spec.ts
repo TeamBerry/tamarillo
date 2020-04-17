@@ -7,11 +7,11 @@ const expect = chai.expect
 import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 const User = require('./../../../src/models/user.model')
-const SubscriberSchema = require('./../../../src/models/subscriber.schema')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 import authService from '../../../src/api/services/auth.service'
+import { Subscriber } from '../../../src/models/subscriber.model'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -41,7 +41,7 @@ describe("Box API", () => {
             _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
         })
 
-        await SubscriberSchema.deleteMany({})
+        await Subscriber.deleteMany({})
 
         await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
@@ -596,7 +596,7 @@ describe("Box API", () => {
 
     describe("Gets all users currently in a box", () => {
         before(async () => {
-            await SubscriberSchema.create([
+            await Subscriber.create([
                 {
                     origin: "Blueberry",
                     boxToken: '9cb763b6e72611381ef043e4',
@@ -613,7 +613,7 @@ describe("Box API", () => {
         })
 
         after(async () => {
-            await SubscriberSchema.deleteMany({})
+            await Subscriber.deleteMany({})
         })
 
         it("Sends a 404 back if no box matches the id given", () => {
