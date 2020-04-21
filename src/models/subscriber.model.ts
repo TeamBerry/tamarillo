@@ -1,25 +1,57 @@
 import { Document, model, Schema } from "mongoose"
 
+
+export interface Connexion {
+    /**
+     * Origin of the connexion (Cranbery: mobile, Blueberry: web)
+     *
+     * @type {('Cranberry' | 'Blueberry')}
+     * @memberof Connexion
+     */
+    origin: 'Cranberry' | 'Blueberry'
+    /**
+     * Socket ID (handled by socket.io)
+     *
+     * @type {string}
+     * @memberof Connexion
+     */
+    socket: string
+}
+
+export interface ConnexionRequest extends Connexion {
+    boxToken: string
+    userToken: string
+}
+
 export class SubscriberClass {
-    public origin: string
     public boxToken: string
     public userToken: string
-    public socket: string
+    /**
+     * Lists all the connexions the user has linking to the box
+     *
+     * @type {Array<Connexion>}
+     * @memberof SubscriberClass
+     */
+    public connexions: Array<Connexion>
 
     constructor(subscriber: SubscriberClass) {
-        this.origin = subscriber.origin ?? null
         this.boxToken = subscriber.boxToken ?? null
         this.userToken = subscriber.userToken ?? null
-        this.socket = subscriber.socket ?? null
+        this.connexions = subscriber.connexions ?? []
     }
 }
 
 const subscriberSchema = new Schema(
     {
-        origin: String,
         boxToken: String,
         userToken: String,
-        socket: String
+        connexions: [
+            {
+                _id: false,
+                origin: String,
+                socket: String
+            }
+        ]
     },
     {
         timestamps: true

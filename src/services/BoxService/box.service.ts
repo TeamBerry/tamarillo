@@ -12,7 +12,7 @@ const boxQueue = new Queue("box")
 
 // Models
 const User = require("./../../models/user.model")
-import { SubscriberDocument, SubscriberClass, Subscriber } from "../../models/subscriber.model"
+import { Subscriber, ConnexionRequest } from "../../models/subscriber.model"
 import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 
 // Import services that need to be managed
@@ -31,8 +31,8 @@ class BoxService {
 
         // Start listening on port 8008.
         http.listen(8008, async () => {
-            // Empty subscribers collection
-            await Subscriber.deleteMany({})
+            // Empty all connexions
+            await Subscriber.update({}, { $set: { connexions: [] } }, { multi: true })
 
             console.log("Socket started; Listening on port 8008...")
         })
@@ -43,46 +43,66 @@ class BoxService {
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on("auth", async request => {
-                const client: SubscriberClass = new SubscriberClass({
+                const connexionRequest: ConnexionRequest = {
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
                     socket: socket.id
-                })
+                }
 
                 // Connection check. If the user is not valid, he's refused
-                if (!request.boxToken) {
+                if (!connexionRequest.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied.",
-                        scope: request.boxToken
+                        scope: connexionRequest.boxToken
                     }
                     socket.emit("denied", message)
                 } else {
                     // Cleaning collection to avoid duplicates (safe guard)
-                    await Subscriber.deleteMany({ boxToken: request.boxToken, userToken: request.userToken })
+                    const userSubscription = await Subscriber.findOne(
+                        { boxToken: connexionRequest.boxToken, userToken: connexionRequest.userToken }
+                    )
 
-                    Subscriber.create(client)
+                    if (!userSubscription) {
+                        await Subscriber.create({
+                            boxToken: connexionRequest.boxToken,
+                            userToken: connexionRequest.userToken,
+                            connexions: [
+                                {
+                                    origin: connexionRequest.origin,
+                                    socket: connexionRequest.socket
+                                }
+                            ]
+                        })
+                    } else {
+                        await Subscriber.findByIdAndUpdate(
+                            userSubscription._id,
+                            {
+                                $push: { connexions: { origin: connexionRequest.origin, socket: connexionRequest.socket } }
+                            }
+                        )
+                    }
 
                     const message: FeedbackMessage = new FeedbackMessage({
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
                         source: "feedback",
-                        scope: request.boxToken,
+                        scope: connexionRequest.boxToken,
                         feedbackType: 'success'
                     })
 
                     // Join Box room
-                    socket.join(request.boxToken)
+                    socket.join(connexionRequest.boxToken)
 
-                    io.in(request.boxToken).clients((error, clients) => {
-                        console.log(`CLIENTS IN ROOM ${request.boxToken}`, clients)
+                    io.in(connexionRequest.boxToken).clients((error, clients) => {
+                        console.log(`CLIENTS IN ROOM ${connexionRequest.boxToken}`, clients)
                     })
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
 
                     // Emit Youtube Key for mobile
-                    if (client.origin === 'Cranberry') {
+                    if (connexionRequest.origin === 'Cranberry') {
                         socket.emit('bootstrap', {
                             boxKey: process.env.CRANBERRY_KEY
                         })
@@ -228,11 +248,6 @@ class BoxService {
                 message.feedbackType = 'info'
                 message.source = 'feedback'
 
-                const chatRecipient: SubscriberDocument = await Subscriber.findOne({
-                    userToken: request.userToken,
-                    boxToken: request.boxToken
-                })
-
                 try {
                     const response = await this.onUserJoined(request.boxToken)
 
@@ -246,16 +261,12 @@ class BoxService {
                         message.feedbackType = 'warning'
                     }
 
-                    if (chatRecipient) {
-                        socket.emit("chat", message)
-                    }
+                    socket.emit("chat", message)
                 } catch (error) {
                     // Emit the box closed message to the recipient
                     message.contents = "This box is closed. Video play is disabled."
                     message.feedbackType = 'warning'
-                    if (chatRecipient) {
-                        socket.emit("chat", message)
-                    }
+                    socket.emit("chat", message)
                 }
             })
 
@@ -338,7 +349,10 @@ class BoxService {
             socket.on("disconnect", async () => {
                 console.log('LEAVING: ', socket.id)
                 try {
-                    await Subscriber.deleteOne({ socket: socket.id })
+                    await Subscriber.findOneAndUpdate(
+                        { 'connexions.socket': socket.id },
+                        { $pull: { connexions: { socket: socket.id } } }
+                    )
                 } catch (error) {
                     // Graceful catch (silent)
                 }

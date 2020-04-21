@@ -343,7 +343,13 @@ export class BoxApi {
 
     public async users(request: Request, response: Response): Promise<Response> {
         try {
-            const subscribersOfBox: Array<string> = (await Subscriber.find({ boxToken: request.params.box, userToken: { $not: /^user-[a-zA-Z0-9]{20}/ } }))
+            const subscribersOfBox: Array<string> = (
+                await Subscriber.find({
+                    "boxToken": request.params.box,
+                    "userToken": { $not: /^user-[a-zA-Z0-9]{20}/ },
+                    "connexions.0": { $exists: true }
+                })
+            )
                 .map(subscriber => subscriber.userToken)
 
             const users = await User
