@@ -12,13 +12,14 @@ const boxQueue = new Queue("box")
 
 // Models
 const User = require("./../../models/user.model")
-import { Subscriber, ConnexionRequest } from "../../models/subscriber.model"
+import { Subscriber, ConnexionRequest, BerryCount } from "../../models/subscriber.model"
 import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
 import queueService from "./queue.service"
 import { BoxJob } from "../../models/box.job"
+import berriesService from "./berries.service"
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -60,12 +61,12 @@ class BoxService {
                     socket.emit("denied", message)
                 } else {
                     // Cleaning collection to avoid duplicates (safe guard)
-                    const userSubscription = await Subscriber.findOne(
+                    let userSubscription = await Subscriber.findOne(
                         { boxToken: connexionRequest.boxToken, userToken: connexionRequest.userToken }
                     )
 
                     if (!userSubscription) {
-                        await Subscriber.create({
+                        userSubscription = await Subscriber.create({
                             boxToken: connexionRequest.boxToken,
                             userToken: connexionRequest.userToken,
                             connexions: [
@@ -73,10 +74,11 @@ class BoxService {
                                     origin: connexionRequest.origin,
                                     socket: connexionRequest.socket
                                 }
-                            ]
+                            ],
+                            berries: 0
                         })
                     } else {
-                        await Subscriber.findByIdAndUpdate(
+                        userSubscription = await Subscriber.findByIdAndUpdate(
                             userSubscription._id,
                             {
                                 $push: { connexions: { origin: connexionRequest.origin, socket: connexionRequest.socket } }
@@ -101,12 +103,20 @@ class BoxService {
                     // Emit confirmation message
                     socket.emit("confirm", message)
 
-                    // Emit Youtube Key for mobile
                     if (connexionRequest.origin === 'Cranberry') {
+                        // Emit Youtube Key for mobile
                         socket.emit('bootstrap', {
                             boxKey: process.env.CRANBERRY_KEY
                         })
                     }
+
+                    const berryCount: BerryCount = {
+                        userToken: userSubscription.userToken,
+                        boxToken: userSubscription.boxToken,
+                        berries: userSubscription.berries
+                    }
+
+                    socket.emit('berries', berryCount)
                 }
             })
 
@@ -133,6 +143,16 @@ class BoxService {
                     if (currentVideoIndex === -1) {
                         this.transitionToNextVideo(request.boxToken)
                     }
+
+                    const newBerriesCount: number = await berriesService.increaseBerryCount({userToken: request.userToken, boxToken: request.boxToken})
+
+                    console.log('NEW BERRIES COUNT: ', newBerriesCount)
+
+                    socket.emit('berries', {
+                        userToken: request.userToken,
+                        boxToken: request.boxToken,
+                        berries: newBerriesCount
+                    } as BerryCount)
                 } catch (error) {
                     const message: FeedbackMessage = new FeedbackMessage({
                         author: "system",

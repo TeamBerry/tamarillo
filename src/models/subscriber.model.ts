@@ -23,6 +23,8 @@ export interface ConnexionRequest extends Connexion {
     userToken: string
 }
 
+export type BerryCount = Pick<SubscriberClass | SubscriberDocument, 'userToken' | 'boxToken' | 'berries'>
+
 export class SubscriberClass {
     public boxToken: string
     public userToken: string
@@ -33,11 +35,13 @@ export class SubscriberClass {
      * @memberof SubscriberClass
      */
     public connexions: Array<Connexion>
+    public berries: number
 
     constructor(subscriber: SubscriberClass) {
         this.boxToken = subscriber.boxToken ?? null
         this.userToken = subscriber.userToken ?? null
         this.connexions = subscriber.connexions ?? []
+        this.berries = subscriber.berries ?? 0
     }
 }
 
@@ -51,7 +55,8 @@ const subscriberSchema = new Schema(
                 origin: String,
                 socket: String
             }
-        ]
+        ],
+        berries: { type: Number, default: 0 }
     },
     {
         timestamps: true
