@@ -14,7 +14,7 @@ const berriesQueue = new Queue("berries")
 // Models
 const User = require("./../../models/user.model")
 import { Subscriber, ConnexionRequest, BerryCount } from "../../models/subscriber.model"
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -88,7 +88,7 @@ class BoxService {
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
                         source: "feedback",
                         scope: connexionRequest.boxToken,
-                        feedbackType: 'success'
+                        context: 'success'
                     })
 
                     // Join Box room
@@ -144,12 +144,10 @@ class BoxService {
                         berries: newBerriesCount
                     } as BerryCount)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: "system",
+                    const message = new FeedbackMessage({
                         contents: error.message,
-                        source: "system",
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
 
                     socket.emit("chat", message)
@@ -169,12 +167,10 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: "system",
+                    const message = new FeedbackMessage({
                         contents: "Your playlist could not be submitted.",
-                        source: "system",
                         scope: request.boxToken,
-                        feedbackType: "error"
+                        context: "error"
                     })
                     socket.emit("chat", message)
                 }
@@ -189,12 +185,10 @@ class BoxService {
                     io.in(request.boxToken).emit("chat", response.feedback)
                     io.in(request.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: 'system',
+                    const message = new FeedbackMessage({
                         contents: error.message,
-                        source: 'system',
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
                     socket.emit("chat", message)
                 }
@@ -205,15 +199,21 @@ class BoxService {
                 try {
                     const response = await queueService.onVideoPreselected(request)
 
+                    const targetSubscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    socket.emit('berries', {
+                        userToken: request.userToken,
+                        boxToken: request.boxToken,
+                        berries: targetSubscriber.berries
+                    })
+
                     io.in(request.boxToken).emit("chat", response.feedback)
                     io.in(request.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: null,
+                    const message = new FeedbackMessage({
                         contents: error.message,
-                        source: 'feedback',
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
                     socket.emit("chat", message)
                 }
@@ -228,12 +228,10 @@ class BoxService {
                     io.in(request.boxToken).emit("box", updatedBox)
                     io.in(request.boxToken).emit("chat", feedbackMessage)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: null,
+                    const message = new FeedbackMessage({
                         contents: error.message,
-                        source: 'feedback',
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
                     socket.emit('chat', message)
                 }
@@ -253,10 +251,10 @@ class BoxService {
              * }
              */
             socket.on("start", async (request: BoxScope) => {
-                const message: FeedbackMessage = new FeedbackMessage()
-                message.scope = request.boxToken
-                message.feedbackType = 'info'
-                message.source = 'feedback'
+                const message = new FeedbackMessage({
+                    context: 'info',
+                    scope: request.boxToken
+                })
 
                 try {
                     const response = await this.onUserJoined(request.boxToken)
@@ -268,14 +266,14 @@ class BoxService {
                         socket.emit("sync", response)
                     } else {
                         message.contents = "No video is currently playing in the box."
-                        message.feedbackType = 'warning'
+                        message.context = 'warning'
                     }
 
                     socket.emit("chat", message)
                 } catch (error) {
                     // Emit the box closed message to the recipient
                     message.contents = "This box is closed. Video play is disabled."
-                    message.feedbackType = 'warning'
+                    message.context = 'warning'
                     socket.emit("chat", message)
                 }
             })
@@ -310,11 +308,10 @@ class BoxService {
                     const author = await User.findById(message.author)
 
                     if (!author) {
-                        const errorMessage: FeedbackMessage = new FeedbackMessage({
-                            source: "feedback",
+                        const errorMessage = new FeedbackMessage({
                             contents: "An error occurred, your message could not be sent.",
                             scope: message.scope,
-                            feedbackType: 'error'
+                            context: 'error'
                         })
 
                         socket.emit("chat", errorMessage)
@@ -336,9 +333,8 @@ class BoxService {
                 } else {
                     const response = new FeedbackMessage({
                         contents: "Your message has been rejected by the server",
-                        source: "feedback",
                         scope: message.scope,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
 
                     socket.emit("chat", response)
@@ -365,11 +361,10 @@ class BoxService {
             const { boxToken, subject }: BoxJob = job.data
 
             // Do things depending on the subject
-            const message: FeedbackMessage = new FeedbackMessage({
-                author: 'system',
+            const message = new SystemMessage({
                 source: 'system',
                 scope: boxToken,
-                feedbackType: 'info'
+                context: 'info'
             })
             switch (subject) {
                 case "close":

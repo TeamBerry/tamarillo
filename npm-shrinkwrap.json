@@ -200,9 +200,9 @@
       "integrity": "sha512-mwhXGkRV5dlvQc4EgPDxDxO6WuMBVymGFd1CA+2Y+z5dG9MNspoQ+AWjl/Ld1MnpCL8AKbosZlDVohqcIwuWsw=="
     },
     "@teamberry/muscadine": {
-      "version": "0.5.1",
-      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.5.1/88e50eb27d53b0ca3ba712a8fec2ae7dc51b18f8ea0dafa987d080b8865c9e47",
-      "integrity": "sha512-m248Zs35nLB0hS5+9y1kiEEbYE/AnD1J9EmAAisOj8MffxDD59xV3L2nsEgDo7Ogx/VPvrLNHBqixYwZQh0fOQ=="
+      "version": "0.6.3",
+      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.6.3/ee052b9982dee02b1c84067434876e3dd8320cac10244d4992b954c6b1de1046",
+      "integrity": "sha512-+YwKLl8NqrManH7vWppZMNdHFmVMeT42io8mch4FvrHFwkwkpSlLYeA4mdWEznrzSNkB4Krg2yKMAed+NWBjyg=="
     },
     "@types/babel-types": {
       "version": "7.0.7",
