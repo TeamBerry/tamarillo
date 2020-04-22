@@ -29,18 +29,15 @@ const BoxSchema = require("./../../models/box.model")
  */
 class BoxService {
     public init() {
-        console.log("Manager service initialisation...")
+        console.log("Box service initialisation...")
 
         // Start listening on port 8008.
         http.listen(8008, async () => {
             // Empty all connexions
             await Subscriber.update({}, { $set: { connexions: [] } }, { multi: true })
-
-            console.log("Socket started; Listening on port 8008...")
         })
 
         io.on("connection", socket => {
-            console.log("Connection attempt.")
             /**
              * When an user joins the box, they will have to auth themselves.
              */
@@ -97,10 +94,6 @@ class BoxService {
                     // Join Box room
                     socket.join(connexionRequest.boxToken)
 
-                    io.in(connexionRequest.boxToken).clients((error, clients) => {
-                        console.log(`CLIENTS IN ROOM ${connexionRequest.boxToken}`, clients)
-                    })
-
                     // Emit confirmation message
                     socket.emit("confirm", message)
 
@@ -124,12 +117,7 @@ class BoxService {
                 }
             })
 
-            /**
-             * What to do when you've got a video.
-             *
-             * @param {VideoSubmissionRequest} payload the Video Payload
-             */
-            // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
+            // When a video is submitted
             socket.on("video", async (request: VideoSubmissionRequest) => {
                 // Emitting feedback to the chat
                 try {
@@ -150,8 +138,6 @@ class BoxService {
 
                     const newBerriesCount: number = await berriesService.increaseBerryCount({userToken: request.userToken, boxToken: request.boxToken})
 
-                    console.log('NEW BERRIES COUNT: ', newBerriesCount)
-
                     socket.emit('berries', {
                         userToken: request.userToken,
                         boxToken: request.boxToken,
@@ -160,8 +146,7 @@ class BoxService {
                 } catch (error) {
                     const message: FeedbackMessage = new FeedbackMessage({
                         author: "system",
-                        // TODO: Extract from the error
-                        contents: "This box is closed. Submission is disallowed.",
+                        contents: error.message,
                         source: "system",
                         scope: request.boxToken,
                         feedbackType: 'error'
@@ -234,6 +219,7 @@ class BoxService {
                 }
             })
 
+            // When a user force plays a video
             socket.on('forcePlay', async (request: QueueItemActionRequest) => {
                 try {
                     const {syncPacket, updatedBox, feedbackMessage} = await queueService.onVideoForcePlayed(request)
@@ -266,7 +252,7 @@ class BoxService {
              *  "userToken": the document ID of the user
              * }
              */
-            socket.on("start", async (request: { boxToken: string, userToken: string }) => {
+            socket.on("start", async (request: BoxScope) => {
                 const message: FeedbackMessage = new FeedbackMessage()
                 message.scope = request.boxToken
                 message.feedbackType = 'info'
@@ -316,18 +302,7 @@ class BoxService {
                 }
             })
 
-            /**
-             * What to do when you've got a chat message
-             *
-             * @param message The message has the following structure:
-             * {
-             *  'author': the document ID of the user who sent the message,
-             *  'contents': the contents of the message,
-             *  'source': the source (user, bot, system...)
-             *  'scope': the document ID of the box or of the user the message is targetting
-             *  'time': the timestamp of the message
-             * }
-             */
+            // Handling chat messages
             socket.on("chat", async (message: Message) => {
                 // Get author full subscriber details
                 if (await chatService.isMessageValid(message)) {
