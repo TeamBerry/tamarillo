@@ -9,11 +9,12 @@ io.set("transports", ["websocket"])
 import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 const boxQueue = new Queue("box")
+const berriesQueue = new Queue("berries")
 
 // Models
 const User = require("./../../models/user.model")
 import { Subscriber, ConnexionRequest, BerryCount } from "../../models/subscriber.model"
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -110,6 +111,7 @@ class BoxService {
                         })
                     }
 
+                    // Berries
                     const berryCount: BerryCount = {
                         userToken: userSubscription.userToken,
                         boxToken: userSubscription.boxToken,
@@ -117,6 +119,8 @@ class BoxService {
                     }
 
                     socket.emit('berries', berryCount)
+
+                    berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
                 }
             })
 
@@ -369,10 +373,11 @@ class BoxService {
             socket.on("disconnect", async () => {
                 console.log('LEAVING: ', socket.id)
                 try {
-                    await Subscriber.findOneAndUpdate(
+                    const targetSubscriber = await Subscriber.findOneAndUpdate(
                         { 'connexions.socket': socket.id },
                         { $pull: { connexions: { socket: socket.id } } }
                     )
+                    berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
                 } catch (error) {
                     // Graceful catch (silent)
                 }
@@ -443,6 +448,35 @@ class BoxService {
 
             if (order === 'next') {
                 this.transitionToNextVideo(boxToken)
+            }
+
+            done()
+        })
+
+        // Activity for all users in boxes
+        berriesQueue.process(async (job, done) => {
+            console.log('BERRIES JOB DONE: ', job.data)
+
+            const scope: BoxScope = job.data.scope
+            const amount: number = job.data.amount
+
+            await berriesService.increaseBerryCount(scope, amount)
+
+            await berriesService.stopNaturalIncrease(scope)
+
+            // Restart only if the subscriber is still active
+            const targetSubscriber = await Subscriber.findOne({ boxToken: scope.boxToken, userToken: scope.userToken })
+            if (targetSubscriber.connexions.length > 0) {
+                berriesService.startNaturalIncrease(scope)
+
+                // Alert via the sockets that the count increased
+                targetSubscriber.connexions.forEach(connexion => {
+                    io.to(connexion.socket).emit('berries', {
+                        userToken: scope.userToken,
+                        boxToken: scope.boxToken,
+                        berries: targetSubscriber.berries
+                    })
+                })
             }
 
             done()

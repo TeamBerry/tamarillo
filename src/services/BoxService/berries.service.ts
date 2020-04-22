@@ -1,7 +1,42 @@
+import * as Queue from 'bull'
+const berriesQueue = new Queue("berries")
+
 import { BoxScope } from "@teamberry/muscadine"
 import { Subscriber } from "../../models/subscriber.model"
 
 class BerriesService {
+    public startNaturalIncrease(scope: BoxScope) {
+        const amount = this.computeNaturalGain()
+
+        berriesQueue.add(
+            { scope, amount },
+            {
+                priority: 1,
+                // 10 minutes
+                delay: 10 * 60 * 1000,
+                removeOnComplete: true
+            }
+        )
+    }
+
+    public async stopNaturalIncrease(scope: BoxScope) {
+        const jobs = await berriesQueue.getJobs(['delayed'])
+
+        jobs.map((job: Queue.Job) => {
+            if (job.data.scope.boxToken === scope.boxToken && job.data.scope.userToken === scope.userToken) {
+                job.remove()
+            }
+        })
+    }
+
+    /**
+     * Adds berries to a subscriber scope (userToken + boxToken)
+     *
+     * @param {BoxScope} scope
+     * @param {number} [amount]
+     * @returns {Promise<number>}
+     * @memberof BerriesService
+     */
     public async increaseBerryCount(scope: BoxScope, amount?: number): Promise<number> {
         const amountToAdd = amount ?? this.computeBerriesGain()
 
@@ -14,6 +49,14 @@ class BerriesService {
         return updatedSubscription.berries
     }
 
+    /**
+     * Removes berries from a subscriber scope (userToken + boxToken)
+     *
+     * @param {BoxScope} scope
+     * @param {number} amount
+     * @returns {Promise<number>}
+     * @memberof BerriesService
+     */
     public async decreaseBerryCount(scope: BoxScope, amount: number): Promise<number> {
         const updatedSubscription = await Subscriber.findOneAndUpdate(
             { userToken: scope.userToken, boxToken: scope.boxToken },
@@ -43,6 +86,24 @@ class BerriesService {
         }
 
         return 5
+    }
+
+    public computeNaturalGain(): number {
+        const willAdd = Math.random()
+
+        console.log(willAdd)
+
+        // 0.05%
+        if (willAdd < 0.0005) {
+            return 100
+        }
+
+        // 3%
+        if (willAdd < 0.02) {
+            return 50
+        }
+
+        return 10
     }
 }
 
