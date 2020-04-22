@@ -12,8 +12,8 @@ class BerriesService {
             { scope, amount },
             {
                 priority: 1,
-                // 10 minutes
-                delay: 10 * 60 * 1000,
+                // 5 minutes
+                delay: 5 * 60 * 1000,
                 removeOnComplete: true
             }
         )
@@ -77,28 +77,26 @@ class BerriesService {
 
         // 1%
         if (willAdd < 0.01) {
-            return 20
+            return 10
         }
 
         // 3%
         if (willAdd < 0.03) {
-            return 10
+            return 5
         }
 
-        return 5
+        return 2
     }
 
     public computeNaturalGain(): number {
         const willAdd = Math.random()
-
-        console.log(willAdd)
 
         // 0.05%
         if (willAdd < 0.0005) {
             return 100
         }
 
-        // 3%
+        // 2%
         if (willAdd < 0.02) {
             return 50
         }
