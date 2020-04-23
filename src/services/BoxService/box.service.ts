@@ -222,7 +222,15 @@ class BoxService {
             // When a user force plays a video
             socket.on('forcePlay', async (request: QueueItemActionRequest) => {
                 try {
-                    const {syncPacket, updatedBox, feedbackMessage} = await queueService.onVideoForcePlayed(request)
+                    const { syncPacket, updatedBox, feedbackMessage } = await queueService.onVideoForcePlayed(request)
+
+                    const targetSubscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    socket.emit('berries', {
+                        userToken: request.userToken,
+                        boxToken: request.boxToken,
+                        berries: targetSubscriber.berries
+                    })
 
                     io.in(request.boxToken).emit("sync", syncPacket)
                     io.in(request.boxToken).emit("box", updatedBox)
@@ -288,6 +296,12 @@ class BoxService {
                         const sourceSubscriber = await Subscriber.findOne({ 'connexions.socket': socket.id })
 
                         const { syncPacket, updatedBox, feedbackMessage } = await queueService.onVideoSkipped({ userToken: sourceSubscriber.userToken, boxToken: request.boxToken })
+
+                        socket.emit('berries', {
+                            userToken: sourceSubscriber.userToken,
+                            boxToken: request.boxToken,
+                            berries: sourceSubscriber.berries - 30
+                        })
 
                         io.in(request.boxToken).emit("sync", syncPacket)
                         io.in(request.boxToken).emit("box", updatedBox)
