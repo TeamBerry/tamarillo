@@ -336,15 +336,6 @@ export class QueueService {
                 throw new Error("An user has used berries to play the currently playing video. You cannot skip it.")
             }
 
-            // Clean jobs to avoid a "double skip"
-            const jobs = await syncQueue.getJobs(['delayed'])
-
-            jobs.map((job: Queue.Job) => {
-                if (job.data.boxToken === scope.boxToken) {
-                    job.remove()
-                }
-            })
-
             const { syncPacket, updatedBox, feedbackMessage } = await this.transitionToNextVideo(scope.boxToken, null, areBerriesSpent)
 
             const playingVideo = updatedBox.playlist.find(video => video.startTime !== null && video.endTime === null)
@@ -611,7 +602,20 @@ export class QueueService {
         return box.playlist
     }
 
-    public async transitionToNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{syncPacket: SyncPacket, feedbackMessage: SystemMessage, updatedBox: Box}> {
+    public async transitionToNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{ syncPacket: SyncPacket, feedbackMessage: SystemMessage, updatedBox: Box }> {
+        try {
+            // Clean jobs to avoid a "double skip"
+            const jobs = await syncQueue.getJobs(['delayed'])
+
+            jobs.map((job: Queue.Job) => {
+                if (job.data.boxToken === boxToken) {
+                    job.remove()
+                }
+            })
+        } catch (error) {
+            console.log('SILENT JOB CLEANUP ERROR')
+        }
+
         const response = await queueService.getNextVideo(boxToken, targetVideo, withBerries)
 
         const message: SystemMessage = new SystemMessage({
