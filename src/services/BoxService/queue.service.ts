@@ -478,6 +478,7 @@ export class QueueService {
         if (nextVideoIndex !== -1) {
             box.playlist[nextVideoIndex].startTime = transitionTime
             box.playlist[nextVideoIndex].isPreselected = false
+            box.playlist[nextVideoIndex].stateForcedWithBerries = false
             response.nextVideo = box.playlist[nextVideoIndex]
 
             // Puts the starting video between the upcoming & played videos
