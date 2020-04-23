@@ -201,6 +201,7 @@ export class QueueService {
                 box.playlist[alreadySelectedVideoIndex].isPreselected = false
                 if (areBerriesSpent) {
                     feedback.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to remove the preslection on "$OLD_VIDEO$".`
+                    feedback.context = 'berries'
                 } else {
                     feedback.contents = `${user.name} has removed the preselection on "$OLD_VIDEO$".`
                     // feedback.feedbackType = 'berries'
@@ -212,6 +213,7 @@ export class QueueService {
                 box.playlist[targetVideoIndex].isPreselected = true
                 if (areBerriesSpent) {
                     feedback.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to preselect the video "$NEW_VIDEO$". It will be the next video to play.`
+                    feedback.context = 'berries'
                 } else {
                     feedback.contents = `${user.name} has preselected the video "$NEW_VIDEO$". It will be the next video to play.`
                     // feedback.feedbackType = 'berries'
