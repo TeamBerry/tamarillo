@@ -266,6 +266,13 @@ export class QueueService {
                 }
             }
 
+            const alreadyPlayingVideoIndex = box.playlist.findIndex(video => video.startTime !== null && video.endTime === null && video.stateForcedWithBerries === true)
+
+            if (alreadyPlayingVideoIndex !== -1) {
+                // If the already preselected video was forced with berries, the operation cannot continue
+                throw new Error("An user has used berries to play the currently playing video. You cannot overwrite it.")
+            }
+
             const targetVideoIndex = box.playlist.findIndex(video => video._id.toString() === request.item)
 
             if (targetVideoIndex === -1) {
@@ -284,6 +291,10 @@ export class QueueService {
 
             if (areBerriesSpent) {
                 berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
+
+                const playingVideo = updatedBox.playlist.find(video => video._id.toString() === request.item)
+                feedbackMessage.context = 'berries'
+                feedbackMessage.contents = `${user.name} has spent ${PLAY_NOW_BERRY_COST} berries to play "${playingVideo.video.name}".`
             }
 
             return {
