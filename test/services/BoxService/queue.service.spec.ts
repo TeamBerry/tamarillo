@@ -381,19 +381,19 @@ describe("Queue Service", () => {
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 70
+                    berries: 7
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef143e7',
                     connexions: [],
-                    berries: 110
+                    berries: 11
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef243e7',
                     connexions: [],
-                    berries: 780
+                    berries: 78
                 }
             ])
         })
@@ -662,7 +662,7 @@ describe("Queue Service", () => {
                 await queueService.onVideoPreselected(preselectRequest)
                 expect.fail()
             } catch (error) {
-                expect(error.message).to.equal("You do not have enough berries to use this action. You need 30 more.")
+                expect(error.message).to.equal("You do not have enough berries to use this action. You need 3 more.")
             }
         })
 
@@ -696,9 +696,9 @@ describe("Queue Service", () => {
 
             const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7'})
 
-            expect(targetSubscription.berries).to.equal(10)
+            expect(targetSubscription.berries).to.equal(1)
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedback.contents).to.equal(`Brock has spent 100 berries to preselect the video "Connected". It will be the next video to play.`)
+            expect(result.feedback.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
         })
 
         it('Preselects a video if no other video is preselected', async () => {
@@ -780,19 +780,19 @@ describe("Queue Service", () => {
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 70
+                    berries: 7
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef143e7',
                     connexions: [],
-                    berries: 510
+                    berries: 51
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef243e7',
                     connexions: [],
-                    berries: 780
+                    berries: 78
                 }
             ])
         })
@@ -1061,7 +1061,7 @@ describe("Queue Service", () => {
                 await queueService.onVideoForcePlayed(preselectRequest)
                 expect.fail()
             } catch (error) {
-                expect(error.message).to.equal("You do not have enough berries to use this action. You need 230 more.")
+                expect(error.message).to.equal("You do not have enough berries to use this action. You need 23 more.")
             }
         })
 
@@ -1094,9 +1094,9 @@ describe("Queue Service", () => {
             const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7'})
             const playingVideo = box.playlist.find(video => video.startTime !== null)
 
-            expect(targetSubscription.berries).to.equal(210)
+            expect(targetSubscription.berries).to.equal(21)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef143f4')
-            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 300 berries to play "Connected".`)
+            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 30 berries to play "Connected".`)
         })
 
         it('Plays the designated track, even if there is a preselected track', async () => {

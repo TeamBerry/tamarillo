@@ -18,8 +18,8 @@ import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.m
 import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 
-const PLAY_NEXT_BERRY_COST = 100
-const PLAY_NOW_BERRY_COST = 300
+const PLAY_NEXT_BERRY_COST = 10
+const PLAY_NOW_BERRY_COST = 30
 
 export class QueueService {
     /**

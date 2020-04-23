@@ -72,20 +72,20 @@ class BerriesService {
 
         // 0.05%
         if (willAdd < 0.0005) {
-            return 50
+            return 6
         }
 
         // 1%
         if (willAdd < 0.01) {
-            return 10
+            return 2
         }
 
-        // 3%
-        if (willAdd < 0.03) {
-            return 5
+        // 25%
+        if (willAdd < 0.25) {
+            return 1
         }
 
-        return 2
+        return 0
     }
 
     public computeNaturalGain(): number {
@@ -93,15 +93,15 @@ class BerriesService {
 
         // 0.05%
         if (willAdd < 0.0005) {
-            return 100
+            return 8
         }
 
         // 2%
         if (willAdd < 0.02) {
-            return 50
+            return 3
         }
 
-        return 10
+        return 1
     }
 }
 
