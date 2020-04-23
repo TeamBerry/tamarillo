@@ -31,7 +31,8 @@ const boxSchema = new Schema(
             submitted_by: { type: Schema.Types.ObjectId, ref: "User" },
             startTime: Date,
             endTime: Date,
-            isPreselected: { type: Boolean, default: false }
+            isPreselected: { type: Boolean, default: false },
+            stateForcedWithBerries: { type: Boolean, default: false }
         }],
         open: Boolean,
         options: {

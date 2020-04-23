@@ -388,6 +388,12 @@ describe("Queue Service", () => {
                     boxToken: '9cb763b6e72611381ef143e7',
                     connexions: [],
                     berries: 110
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 780
                 }
             ])
         })
@@ -515,6 +521,70 @@ describe("Queue Service", () => {
                         random: true,
                         refresh: true
                     }
+                },
+                {
+                    _id: '9cb763b6e72611381ef243e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef243f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: true,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        refresh: true
+                    }
                 }
             ])
         })
@@ -522,6 +592,7 @@ describe("Queue Service", () => {
         afterEach(async () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
             await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
         })
 
         it('Refuses the order if the box is closed', async () => {
@@ -592,6 +663,21 @@ describe("Queue Service", () => {
                 expect.fail()
             } catch (error) {
                 expect(error.message).to.equal("You do not have enough berries to use this action. You need 30 more.")
+            }
+        })
+
+        it('Refuses if there is another video already preselected with berries', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef243e7',
+                userToken: '9ca0df5f86abeb66da97ba5f',
+                item: '9cb763b6e72611381ef243f4'
+            }
+
+            try {
+                await queueService.onVideoPreselected(preselectRequest)
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal("Another video has already been preselected with berries. You cannot overwrite the preselected video.")
             }
         })
 
@@ -894,6 +980,7 @@ describe("Queue Service", () => {
                     name: 'The Piano Before Cynthia',
                 },
                 startTime: new Date("2019-05-31T09:19:44+0000"),
+                stateForcedWithBerries: false,
                 endTime: null,
                 isPreselected: false,
                 submittedAt: new Date("2019-05-31T09:19:41+0000"),

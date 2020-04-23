@@ -193,6 +193,11 @@ export class QueueService {
 
             // Unselect already selected video if it exists
             if (alreadySelectedVideoIndex !== -1) {
+                // If the already preselected video was forced with berries, the operation cannot continue
+                if (box.playlist[alreadySelectedVideoIndex].stateForcedWithBerries === true) {
+                    throw new Error("Another video has already been preselected with berries. You cannot overwrite the preselected video.")
+                }
+
                 box.playlist[alreadySelectedVideoIndex].isPreselected = false
                 if (areBerriesSpent) {
                     feedback.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to remove the preslection on "$OLD_VIDEO$".`
@@ -313,7 +318,8 @@ export class QueueService {
             endTime: null,
             submittedAt: new Date(),
             submitted_by: userToken,
-            isPreselected: false
+            isPreselected: false,
+            stateForcedWithBerries: false
         }
 
         box.playlist.unshift(submission)
@@ -513,7 +519,8 @@ export class QueueService {
                 endTime: null,
                 submittedAt: new Date(),
                 submitted_by: item.submitted_by,
-                isPreselected: false
+                isPreselected: false,
+                stateForcedWithBerries: false
             }
 
             newBatch.push(submission)
