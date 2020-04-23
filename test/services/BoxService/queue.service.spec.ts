@@ -10,7 +10,7 @@ import queueService from '../../../src/services/BoxService/queue.service'
 const Box = require('../../../src/models/box.model')
 const User = require('../../../src/models/user.model')
 
-import { QueueItemActionRequest } from '@teamberry/muscadine'
+import { QueueItemActionRequest, BoxScope } from '@teamberry/muscadine'
 import { Video } from '../../../src/models/video.model'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 import { Subscriber } from "../../../src/models/subscriber.model"
@@ -1116,6 +1116,311 @@ describe("Queue Service", () => {
             expect(preselectedVideo.isPreselected).to.equal(true)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef043f3')
             expect(result.feedbackMessage.contents).to.equal(`Currently playing: The Evil King`)
+        })
+    })
+
+    describe('Skip a video', () => {
+        before(async () => {
+            await Subscriber.create([
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    connexions: [],
+                    berries: 0
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    connexions: [],
+                    berries: 7
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef143e7',
+                    connexions: [],
+                    berries: 51
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 78
+                }
+            ])
+        })
+
+        after(async () => {
+            await Subscriber.deleteMany({})
+        })
+
+        beforeEach(async () => {
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef043e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef043f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        refresh: true
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef143e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef143f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        refresh: true
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef243e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef243f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: true,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        refresh: true
+                    }
+                }
+            ])
+        })
+
+        afterEach(async () => {
+            await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
+        })
+
+        it('Refuses the order if the box is closed', async () => {
+            const skipRequest: BoxScope = {
+                boxToken: '9cb763b6e72611381ef043e5',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+            }
+
+            try {
+                await queueService.onVideoSkipped(skipRequest)
+            } catch (error) {
+                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
+            }
+        })
+
+        it('Refuses if the non-admin user does not have enough berries', async () => {
+            const skipRequest: BoxScope = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5e',
+            }
+
+            try {
+                await queueService.onVideoSkipped(skipRequest)
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal("You do not have enough berries to use this action. You need 43 more.")
+            }
+        })
+
+        it('Refuses if there is another video already playing with berries', async () => {
+            const skipRequest: BoxScope = {
+                boxToken: '9cb763b6e72611381ef243e7',
+                userToken: '9ca0df5f86abeb66da97ba5f',
+            }
+
+            try {
+                await queueService.onVideoSkipped(skipRequest)
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal("An user has used berries to play the currently playing video. You cannot skip it.")
+            }
+        })
+
+        it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
+            const skipRequest: BoxScope = {
+                boxToken: '9cb763b6e72611381ef143e7',
+                userToken: '9ca0df5f86abeb66da97ba5f',
+            }
+
+            const result = await queueService.onVideoSkipped(skipRequest)
+
+            const box = await Box
+                .findById('9cb763b6e72611381ef143e7')
+                .populate("playlist.video")
+
+            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7'})
+            const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
+
+            expect(targetSubscription.berries).to.equal(1)
+            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 50 berries to skip the current video. Currently playing: "${playingVideo.video.name}".`)
+        })
+
+        it('Skip the track', async () => {
+            const skipRequest: BoxScope = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+            }
+
+            const result = await queueService.onVideoSkipped(skipRequest)
+
+            const box = await Box
+                .findById('9cb763b6e72611381ef043e7')
+                .populate("playlist.video")
+
+            const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
+
+            expect(result.feedbackMessage.contents).to.equal(`The previous video has been skipped. Currently playing: "${playingVideo.video.name}".`)
         })
     })
 

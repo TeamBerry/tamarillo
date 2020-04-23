@@ -11,7 +11,7 @@ const syncQueue = new Queue("sync")
 
 const BoxSchema = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage } from "@teamberry/muscadine"
+import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
@@ -20,6 +20,7 @@ import berriesService from './berries.service'
 
 const PLAY_NEXT_BERRY_COST = 10
 const PLAY_NOW_BERRY_COST = 30
+const SKIP_BERRY_COST = 50
 
 export class QueueService {
     /**
@@ -212,11 +213,11 @@ export class QueueService {
             if (alreadySelectedVideoIndex !== targetVideoIndex) {
                 box.playlist[targetVideoIndex].isPreselected = true
                 if (areBerriesSpent) {
+                    box.playlist[targetVideoIndex].stateForcedWithBerries = true
                     feedback.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to preselect the video "$NEW_VIDEO$". It will be the next video to play.`
                     feedback.context = 'berries'
                 } else {
                     feedback.contents = `${user.name} has preselected the video "$NEW_VIDEO$". It will be the next video to play.`
-                    // feedback.feedbackType = 'berries'
                 }
             }
 
@@ -303,6 +304,64 @@ export class QueueService {
                 syncPacket,
                 feedbackMessage,
                 updatedBox
+            }
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
+    public async onVideoSkipped(scope: BoxScope) {
+        try {
+            const user = await User.findById(scope.userToken)
+
+            const box = await BoxSchema.findById(scope.boxToken)
+
+            if (!box.open) {
+                throw new Error("The box is closed. The queue cannot be modified.")
+            }
+
+            const areBerriesSpent = user._id.toString() !== box.creator.toString()
+
+            if (areBerriesSpent) {
+                const subscriber = await Subscriber.findOne({ userToken: scope.userToken, boxToken: scope.boxToken })
+                if (subscriber.berries < SKIP_BERRY_COST) {
+                    throw new Error(`You do not have enough berries to use this action. You need ${SKIP_BERRY_COST - subscriber.berries} more.`)
+                }
+            }
+
+            const alreadyPlayingVideoIndex = box.playlist.findIndex(video => video.startTime !== null && video.endTime === null && video.stateForcedWithBerries === true)
+
+            if (alreadyPlayingVideoIndex !== -1) {
+                // If the already preselected video was forced with berries, the operation cannot continue
+                throw new Error("An user has used berries to play the currently playing video. You cannot skip it.")
+            }
+
+            // Clean jobs to avoid a "double skip"
+            const jobs = await syncQueue.getJobs(['delayed'])
+
+            jobs.map((job: Queue.Job) => {
+                if (job.data.boxToken === scope.boxToken) {
+                    job.remove()
+                }
+            })
+
+            const { syncPacket, updatedBox, feedbackMessage } = await this.transitionToNextVideo(scope.boxToken)
+
+            const playingVideo = updatedBox.playlist.find(video => video.startTime !== null && video.endTime === null)
+
+            if (areBerriesSpent) {
+                berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
+
+                feedbackMessage.context = 'berries'
+                feedbackMessage.contents = `${user.name} has spent ${SKIP_BERRY_COST} berries to skip the current video. Currently playing: "${playingVideo.video.name}".`
+            } else {
+                feedbackMessage.contents = `The previous video has been skipped. Currently playing: "${playingVideo.video.name}".`
+            }
+
+            return {
+                syncPacket,
+                updatedBox,
+                feedbackMessage
             }
         } catch (error) {
             throw new Error(error.message)

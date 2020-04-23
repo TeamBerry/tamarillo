@@ -282,21 +282,24 @@ class BoxService {
              * Every in-box communication regarding video sync between clients will go through this event.
              */
             socket.on("sync", async (request: { boxToken: string, order: string }) => {
-                switch (request.order) {
-                    case "next": // Go to next video
-                        // Clean jobs to avoid a "double skip"
-                        const jobs = await syncQueue.getJobs(['delayed'])
 
-                        jobs.map((job: Queue.Job) => {
-                            if (job.data.boxToken === request.boxToken) {
-                                job.remove()
-                            }
+                if (request.order === 'next') {
+                    try {
+                        const sourceSubscriber = await Subscriber.findOne({ 'connexions.socket': socket.id })
+
+                        const { syncPacket, updatedBox, feedbackMessage } = await queueService.onVideoSkipped({ userToken: sourceSubscriber.userToken, boxToken: request.boxToken })
+
+                        io.in(request.boxToken).emit("sync", syncPacket)
+                        io.in(request.boxToken).emit("box", updatedBox)
+                        io.in(request.boxToken).emit("chat", feedbackMessage)
+                    } catch (error) {
+                        const message = new FeedbackMessage({
+                            contents: error.message,
+                            scope: request.boxToken,
+                            context: 'error'
                         })
-                        this.transitionToNextVideo(request.boxToken)
-                        break
-
-                    default:
-                        break
+                        socket.emit('chat', message)
+                    }
                 }
             })
 
