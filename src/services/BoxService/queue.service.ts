@@ -19,8 +19,8 @@ import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 
 const PLAY_NEXT_BERRY_COST = 10
-const PLAY_NOW_BERRY_COST = 30
-const SKIP_BERRY_COST = 50
+const SKIP_BERRY_COST = 30
+const PLAY_NOW_BERRY_COST = 50
 
 export class QueueService {
     /**
@@ -290,7 +290,7 @@ export class QueueService {
                 }
             }
 
-            const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item)
+            const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item, areBerriesSpent)
 
             if (areBerriesSpent) {
                 berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
@@ -345,7 +345,7 @@ export class QueueService {
                 }
             })
 
-            const { syncPacket, updatedBox, feedbackMessage } = await this.transitionToNextVideo(scope.boxToken)
+            const { syncPacket, updatedBox, feedbackMessage } = await this.transitionToNextVideo(scope.boxToken, null, areBerriesSpent)
 
             const playingVideo = updatedBox.playlist.find(video => video.startTime !== null && video.endTime === null)
 
@@ -426,8 +426,6 @@ export class QueueService {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        console.log(playlist);
-
         (playlist.videos as unknown as Array<string>).forEach((video: string) => {
             box.playlist.unshift({
                 video,
@@ -483,11 +481,14 @@ export class QueueService {
      * update the playlist of the box, and send JSON containing all the info for subscribers
      * in the box
      *
-     * @param {string} boxToken The document ID of the box
-     * @returns JSON of the nextVideo and the updatedBox, or null
-     * @memberof PlaylistService
+     * @param {string} boxToken
+     * @param {string} [targetVideo] If there's a target video, it will be the one selected (preselection / play now)
+     * @param {boolean} [withBerries=false] Indicates if the action is caused by a play now or skip. In that case,
+     * the playing video bears the "stateForceWithBerries" flag so that it cannot be skipped itself.
+     * @returns {(Promise<{ nextVideo: QueueItem, updatedBox: Box } | null>)}
+     * @memberof QueueService
      */
-    public async getNextVideo(boxToken: string, targetVideo?: string): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
+    public async getNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
         const response = {
             nextVideo: null,
@@ -509,6 +510,7 @@ export class QueueService {
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
             box.playlist[currentVideoIndex].endTime = transitionTime
+            box.playlist[currentVideoIndex].stateForcedWithBerries = false
         }
 
         // Test if there are some videos remaining
@@ -550,7 +552,10 @@ export class QueueService {
         if (nextVideoIndex !== -1) {
             box.playlist[nextVideoIndex].startTime = transitionTime
             box.playlist[nextVideoIndex].isPreselected = false
-            box.playlist[nextVideoIndex].stateForcedWithBerries = false
+            // If the state is true (the video was preselected with berries), it stays true
+            // If the video was skipped/played now with berries, the 'withBerries' flag will be true
+            // Else, it's false
+            box.playlist[nextVideoIndex].stateForcedWithBerries = box.playlist[nextVideoIndex].stateForcedWithBerries ? box.playlist[nextVideoIndex].stateForcedWithBerries : withBerries
             response.nextVideo = box.playlist[nextVideoIndex]
 
             // Puts the starting video between the upcoming & played videos
@@ -606,16 +611,8 @@ export class QueueService {
         return box.playlist
     }
 
-    public async transitionToNextVideo(boxToken: string, targetVideo?: string): Promise<{syncPacket: SyncPacket, feedbackMessage: SystemMessage, updatedBox: Box}> {
-        const jobs = await syncQueue.getJobs(['delayed'])
-
-        jobs.map((job: Queue.Job) => {
-            if (job.data.boxToken === boxToken) {
-                job.remove()
-            }
-        })
-
-        const response = await queueService.getNextVideo(boxToken, targetVideo)
+    public async transitionToNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{syncPacket: SyncPacket, feedbackMessage: SystemMessage, updatedBox: Box}> {
+        const response = await queueService.getNextVideo(boxToken, targetVideo, withBerries)
 
         const message: SystemMessage = new SystemMessage({
             scope: boxToken,
