@@ -25,7 +25,7 @@ const PLAY_NOW_BERRY_COST = 50
 export class QueueService {
     /**
      * When recieving a video from an user, the service searches for it in the video database
-     * and adds the video to the playlist of the box.
+     * and adds the video to the queue of the box.
      *
      * If the video's not found in the database, it is created.
      *
@@ -43,14 +43,14 @@ export class QueueService {
             // Finding the user who submitted the video
             const user = await User.findById(request.userToken)
 
-            // Adding it to the playlist of the box
+            // Adding it to the queue of the box
             const updatedBox = await this.addVideoToQueue(video, request.boxToken, request.userToken)
             let message: string
 
             if (user) {
-                message = `${user.name} has added the video "${video.name}" to the playlist.`
+                message = `${user.name} has added the video "${video.name}" to the queue.`
             } else {
-                message = `The video "${video.name}" has been added to the playlist.`
+                message = `The video "${video.name}" has been added to the queue.`
             }
 
             const feedback = new SystemMessage({
@@ -84,7 +84,7 @@ export class QueueService {
             const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
 
             const feedback = new SystemMessage({
-                contents: `${user.name} has added the playlist "${playlist.name}" to the queue.`,
+                contents: `${user.name} has added his playlist "${playlist.name}" (${playlist.videos.length} videos) to the queue.`,
                 scope: request.boxToken,
                 context: 'info'
             })
@@ -96,7 +96,7 @@ export class QueueService {
     }
 
     /**
-     * Removing a video from the playlist of a box.
+     * Removing a video from the queue of a box.
      *
      * @param {QueueItemActionRequest} request
      * @returns {Promise<{ feedback: SystemMessage, updatedBox: any }>}
@@ -106,11 +106,16 @@ export class QueueService {
         try {
             const user = await User.findById(request.userToken)
 
-            const box = await BoxSchema.findById(request.boxToken)
+            const box: Box = await BoxSchema.findById(request.boxToken)
 
             if (!box.open) {
-                throw new Error("The box is closed. The playlist cannot be modified.")
+                throw new Error("The box is closed. The queue cannot be modified.")
             }
+
+            // Get the video details
+            const targetItem: QueueItem = box.playlist.find((item: QueueItem) => item._id.toString() === request.item)
+
+            const targetVideo = await Video.findById(targetItem.video)
 
             // Pull the video from the paylist
             const updatedBox = await BoxSchema
@@ -127,7 +132,7 @@ export class QueueService {
                 .populate("playlist.video")
                 .populate("playlist.submitted_by", "_id name")
 
-            const message = `${user.name} has removed a submission from the playlist`
+            const message = `${user.name} has removed the video "${targetVideo.name}" from the queue.`
 
             const feedback = new SystemMessage({
                 contents: message,
@@ -468,8 +473,8 @@ export class QueueService {
     }
 
     /**
-     * Gets the next video from the playlist to play. Will
-     * update the playlist of the box, and send JSON containing all the info for subscribers
+     * Gets the next video from the queue to play. Will
+     * update the queue of the box, and send JSON containing all the info for subscribers
      * in the box
      *
      * @param {string} boxToken
@@ -570,7 +575,7 @@ export class QueueService {
     /**
      * Called if Loop Mode is enabled.
      *
-     * If there are no more videos in the upcoming pool, the entire playlist is resubmitted in order
+     * If there are no more videos in the upcoming pool, the entire queue is resubmitted in order
      *
      * @private
      * @param {Box} box
@@ -620,7 +625,7 @@ export class QueueService {
 
         const message: SystemMessage = new SystemMessage({
             scope: boxToken,
-            contents: 'The playlist has no upcoming videos.',
+            contents: 'The queue has no upcoming videos.',
             context: 'info'
         })
 

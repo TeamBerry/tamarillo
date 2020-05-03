@@ -206,13 +206,13 @@ describe("Queue Service", () => {
         it("Sends message with user name if user exists", async () => {
             const { feedback, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
 
-            expect(feedback.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the playlist.`)
+            expect(feedback.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
         })
 
         it("Sends generic message if the submitter is the system (no user given)", async () => {
             const { feedback, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: null, boxToken: '9cb763b6e72611381ef043e4' })
 
-            expect(feedback.contents).to.equal(`The video "Destroid - Annihilate" has been added to the playlist.`)
+            expect(feedback.contents).to.equal(`The video "Destroid - Annihilate" has been added to the queue.`)
         })
     })
 
@@ -223,7 +223,7 @@ describe("Queue Service", () => {
                     _id: '9cb763b6e72611381ef043e4',
                     description: null,
                     lang: 'English',
-                    name: 'Box with empty playlist',
+                    name: 'Box with empty queue',
                     playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: true,
@@ -347,24 +347,25 @@ describe("Queue Service", () => {
             try {
                 await queueService.onVideoCancelled(cancelPayload)
             } catch (error) {
-                expect(error.message).to.equal("The box is closed. The playlist cannot be modified.")
+                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
 
             }
 
         })
 
-        it("Removes the video from the playlist", async () => {
+        it("Removes the video from the queue", async () => {
             const cancelPayload: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e6',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043e8'
             }
 
-            await queueService.onVideoCancelled(cancelPayload)
+            const { feedback, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
 
             const box = await Box.findById('9cb763b6e72611381ef043e6')
 
             expect(box.playlist).to.have.lengthOf(1)
+            expect(feedback.contents).to.equal('Ash Ketchum has removed the video "The Piano Before Cynthia" from the queue.')
         })
     })
 
@@ -609,7 +610,7 @@ describe("Queue Service", () => {
             }
         })
 
-        it('Refuses if the video does not exist in the playlist', async () => {
+        it('Refuses if the video does not exist in the queue', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -1850,7 +1851,7 @@ describe("Queue Service", () => {
     })
 
     describe("Loop Mode", () => {
-        it("Loops the playlist when no more videos are upcoming", async () => {
+        it("Loops the queue when no more videos are upcoming", async () => {
             const box = await Box.create({
                 _id: '9cb763b6e72611381ef043e8',
                 description: null,
