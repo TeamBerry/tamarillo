@@ -1,6 +1,5 @@
 // Utils imports
 import * as _ from "lodash"
-import moment = require("moment")
 
 // MongoDB & Sockets
 const express = require("express")()
@@ -10,17 +9,18 @@ io.set("transports", ["websocket"])
 import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 const boxQueue = new Queue("box")
+const berriesQueue = new Queue("berries")
 
 // Models
 const User = require("./../../models/user.model")
-const SubscriberSchema = require("./../../models/subscriber.schema")
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket } from "@teamberry/muscadine"
-import { Subscriber } from "./../../models/subscriber.model"
+import { Subscriber, ConnexionRequest, BerryCount } from "../../models/subscriber.model"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
 import queueService from "./queue.service"
 import { BoxJob } from "../../models/box.job"
+import berriesService from "./berries.service"
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -29,23 +29,20 @@ const BoxSchema = require("./../../models/box.model")
  */
 class BoxService {
     public init() {
-        console.log("Manager service initialisation...")
+        console.log("Box service initialisation...")
 
         // Start listening on port 8008.
         http.listen(8008, async () => {
-            // Empty subscribers collection
-            await SubscriberSchema.deleteMany({})
-
-            console.log("Socket started; Listening on port 8008...")
+            // Empty all connexions
+            await Subscriber.update({}, { $set: { connexions: [] } }, { multi: true })
         })
 
         io.on("connection", socket => {
-            console.log("Connection attempt.")
             /**
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on("auth", async request => {
-                const client: Subscriber = {
+                const connexionRequest: ConnexionRequest = {
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
@@ -53,51 +50,74 @@ class BoxService {
                 }
 
                 // Connection check. If the user is not valid, he's refused
-                if (!request.boxToken) {
+                if (!connexionRequest.boxToken) {
                     const message = {
                         status: "ERROR_NO_TOKEN",
                         message: "No token has been given to the socket. Access has been denied.",
-                        scope: request.boxToken
+                        scope: connexionRequest.boxToken
                     }
                     socket.emit("denied", message)
                 } else {
                     // Cleaning collection to avoid duplicates (safe guard)
-                    await SubscriberSchema.deleteMany({ boxToken: request.boxToken, userToken: request.userToken })
+                    let userSubscription = await Subscriber.findOne(
+                        { boxToken: connexionRequest.boxToken, userToken: connexionRequest.userToken }
+                    )
 
-                    SubscriberSchema.create(client)
+                    if (!userSubscription) {
+                        userSubscription = await Subscriber.create({
+                            boxToken: connexionRequest.boxToken,
+                            userToken: connexionRequest.userToken,
+                            connexions: [
+                                {
+                                    origin: connexionRequest.origin,
+                                    socket: connexionRequest.socket
+                                }
+                            ],
+                            berries: 0
+                        })
+                    } else {
+                        userSubscription = await Subscriber.findByIdAndUpdate(
+                            userSubscription._id,
+                            {
+                                $push: { connexions: { origin: connexionRequest.origin, socket: connexionRequest.socket } }
+                            }
+                        )
+                    }
 
                     const message: FeedbackMessage = new FeedbackMessage({
                         contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
-                        source: "system",
-                        scope: request.boxToken,
-                        feedbackType: 'success'
+                        source: "feedback",
+                        scope: connexionRequest.boxToken,
+                        context: 'success'
                     })
 
                     // Join Box room
-                    socket.join(request.boxToken)
-
-                    io.in(request.boxToken).clients((error, clients) => {
-                        console.log(`CLIENTS IN ROOM ${request.boxToken}`, clients)
-                    })
+                    socket.join(connexionRequest.boxToken)
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
 
-                    // Emit Youtube Key for mobile
-                    if (client.origin === 'Cranberry') {
+                    if (connexionRequest.origin === 'Cranberry') {
+                        // Emit Youtube Key for mobile
                         socket.emit('bootstrap', {
                             boxKey: process.env.CRANBERRY_KEY
                         })
                     }
+
+                    // Berries
+                    const berryCount: BerryCount = {
+                        userToken: userSubscription.userToken,
+                        boxToken: userSubscription.boxToken,
+                        berries: userSubscription.berries
+                    }
+
+                    socket.emit('berries', berryCount)
+
+                    berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
                 }
             })
 
-            /**
-             * What to do when you've got a video.
-             *
-             * @param {VideoSubmissionRequest} payload the Video Payload
-             */
-            // Test video: https://www.youtube.com/watch?v=3gPBmDptqlQ
+            // When a video is submitted
             socket.on("video", async (request: VideoSubmissionRequest) => {
                 // Emitting feedback to the chat
                 try {
@@ -115,14 +135,19 @@ class BoxService {
                     if (currentVideoIndex === -1) {
                         this.transitionToNextVideo(request.boxToken)
                     }
+
+                    const newBerriesCount: number = await berriesService.increaseBerryCount({userToken: request.userToken, boxToken: request.boxToken})
+
+                    socket.emit('berries', {
+                        userToken: request.userToken,
+                        boxToken: request.boxToken,
+                        berries: newBerriesCount
+                    } as BerryCount)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: "system",
-                        // TODO: Extract from the error
-                        contents: "This box is closed. Submission is disallowed.",
-                        source: "system",
+                    const message = new FeedbackMessage({
+                        contents: error.message,
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
 
                     socket.emit("chat", message)
@@ -142,12 +167,10 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: "system",
+                    const message = new FeedbackMessage({
                         contents: "Your playlist could not be submitted.",
-                        source: "system",
                         scope: request.boxToken,
-                        feedbackType: "error"
+                        context: "error"
                     })
                     socket.emit("chat", message)
                 }
@@ -162,12 +185,10 @@ class BoxService {
                     io.in(request.boxToken).emit("chat", response.feedback)
                     io.in(request.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: 'system',
-                        contents: 'The box is closed. The playlist cannot be changed.',
-                        source: 'system',
+                    const message = new FeedbackMessage({
+                        contents: error.message,
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
                     socket.emit("chat", message)
                 }
@@ -178,17 +199,49 @@ class BoxService {
                 try {
                     const response = await queueService.onVideoPreselected(request)
 
+                    const targetSubscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    socket.emit('berries', {
+                        userToken: request.userToken,
+                        boxToken: request.boxToken,
+                        berries: targetSubscriber.berries
+                    })
+
                     io.in(request.boxToken).emit("chat", response.feedback)
                     io.in(request.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
-                    const message: FeedbackMessage = new FeedbackMessage({
-                        author: 'system',
+                    const message = new FeedbackMessage({
                         contents: error.message,
-                        source: 'system',
                         scope: request.boxToken,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
                     socket.emit("chat", message)
+                }
+            })
+
+            // When a user force plays a video
+            socket.on('forcePlay', async (request: QueueItemActionRequest) => {
+                try {
+                    const { syncPacket, updatedBox, feedbackMessage } = await queueService.onVideoForcePlayed(request)
+
+                    const targetSubscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
+
+                    socket.emit('berries', {
+                        userToken: request.userToken,
+                        boxToken: request.boxToken,
+                        berries: targetSubscriber.berries
+                    })
+
+                    io.in(request.boxToken).emit("sync", syncPacket)
+                    io.in(request.boxToken).emit("box", updatedBox)
+                    io.in(request.boxToken).emit("chat", feedbackMessage)
+                } catch (error) {
+                    const message = new FeedbackMessage({
+                        contents: error.message,
+                        scope: request.boxToken,
+                        context: 'error'
+                    })
+                    socket.emit('chat', message)
                 }
             })
 
@@ -205,14 +258,10 @@ class BoxService {
              *  "userToken": the document ID of the user
              * }
              */
-            socket.on("start", async (request: { boxToken: string, userToken: string }) => {
-                const message: FeedbackMessage = new FeedbackMessage()
-                message.scope = request.boxToken
-                message.feedbackType = 'info'
-
-                const chatRecipient: Subscriber = await SubscriberSchema.findOne({
-                    userToken: request.userToken,
-                    boxToken: request.boxToken
+            socket.on("start", async (request: BoxScope) => {
+                const message = new FeedbackMessage({
+                    context: 'info',
+                    scope: request.boxToken
                 })
 
                 try {
@@ -220,25 +269,20 @@ class BoxService {
 
                     if (response.item !== null) {
                         message.contents = 'Currently playing: "' + response.item.video.name + '"'
-                        message.source = "system"
 
                         // Emit the response back to the client
                         socket.emit("sync", response)
                     } else {
                         message.contents = "No video is currently playing in the box."
-                        message.source = "system"
+                        message.context = 'warning'
                     }
 
-                    if (chatRecipient) {
-                        socket.emit("chat", message)
-                    }
+                    socket.emit("chat", message)
                 } catch (error) {
                     // Emit the box closed message to the recipient
                     message.contents = "This box is closed. Video play is disabled."
-                    message.source = "system"
-                    if (chatRecipient) {
-                        socket.emit("chat", message)
-                    }
+                    message.context = 'warning'
+                    socket.emit("chat", message)
                 }
             })
 
@@ -246,28 +290,34 @@ class BoxService {
              * Every in-box communication regarding video sync between clients will go through this event.
              */
             socket.on("sync", async (request: { boxToken: string, order: string }) => {
-                switch (request.order) {
-                    case "next": // Go to next video
-                        this.skipVideo(request.boxToken)
-                        break
 
-                    default:
-                        break
+                if (request.order === 'next') {
+                    try {
+                        const sourceSubscriber = await Subscriber.findOne({ 'connexions.socket': socket.id })
+
+                        const { syncPacket, updatedBox, feedbackMessage } = await queueService.onVideoSkipped({ userToken: sourceSubscriber.userToken, boxToken: request.boxToken })
+
+                        socket.emit('berries', {
+                            userToken: sourceSubscriber.userToken,
+                            boxToken: request.boxToken,
+                            berries: sourceSubscriber.berries - 30
+                        })
+
+                        io.in(request.boxToken).emit("sync", syncPacket)
+                        io.in(request.boxToken).emit("box", updatedBox)
+                        io.in(request.boxToken).emit("chat", feedbackMessage)
+                    } catch (error) {
+                        const message = new FeedbackMessage({
+                            contents: error.message,
+                            scope: request.boxToken,
+                            context: 'error'
+                        })
+                        socket.emit('chat', message)
+                    }
                 }
             })
 
-            /**
-             * What to do when you've got a chat message
-             *
-             * @param message The message has the following structure:
-             * {
-             *  'author': the document ID of the user who sent the message,
-             *  'contents': the contents of the message,
-             *  'source': the source (user, bot, system...)
-             *  'scope': the document ID of the box or of the user the message is targetting
-             *  'time': the timestamp of the message
-             * }
-             */
+            // Handling chat messages
             socket.on("chat", async (message: Message) => {
                 // Get author full subscriber details
                 if (await chatService.isMessageValid(message)) {
@@ -275,11 +325,10 @@ class BoxService {
                     const author = await User.findById(message.author)
 
                     if (!author) {
-                        const errorMessage: FeedbackMessage = new FeedbackMessage({
-                            source: "system",
+                        const errorMessage = new FeedbackMessage({
                             contents: "An error occurred, your message could not be sent.",
                             scope: message.scope,
-                            feedbackType: 'error'
+                            context: 'error'
                         })
 
                         socket.emit("chat", errorMessage)
@@ -301,9 +350,8 @@ class BoxService {
                 } else {
                     const response = new FeedbackMessage({
                         contents: "Your message has been rejected by the server",
-                        source: "system",
                         scope: message.scope,
-                        feedbackType: 'error'
+                        context: 'error'
                     })
 
                     socket.emit("chat", response)
@@ -313,7 +361,11 @@ class BoxService {
             socket.on("disconnect", async () => {
                 console.log('LEAVING: ', socket.id)
                 try {
-                    await SubscriberSchema.deleteOne({ socket: socket.id })
+                    const targetSubscriber = await Subscriber.findOneAndUpdate(
+                        { 'connexions.socket': socket.id },
+                        { $pull: { connexions: { socket: socket.id } } }
+                    )
+                    berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
                 } catch (error) {
                     // Graceful catch (silent)
                 }
@@ -326,11 +378,10 @@ class BoxService {
             const { boxToken, subject }: BoxJob = job.data
 
             // Do things depending on the subject
-            const message: FeedbackMessage = new FeedbackMessage({
-                author: 'system',
+            const message = new SystemMessage({
                 source: 'system',
                 scope: boxToken,
-                feedbackType: 'info'
+                context: 'info'
             })
             switch (subject) {
                 case "close":
@@ -360,7 +411,7 @@ class BoxService {
                     io.in(boxToken).emit('chat', message)
 
                     // Remove subscribers
-                    SubscriberSchema.deleteMany({ boxToken })
+                    Subscriber.deleteMany({ boxToken })
                     break
 
                 case "update":
@@ -384,6 +435,35 @@ class BoxService {
 
             if (order === 'next') {
                 this.transitionToNextVideo(boxToken)
+            }
+
+            done()
+        })
+
+        // Activity for all users in boxes
+        berriesQueue.process(async (job, done) => {
+            console.log('BERRIES JOB DONE: ', job.data)
+
+            const scope: BoxScope = job.data.scope
+            const amount: number = job.data.amount
+
+            await berriesService.increaseBerryCount(scope, amount)
+
+            await berriesService.stopNaturalIncrease(scope)
+
+            // Restart only if the subscriber is still active
+            const targetSubscriber = await Subscriber.findOne({ boxToken: scope.boxToken, userToken: scope.userToken })
+            if (targetSubscriber.connexions.length > 0) {
+                berriesService.startNaturalIncrease(scope)
+
+                // Alert via the sockets that the count increased
+                targetSubscriber.connexions.forEach(connexion => {
+                    io.to(connexion.socket).emit('berries', {
+                        userToken: scope.userToken,
+                        boxToken: scope.boxToken,
+                        berries: targetSubscriber.berries
+                    })
+                })
             }
 
             done()
@@ -413,23 +493,6 @@ class BoxService {
     }
 
     /**
-     * Skips a video
-     *
-     * @param {string} boxToken
-     * @memberof BoxService
-     */
-    public async skipVideo(boxToken: string) {
-        const jobs = await syncQueue.getJobs(['delayed'])
-
-        jobs.map((job: Queue.Job) => {
-            if (job.data.boxToken === boxToken) {
-                job.remove()
-            }
-        })
-        this.transitionToNextVideo(boxToken)
-    }
-
-    /**
      * Method called when the video ends; gets the next video in the playlist and sends it
      * to all subscribers in the box
      *
@@ -438,48 +501,11 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
-        const jobs = await syncQueue.getJobs(['delayed'])
+        const {syncPacket, updatedBox, feedbackMessage} = await queueService.transitionToNextVideo(boxToken)
 
-        jobs.map((job: Queue.Job) => {
-            if (job.data.boxToken === boxToken) {
-                job.remove()
-            }
-        })
-
-        const response = await queueService.getNextVideo(boxToken)
-
-        const message: FeedbackMessage = new FeedbackMessage()
-        message.scope = boxToken
-        message.feedbackType = 'info'
-
-        if (response.nextVideo) {
-            const syncPacket: SyncPacket = {
-                box: boxToken,
-                item: response.nextVideo
-            }
-            io.in(boxToken).emit("sync", syncPacket)
-
-            // Send chat message for subscribers
-            message.contents = "Currently playing: " + response.nextVideo.video.name
-            message.source = "system"
-
-            // Create a new sync job
-            syncQueue.add(
-                { boxToken, order: 'next' },
-                {
-                    priority: 1,
-                    delay: moment.duration(response.nextVideo.video.duration).asMilliseconds(),
-                    attempts: 5,
-                    removeOnComplete: true
-                }
-            )
-        } else {
-            message.contents = "The playlist has no upcoming videos."
-            message.source = "system"
-        }
-
-        io.in(boxToken).emit("box", response.updatedBox)
-        io.in(boxToken).emit("chat", message)
+        io.in(boxToken).emit("sync", syncPacket)
+        io.in(boxToken).emit("box", updatedBox)
+        io.in(boxToken).emit("chat", feedbackMessage)
     }
 
     public async sendBoxToSubscribers(boxToken: string) {

@@ -3,13 +3,13 @@ import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
+import { Subscriber } from "../../models/subscriber.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
 
 const Box = require("./../../models/box.model")
 const User = require("./../../models/user.model")
-const SubscriberSchema = require("./../../models/subscriber.schema")
 
 export class BoxApi {
     public router: Router
@@ -343,7 +343,13 @@ export class BoxApi {
 
     public async users(request: Request, response: Response): Promise<Response> {
         try {
-            const subscribersOfBox: Array<string> = (await SubscriberSchema.find({ boxToken: request.params.box, userToken: { $not: /^user-[a-zA-Z0-9]{20}/ } }))
+            const subscribersOfBox: Array<string> = (
+                await Subscriber.find({
+                    "boxToken": request.params.box,
+                    "userToken": { $not: /^user-[a-zA-Z0-9]{20}/ },
+                    "connexions.0": { $exists: true }
+                })
+            )
                 .map(subscriber => subscriber.userToken)
 
             const users = await User
