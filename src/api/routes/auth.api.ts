@@ -72,7 +72,8 @@ export class AuthApi {
     }
 
     public async signup(request: Request, response: Response): Promise<Response> {
-        const { mail, password, name } = request.body
+        const mail = request.body.mail.toLowerCase()
+        const { password, name } = request.body
 
         try {
             if (await User.exists({ mail })) {
