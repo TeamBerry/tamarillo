@@ -75,10 +75,12 @@ export class AuthApi {
         const { mail, password, name } = request.body
 
         try {
-            const userExists = await User.exists({ mail })
+            if (await User.exists({ mail })) {
+                return response.status(409).send('MAIL_ALREADY_EXISTS')
+            }
 
-            if (userExists) {
-                return response.status(409).send()
+            if (await User.exists({ name })) {
+                return response.status(409).send('USERNAME_ALREADY_EXISTS')
             }
 
             const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS)

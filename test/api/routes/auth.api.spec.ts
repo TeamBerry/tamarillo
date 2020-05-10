@@ -105,17 +105,24 @@ describe("Auth API", () => {
             await User.deleteMany({})
         })
 
-        it("Sends a 409 if the user already exists", async () => {
+        it("Sends a 409 if the mail already exists", async () => {
             return supertest(expressApp)
                 .post('/signup')
-                .send({ mail: 'ash@pokemon.com', password: 'Mewtwo' })
-                .expect(409)
+                .send({ mail: 'ash@pokemon.com', name: 'Misty', password: 'Mewtwo' })
+                .expect(409, 'MAIL_ALREADY_EXISTS')
+        })
+
+        it("Sends a 409 if the username already exists", async () => {
+            return supertest(expressApp)
+                .post('/signup')
+                .send({ mail: 'misty@pokemon.com', name: 'Ash Ketchum', password: 'Mewtwo' })
+                .expect(409, 'USERNAME_ALREADY_EXISTS')
         })
 
         it("Returns a 200 with an active session", async () => {
             return supertest(expressApp)
                 .post('/signup')
-                .send({ mail: 'blue@pokemon.com', password: 'Ratticate' })
+                .send({ mail: 'blue@pokemon.com', name: 'Blue', password: 'Ratticate' })
                 .expect(200)
                 .then(async () => {
                     const user = await User.findOne({ mail: 'blue@pokemon.com' })
@@ -127,7 +134,7 @@ describe("Auth API", () => {
         it("Creates a 'favorites' playlist, undeletable, for the user", async () => {
             return supertest(expressApp)
                 .post('/signup')
-                .send({ mail: 'green@pokemon.com', password: 'Venusaur' })
+                .send({ mail: 'green@pokemon.com', name: 'Green', password: 'Venusaur' })
                 .expect(200)
                 .then(async () => {
                     const user = await User.findOne({ mail: 'green@pokemon.com' })
