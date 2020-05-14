@@ -17,6 +17,8 @@ export class Box {
         // Users will be able to accumulate berries and use them to gain temporary access to admin actions (skip, play now...)
         berries: boolean
     }
+    // The number of users in the box
+    public users?: number
 }
 
 const boxSchema = new Schema(

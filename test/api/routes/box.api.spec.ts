@@ -97,6 +97,42 @@ describe("Box API", () => {
             open: false,
         })
 
+        await Subscriber.create([
+            {
+                boxToken: '9cb763b6e72611381ef043e4',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                connexions: [
+                    {
+                        origin: 'Blueberry',
+                        socket: ''
+                    }
+                ],
+                berries: 0
+            },
+                        {
+                boxToken: '9cb763b6e72611381ef043e4',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                connexions: [
+                    {
+                        origin: 'Blueberry',
+                        socket: ''
+                    }
+                ],
+                berries: 0
+            },
+            {
+                boxToken: '9cb763b6e72611381ef043e6',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                connexions: [
+                    {
+                        origin: 'Cranberry',
+                        socket: ''
+                    }
+                ],
+                berries: 0
+            }
+        ])
+
         ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
         foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
     })
@@ -114,6 +150,8 @@ describe("Box API", () => {
                 },
             },
         )
+
+        await Subscriber.deleteMany({})
     })
 
     it("Gets all boxes", () => {
@@ -596,6 +634,8 @@ describe("Box API", () => {
 
     describe("Gets all users currently in a box", () => {
         before(async () => {
+            await Subscriber.deleteMany({})
+
             await Subscriber.create([
                 {
                     boxToken: '9cb763b6e72611381ef043e4',
