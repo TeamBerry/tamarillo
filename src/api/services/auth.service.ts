@@ -38,6 +38,7 @@ export class AuthService {
         const authSubject: IAuthSubject = {
             _id: user._id,
             name: user.name,
+            mail: user.mail,
             settings: user.settings
         }
 
