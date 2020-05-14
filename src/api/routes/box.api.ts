@@ -4,12 +4,12 @@ import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber } from "../../models/subscriber.model"
+import { User } from "../../models/user.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
 
 const Box = require("./../../models/box.model")
-const User = require("./../../models/user.model")
 
 export class BoxApi {
     public router: Router

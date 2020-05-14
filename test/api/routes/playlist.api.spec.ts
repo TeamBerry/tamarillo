@@ -6,11 +6,11 @@ const expect = chai.expect
 
 import PlaylistApi from './../../../src/api/routes/playlist.api'
 import { AuthApi } from './../../../src/api/routes/auth.api'
-const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Video, VideoDocument } from './../../../src/models/video.model'
 import authService from "../../../src/api/services/auth.service"
+import { User } from "../../../src/models/user.model"
 
 describe("Playlists API", () => {
     const expressApp = express()
@@ -26,21 +26,21 @@ describe("Playlists API", () => {
         await UserPlaylist.deleteMany({})
         await Video.deleteMany({})
 
-        await User.create({
+        const ashUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
             password: 'Pikachu',
         })
 
-        await User.create({
+        const shironaUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5e',
             name: 'Shirona',
             mail: 'shirona@sinnoh-league.com',
             password: 'Piano',
         })
 
-        await User.create({
+        const peterUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5f',
             name: 'Peter',
             mail: 'peter@hoenn-league.com',
@@ -59,8 +59,8 @@ describe("Playlists API", () => {
             link: 'aC9d3edD3e2'
         })
 
-        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession(ashUser)
+        foreignJWT = authService.createSession(shironaUser)
 
         await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",

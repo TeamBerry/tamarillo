@@ -12,7 +12,6 @@ const boxQueue = new Queue("box")
 const berriesQueue = new Queue("berries")
 
 // Models
-const User = require("./../../models/user.model")
 import { Subscriber, ConnexionRequest, BerryCount } from "../../models/subscriber.model"
 import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
 
@@ -21,6 +20,7 @@ import chatService from "./chat.service"
 import queueService from "./queue.service"
 import { BoxJob } from "../../models/box.job"
 import berriesService from "./berries.service"
+import { User } from "../../models/user.model"
 const BoxSchema = require("./../../models/box.model")
 
 /**

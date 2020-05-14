@@ -7,7 +7,7 @@ const expect = chai.expect
 
 import AuthApi from './../../../src/api/routes/auth.api'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
-const User = require('./../../../src/models/user.model')
+import { User } from "../../../src/models/user.model"
 
 describe("Auth API", () => {
 

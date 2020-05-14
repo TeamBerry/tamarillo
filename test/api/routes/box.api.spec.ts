@@ -6,12 +6,12 @@ const expect = chai.expect
 
 import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
-const User = require('./../../../src/models/user.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber } from '../../../src/models/subscriber.model'
+import { User } from '../../../src/models/user.model'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -23,34 +23,19 @@ describe("Box API", () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
         expressApp.use('/', BoxApi)
 
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
-        })
-
-        await Box.deleteMany(
-            {
-                _id: {
-                    $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5',
-                        '9cb763b6e72611381ef043e6', '9cb763b6e72611381ef043e7',
-                        '9cb763b6e72611381ef043e8'],
-                },
-            },
-        )
-
-        await Video.deleteMany({
-            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
-        })
-
+        await User.deleteMany({})
+        await Box.deleteMany({})
+        await Video.deleteMany({})
         await Subscriber.deleteMany({})
 
-        await User.create({
+        const ashUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
             password: 'Pikachu',
         })
 
-        await User.create({
+        const shironaUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5e',
             name: 'Shirona',
             mail: 'shirona@sinnoh-league.com',
@@ -133,24 +118,13 @@ describe("Box API", () => {
             }
         ])
 
-        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession(ashUser)
+        foreignJWT = authService.createSession(shironaUser)
     })
 
     after(async () => {
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e', '9ca0df5f86abeb66da97ba5f'] },
-        })
-
-        await Box.deleteMany(
-            {
-                _id: {
-                    $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef043e5',
-                        '9cb763b6e72611381ef043e6', '9cb763b6e72611381ef043e7'],
-                },
-            },
-        )
-
+        await User.deleteMany({})
+        await Box.deleteMany({})
         await Subscriber.deleteMany({})
     })
 
