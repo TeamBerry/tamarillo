@@ -58,9 +58,32 @@ export class BoxApi {
      */
     public async index(request: Request, response: Response): Promise<Response> {
         try {
-            const boxes = await Box.find({ open: { $ne: false } })
+            const boxes: Array<any> = await Box.find({ open: { $ne: false } })
                 .populate("creator", "_id name")
                 .populate("playlist.video")
+                .lean()
+
+            const boxTokens: Array<string> = boxes.map(box => box._id)
+
+            const users: Array<{ _id: string, count: number}> = await Subscriber.aggregate([
+                {
+                    $match: { "boxToken": { $in: boxTokens }, 'connexions.0': { $exists: true } }
+                },
+                {
+                    $group: {
+                        _id: "$boxToken",
+                        count: { $sum: 1 }
+                    }
+                }
+            ])
+
+            users.forEach(user => {
+                const boxIndex = boxes.findIndex(box => box._id.toString() === user._id.toString())
+
+                if (boxIndex !== -1) {
+                    boxes[boxIndex].users = user.count
+                }
+            })
 
             return response.status(200).send(boxes)
         } catch (error) {
