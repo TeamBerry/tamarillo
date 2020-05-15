@@ -3,12 +3,12 @@ import * as _ from "lodash"
 const multer = require('multer')
 const upload = multer({ dest: 'upload/' })
 
-const User = require("./../../models/user.model")
 const Box = require("./../../models/box.model")
 
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
+import { User } from "../../models/user.model"
 const auth = require("./../auth.middleware")
 
 export class UserApi {

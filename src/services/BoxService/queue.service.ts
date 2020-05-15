@@ -10,13 +10,13 @@ import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 
 const BoxSchema = require("./../../models/box.model")
-const User = require("./../../models/user.model")
 import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
 import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
+import { User } from '../../models/user.model'
 
 const PLAY_NEXT_BERRY_COST = 10
 const SKIP_BERRY_COST = 30

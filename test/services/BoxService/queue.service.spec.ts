@@ -8,12 +8,12 @@ import * as _ from 'lodash'
 
 import queueService from '../../../src/services/BoxService/queue.service'
 const Box = require('../../../src/models/box.model')
-const User = require('../../../src/models/user.model')
 
 import { QueueItemActionRequest, BoxScope } from '@teamberry/muscadine'
 import { Video } from '../../../src/models/video.model'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 import { Subscriber } from "../../../src/models/subscriber.model"
+import { User } from "../../../src/models/user.model"
 
 describe("Queue Service", () => {
 

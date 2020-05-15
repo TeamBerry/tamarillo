@@ -2,6 +2,7 @@ import * as jwt from "jsonwebtoken"
 
 import { PRIVATE_KEY } from '../../config/keys'
 import { IAuthSubject, Session } from "../../models/session.model"
+import { UserDocument } from "../../models/user.model"
 
 export class AuthService {
     /**
@@ -32,11 +33,12 @@ export class AuthService {
      * @returns {Session} The JSON Web Token
      * @memberof AuthApi
      */
-    public createSession(user, tokenExpiration: number | string = 1296000): Session {
+    public createSession(user: UserDocument, tokenExpiration: number | string = 1296000): Session {
         // If password is correct, Create & Sign Bearer token and send it back to client
         const authSubject: IAuthSubject = {
             _id: user._id,
             name: user.name,
+            mail: user.mail,
             settings: user.settings
         }
 

@@ -4,10 +4,10 @@ const Queue = require("bull")
 const mailQueue = new Queue("mail")
 import * as bcrypt from 'bcrypt'
 
-const User = require("./../../models/user.model")
 import { MailJob } from "../../models/mail.job"
 import authService from "../services/auth.service"
 import { UserPlaylist } from "../../models/user-playlist.model"
+import { UserClass, User } from '../../models/user.model'
 
 const dotenv = require("dotenv")
 dotenv.config()

@@ -5,11 +5,11 @@ import * as supertest from "supertest"
 const expect = chai.expect
 
 import UserApi from './../../../src/api/routes/user.api'
-const User = require('./../../../src/models/user.model')
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist } from './../../../src/models/user-playlist.model'
 import authService from "../../../src/api/services/auth.service"
 import { Video } from "../../../src/models/video.model"
+import { User } from "../../../src/models/user.model"
 
 describe("User API", () => {
     const expressApp = express()
@@ -21,17 +21,11 @@ describe("User API", () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
         expressApp.use('/', UserApi)
 
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] },
-        })
+        await User.deleteMany({})
 
-        await UserPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
-        })
+        await UserPlaylist.deleteMany({})
 
-        await Video.deleteMany({
-            _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
-        })
+        await Video.deleteMany({})
 
         await Video.create([{
             _id: '9bc72f3d7edc6312d0ef2e47',
@@ -43,7 +37,7 @@ describe("User API", () => {
             link: 'aC9d3edD3e2'
         }])
 
-        await User.create({
+        const ashUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
@@ -63,7 +57,7 @@ describe("User API", () => {
             isDeletable: false
         })
 
-        await User.create({
+        const shironaUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5e',
             name: 'Shirona',
             mail: 'shirona@sinnoh-league.com',
@@ -83,8 +77,8 @@ describe("User API", () => {
             isDeletable: false
         })
 
-        ashJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5d', mail: 'ash@pokemon.com' })
-        foreignJWT = authService.createSession({ _id: '9ca0df5f86abeb66da97ba5e', mail: 'shirona@sinnoh-league.com' })
+        ashJWT = authService.createSession(ashUser)
+        foreignJWT = authService.createSession(shironaUser)
 
         await UserPlaylist.create({
             _id: "8da1e01fda34eb8c1b9db46e",
@@ -104,13 +98,9 @@ describe("User API", () => {
     })
 
     after(async () => {
-        await User.deleteMany({
-            _id: { $in: ['9ca0df5f86abeb66da97ba5d', '9ca0df5f86abeb66da97ba5e'] },
-        })
+        await User.deleteMany({})
 
-        await UserPlaylist.deleteMany({
-            _id: { $in: ['8da1e01fda34eb8c1b9db46e', '8da1e01fda34eb8c1b9db46f'] },
-        })
+        await UserPlaylist.deleteMany({})
     })
 
     describe("Gets an user", () => {
