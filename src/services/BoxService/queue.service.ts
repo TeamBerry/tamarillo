@@ -376,31 +376,42 @@ export class QueueService {
     public async addVideoToQueue(video, boxToken: string, userToken: string) {
         const box = await BoxSchema.findById(boxToken)
 
-        if (box.open === false) {
+        if (!box.open) {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        const submission: QueueItem = {
-            video: video._id,
-            startTime: null,
-            endTime: null,
-            submittedAt: new Date(),
-            submitted_by: userToken,
-            isPreselected: false,
-            stateForcedWithBerries: false
+        let updatedBox
+
+        const isVideoAlreadyInQueue = box.playlist.find((queueItem: QueueItem) => queueItem.video.toString() === video._id.toString())
+        if (isVideoAlreadyInQueue) {
+            updatedBox = await BoxSchema
+                .findById(boxToken)
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+        } else {
+            const submission: QueueItem = {
+                video: video._id,
+                startTime: null,
+                endTime: null,
+                submittedAt: new Date(),
+                submitted_by: userToken,
+                isPreselected: false,
+                stateForcedWithBerries: false
+            }
+
+            box.playlist.unshift(submission)
+
+            updatedBox = await BoxSchema
+                .findOneAndUpdate(
+                    { _id: boxToken },
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                )
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
         }
-
-        box.playlist.unshift(submission)
-
-        const updatedBox = await BoxSchema
-            .findOneAndUpdate(
-                { _id: boxToken },
-                { $set: { playlist: box.playlist } },
-                { new: true }
-            )
-            .populate("creator", "_id name")
-            .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name")
 
         return updatedBox
     }
