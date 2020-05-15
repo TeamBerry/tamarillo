@@ -153,29 +153,58 @@ describe("Queue Service", () => {
 
     describe("Submit video to box", () => {
         before(async () => {
-            await Box.create({
-                _id: '9cb763b6e72611381ef043e4',
-                description: null,
-                lang: 'English',
-                name: 'Box with empty playlist',
-                playlist: [],
-                creator: '9ca0df5f86abeb66da97ba5d',
-                open: true,
-                options: {
-                    random: true,
-                    refresh: false
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef043e4',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with empty playlist',
+                    playlist: [],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false,
+                        berries: true
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef053f4',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with a video already added to it',
+                    playlist: [
+                        {
+                            isPreselected: false,
+                            stateForcedWithBerries: false,
+                            _id: '9cb763b6e72611381ef04401',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: '2020-04-23T15:50:31.921Z',
+                            endTime: null,
+                            submittedAt: '2020-04-23T15:50:30.896Z',
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true,
+                        berries: true
+                    }
                 }
-            })
+            ])
         })
 
         after(async () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e4')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef053f4')
         })
 
         const video = {
             _id: '9cb81150594b2e75f06ba8fe',
             link: 'Ivi1e-yCPcI',
-            name: 'Destroid - Annihilate'
+            name: 'Destroid - Annihilate',
         }
 
         // On Video submission
@@ -194,6 +223,15 @@ describe("Queue Service", () => {
             } catch (error) {
                 expect(error.message).to.equal('This box is closed. Submission is disallowed.')
             }
+        })
+
+        it('Accepts the video even if it already is in the queue, without adding it', async () => {
+            const updatedBox = await queueService.addVideoToQueue(video, '9cb763b6e72611381ef053f4', '9ca0df5f86abeb66da97ba5d')
+
+            expect(updatedBox.playlist).to.length(1)
+
+            const updatedBoxAgain = await queueService.addVideoToQueue(video, '9cb763b6e72611381ef053f4', '9ca0df5f86abeb66da97ba5d')
+            expect(updatedBoxAgain.playlist).to.length(1)
         })
 
         it("Accepts the video and sends back the updated box", async () => {
