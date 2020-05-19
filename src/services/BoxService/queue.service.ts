@@ -10,7 +10,7 @@ import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 
 const BoxSchema = require("./../../models/box.model")
-import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope } from "@teamberry/muscadine"
+import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope, PlayingItem } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
@@ -154,7 +154,7 @@ export class QueueService {
      * @returns {Promise<{ feedback: FeedbackMessage, updatedBox: any }>}
      * @memberof QueueService
      */
-    public async onVideoPreselected(request: QueueItemActionRequest): Promise<{ feedback: SystemMessage, updatedBox: any }>{
+    public async onVideoPreselected(request: QueueItemActionRequest): Promise<{ feedback: SystemMessage, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -463,7 +463,7 @@ export class QueueService {
      * @returns the video. The structure is the same as a playlist entry
      * @memberof PlaylistService
      */
-    public async getCurrentVideo(boxToken: string) {
+    public async getCurrentVideo(boxToken: string): Promise<PlayingItem> {
         const box = await BoxSchema
             .findById(boxToken)
             .populate("playlist.video", "_id link name")
@@ -478,9 +478,10 @@ export class QueueService {
             return null
         }
 
-        const currentVideo = _.find(box.playlist, video => video.startTime !== null && video.endTime === null)
+        const currentVideo: PlayingItem = _.find(box.playlist, video => video.startTime !== null && video.endTime === null)
+        currentVideo.position = Math.round((Date.now() - Date.parse(currentVideo.startTime.toString())) / 1000)
 
-        return currentVideo ? currentVideo : null
+        return currentVideo ?? null
     }
 
     /**
@@ -495,7 +496,7 @@ export class QueueService {
      * @returns {(Promise<{ nextVideo: QueueItem, updatedBox: Box } | null>)}
      * @memberof QueueService
      */
-    public async getNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{ nextVideo: QueueItem, updatedBox: Box } | null> {
+    public async getNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{ nextVideo: PlayingItem, updatedBox: Box } | null> {
         const transitionTime = new Date()
         const response = {
             nextVideo: null,
@@ -532,7 +533,7 @@ export class QueueService {
         let nextVideoIndex = -1
 
         let preselectedVideoIndex = -1
-        if (targetVideo){
+        if (targetVideo) {
             preselectedVideoIndex = box.playlist.findIndex(video => video._id.toString() === targetVideo)
         } else {
             preselectedVideoIndex = box.playlist.findIndex(video => video.isPreselected)
@@ -564,6 +565,7 @@ export class QueueService {
             // Else, it's false
             box.playlist[nextVideoIndex].stateForcedWithBerries = box.playlist[nextVideoIndex].stateForcedWithBerries ? box.playlist[nextVideoIndex].stateForcedWithBerries : withBerries
             response.nextVideo = box.playlist[nextVideoIndex]
+            response.nextVideo.position = 0
 
             // Puts the starting video between the upcoming & played videos
             box.playlist = arrayMove(box.playlist, nextVideoIndex, currentVideoIndex - 1)

@@ -136,7 +136,7 @@ class BoxService {
                         this.transitionToNextVideo(request.boxToken)
                     }
 
-                    const newBerriesCount: number = await berriesService.increaseBerryCount({userToken: request.userToken, boxToken: request.boxToken})
+                    const newBerriesCount: number = await berriesService.increaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken })
 
                     socket.emit('berries', {
                         userToken: request.userToken,
@@ -340,8 +340,7 @@ class BoxService {
                             },
                             contents: message.contents,
                             source: message.source,
-                            scope: message.scope,
-                            time: message.time
+                            scope: message.scope
                         })
 
                         // To all of them, we send the message
@@ -501,7 +500,7 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
-        const {syncPacket, updatedBox, feedbackMessage} = await queueService.transitionToNextVideo(boxToken)
+        const { syncPacket, updatedBox, feedbackMessage } = await queueService.transitionToNextVideo(boxToken)
 
         io.in(boxToken).emit("sync", syncPacket)
         io.in(boxToken).emit("box", updatedBox)
