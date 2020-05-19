@@ -695,7 +695,7 @@ describe("Queue Service", () => {
 
             const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef143f4')
 
-            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7'})
+            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
 
             expect(targetSubscription.berries).to.equal(1)
             expect(preselectedVideo.isPreselected).to.equal(true)
@@ -1092,7 +1092,7 @@ describe("Queue Service", () => {
 
             const box = await Box.findById('9cb763b6e72611381ef143e7')
 
-            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7'})
+            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
             const playingVideo = box.playlist.find(video => video.startTime !== null)
 
             expect(targetSubscription.berries).to.equal(1)
@@ -1400,7 +1400,7 @@ describe("Queue Service", () => {
                 .findById('9cb763b6e72611381ef143e7')
                 .populate("playlist.video")
 
-            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7'})
+            const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             expect(targetSubscription.berries).to.equal(21)
@@ -1454,7 +1454,8 @@ describe("Queue Service", () => {
                         {
                             _id: '9cb763b6e72611381ef043e7',
                             video: '9cb81150594b2e75f06ba90a',
-                            startTime: "2019-05-31T09:19:44+0000",
+                            // 20 seconds ago
+                            startTime: new Date(Date.now() - 20000),
                             endTime: null,
                             submittedAt: "2019-05-31T09:19:41+0000",
                             submitted_by: '9ca0df5f86abeb66da97ba5d'
@@ -1487,27 +1488,19 @@ describe("Queue Service", () => {
         })
 
         it("Returns the currently playing video", async () => {
-            const video = {
-                _id: new ObjectId('9cb763b6e72611381ef043e7'),
-                video: {
-                    _id: new ObjectId('9cb81150594b2e75f06ba90a'),
-                    link: 'j6okxJ1CYJM',
-                    name: 'The Piano Before Cynthia',
-                },
-                startTime: new Date("2019-05-31T09:19:44+0000"),
-                stateForcedWithBerries: false,
-                endTime: null,
-                isPreselected: false,
-                submittedAt: new Date("2019-05-31T09:19:41+0000"),
-                submitted_by: {
-                    _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
-                    name: 'Ash Ketchum'
-                }
-            }
-
             const currentVideo = await queueService.getCurrentVideo('9cb763b6e72611381ef043e6')
 
-            expect(currentVideo).to.eql(video)
+            expect(currentVideo._id.toString()).to.equal('9cb763b6e72611381ef043e7')
+            expect(currentVideo.video).to.eql({
+                _id: new ObjectId('9cb81150594b2e75f06ba90a'),
+                link: 'j6okxJ1CYJM',
+                name: 'The Piano Before Cynthia',
+            })
+            expect(currentVideo.submitted_by).to.eql({
+                _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
+                name: 'Ash Ketchum'
+            })
+            expect(currentVideo.position).to.approximately(20, 1)
         })
     })
 
