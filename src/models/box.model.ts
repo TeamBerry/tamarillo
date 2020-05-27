@@ -9,6 +9,7 @@ export class Box {
     public name: string
     public playlist: Array<QueueItem>
     public open: boolean
+    public private: boolean
     public options: {
         // Random: The next video will be picked at random from the playlist
         random: boolean
@@ -36,7 +37,8 @@ const boxSchema = new Schema(
             isPreselected: { type: Boolean, default: false },
             stateForcedWithBerries: { type: Boolean, default: false }
         }],
-        open: Boolean,
+        open: { type: Boolean, default: true },
+        private: { type: Boolean, default: false },
         options: {
             random: { type: Boolean, default: false },
             loop: { type: Boolean, default: false },
