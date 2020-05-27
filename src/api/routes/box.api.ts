@@ -20,7 +20,7 @@ export class BoxApi {
     }
 
     public init() {
-        this.router.get("/", this.index)
+        this.router.get("/", auth.canBeAuthorized, this.index)
         this.router.get("/:box", this.show)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
@@ -58,14 +58,32 @@ export class BoxApi {
      */
     public async index(request: Request, response: Response): Promise<Response> {
         try {
-            const boxes: Array<any> = await Box.find({ open: { $ne: false } })
+            let query: unknown = { open: true, private: { $ne: true } }
+
+            const decodedToken = response.locals.auth
+            if (decodedToken) {
+                query = {
+                    open: true,
+                    $or: [
+                        { private: { $ne: true } },
+                        {
+                            $and: [
+                                { private: { $ne: false } },
+                                { creator: decodedToken.user }
+                            ]
+                        }
+                    ]
+                }
+            }
+
+            const boxes: Array<any> = await Box.find(query)
                 .populate("creator", "_id name")
                 .populate("playlist.video")
                 .lean()
 
             const boxTokens: Array<string> = boxes.map(box => box._id)
 
-            const users: Array<{ _id: string, count: number}> = await Subscriber.aggregate([
+            const users: Array<{ _id: string, count: number }> = await Subscriber.aggregate([
                 {
                     $match: { "boxToken": { $in: boxTokens }, 'connexions.0': { $exists: true } }
                 },
@@ -143,7 +161,7 @@ export class BoxApi {
 
             const targetId = request.params.box
 
-            const { _id, description, lang, name, options } = request.body
+            const { _id, description, lang, name, options, private: isPrivate } = request.body
 
             if (targetId !== _id) {
                 return response.status(412).send("IDENTIFIER_MISMATCH")
@@ -156,7 +174,8 @@ export class BoxApi {
                         description,
                         lang,
                         name,
-                        options
+                        options,
+                        private: isPrivate
                     }
                 },
                 {
