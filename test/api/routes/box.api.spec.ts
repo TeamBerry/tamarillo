@@ -45,41 +45,67 @@ describe("Box API", () => {
         await Box.create({
             _id: '9cb763b6e72611381ef043e4',
             description: null,
-            lang: 'English',
+            lang: 'en',
             name: 'Test box',
             playlist: [],
             creator: '9ca0df5f86abeb66da97ba5d',
+            private: true,
             open: true,
         })
 
         await Box.create({
             _id: '9cb763b6e72611381ef043e5',
             description: 'Closed box',
-            lang: 'English',
+            lang: 'en',
             name: 'Closed box',
             playlist: [],
             creator: '9ca0df5f86abeb66da97ba5d',
+            private: false,
             open: false,
         })
 
         await Box.create({
             _id: '9cb763b6e72611381ef043e6',
             description: 'Open box to delete',
-            lang: 'English',
+            lang: 'en',
             name: 'Open box to delete',
             playlist: [],
             creator: '9ca0df5f86abeb66da97ba5d',
+            private: true,
             open: true,
         })
 
         await Box.create({
             _id: '9cb763b6e72611381ef043e7',
             description: 'Closed box to delete',
-            lang: 'English',
+            lang: 'en',
             name: 'Closed box to delete',
             playlist: [],
             creator: '9ca0df5f86abeb66da97ba5d',
+            private: true,
             open: false,
+        })
+
+        await Box.create({
+            _id: '9cb763b6e72611381ef053e8',
+            description: 'Persona inside',
+            lang: 'en',
+            name: 'VGM Box',
+            playlist: [],
+            creator: '9ca0df5f86abeb66da97ba5e',
+            private: true,
+            open: true,
+        })
+
+        await Box.create({
+            _id: '9cb763b6e72611381ef053e9',
+            description: 'The most active box ever',
+            lang: 'en',
+            name: 'Anime Box',
+            playlist: [],
+            creator: '9ca0df5f86abeb66da97ba5e',
+            private: false,
+            open: true,
         })
 
         await Subscriber.create([
@@ -94,7 +120,7 @@ describe("Box API", () => {
                 ],
                 berries: 0
             },
-                        {
+            {
                 boxToken: '9cb763b6e72611381ef043e4',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 connexions: [
@@ -128,16 +154,49 @@ describe("Box API", () => {
         await Subscriber.deleteMany({})
     })
 
-    it("Gets all boxes", () => {
-        return supertest(expressApp)
-            .get('/')
-            .expect(200)
-            .then((response) => {
-                const boxes = response.body
+    describe("Gets all boxes", () => {
+        it("Returns all public boxes for an anonymous request", () => {
+            return supertest(expressApp)
+                .get('/')
+                .expect(200)
+                .then((response) => {
+                    const boxes = response.body
 
-                expect(boxes.length).to.be.greaterThan(0)
-            })
+                    const ids = boxes.map((box) => box._id.toString())
+
+                    expect(ids).to.include('9cb763b6e72611381ef053e9')
+                    expect(ids).to.not.include('9cb763b6e72611381ef053e8')
+                    expect(ids).to.not.include('9cb763b6e72611381ef043e7')
+                    expect(ids).to.not.include('9cb763b6e72611381ef043e6')
+                    expect(ids).to.not.include('9cb763b6e72611381ef043e5')
+                    expect(ids).to.not.include('9cb763b6e72611381ef043e4')
+
+                    expect(boxes.length).to.equal(1)
+                })
+        })
+
+        it("Returns all public boxes and private boxes of the user requesting", () => {
+            return supertest(expressApp)
+                .get('/')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const boxes = response.body
+
+                    const ids = boxes.map((box) => box._id.toString())
+
+                    expect(ids).to.include('9cb763b6e72611381ef053e9')
+                    expect(ids).to.not.include('9cb763b6e72611381ef053e8')
+                    expect(ids).to.not.include('9cb763b6e72611381ef043e7')
+                    expect(ids).to.include('9cb763b6e72611381ef043e6')
+                    expect(ids).to.not.include('9cb763b6e72611381ef043e5')
+                    expect(ids).to.include('9cb763b6e72611381ef043e4')
+
+                    expect(boxes.length).to.equal(3)
+                })
+        })
     })
+
 
     describe("Gets a single box", () => {
         it("Sends a 404 back if no box matches the id given", () => {
