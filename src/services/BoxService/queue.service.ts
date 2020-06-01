@@ -604,7 +604,7 @@ export class QueueService {
                 video: item.video,
                 startTime: null,
                 endTime: null,
-                submittedAt: new Date(),
+                submittedAt: item.submittedAt,
                 submitted_by: item.submitted_by,
                 isPreselected: false,
                 stateForcedWithBerries: false
