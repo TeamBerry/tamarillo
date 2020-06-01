@@ -755,23 +755,6 @@ describe("Queue Service", () => {
             }
         })
 
-        it('Accepts the played video in loop mode', async () => {
-            const preselectRequest: QueueItemActionRequest = {
-                boxToken: '9cb763b6e72611381ef343e7',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef343f0'
-            }
-
-            const result = await queueService.onVideoPreselected(preselectRequest)
-
-            const box = await Box.findById('9cb763b6e72611381ef343e7')
-
-            const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef343f0')
-
-            expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedback.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
-        })
-
         it('Refuses if the non-admin user does not have enough berries', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
@@ -820,6 +803,23 @@ describe("Queue Service", () => {
             expect(targetSubscription.berries).to.equal(1)
             expect(preselectedVideo.isPreselected).to.equal(true)
             expect(result.feedback.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
+        })
+
+        it('Accepts the played video in loop mode', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef343e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef343f0'
+            }
+
+            const result = await queueService.onVideoPreselected(preselectRequest)
+
+            const box = await Box.findById('9cb763b6e72611381ef343e7')
+
+            const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef343f0')
+
+            expect(preselectedVideo.isPreselected).to.equal(true)
+            expect(result.feedback.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
         })
 
         it('Preselects a video if no other video is preselected', async () => {
@@ -1103,6 +1103,70 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef343e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in loop + random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef343f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
                         loop: true
                     }
                 }
@@ -1113,6 +1177,7 @@ describe("Queue Service", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
             await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
             await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef343e7')
         })
 
         it('Refuses the order if the box is closed', async () => {
@@ -1157,7 +1222,7 @@ describe("Queue Service", () => {
             }
         })
 
-        it('Refuses if the video has already been played', async () => {
+        it('Refuses if the video has already been played (non-loop)', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -1213,11 +1278,28 @@ describe("Queue Service", () => {
             const box = await Box.findById('9cb763b6e72611381ef143e7')
 
             const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
-            const playingVideo = box.playlist.find(video => video.startTime !== null)
+            const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             expect(targetSubscription.berries).to.equal(1)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef143f4')
             expect(result.feedbackMessage.contents).to.equal(`Brock has spent 50 berries to play "Connected".`)
+        })
+
+        it('Accepts the played video in loop mode', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef343e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef343f0'
+            }
+
+            const result = await queueService.onVideoForcePlayed(preselectRequest)
+
+            const box = await Box.findById('9cb763b6e72611381ef343e7')
+
+            const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
+
+            expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef343f0')
+            expect(result.feedbackMessage.contents).to.equal(`Currently playing: "Connected".`)
         })
 
         it('Plays the designated track, even if there is a preselected track', async () => {
@@ -1236,7 +1318,7 @@ describe("Queue Service", () => {
 
             expect(preselectedVideo.isPreselected).to.equal(true)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef043f3')
-            expect(result.feedbackMessage.contents).to.equal(`Currently playing: The Evil King`)
+            expect(result.feedbackMessage.contents).to.equal(`Currently playing: "The Evil King".`)
         })
     })
 

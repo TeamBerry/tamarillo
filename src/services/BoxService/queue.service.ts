@@ -290,12 +290,15 @@ export class QueueService {
                 throw new Error('The video you selected could not be found.')
             }
 
-            if (box.playlist[targetVideoIndex].startTime !== null) {
-                if (box.playlist[targetVideoIndex].endTime !== null) {
-                    throw new Error("The video you selected has already been played.")
-                } else {
-                    throw new Error("The video you selected is currently playing.")
-                }
+            const isPlaying = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime === null
+            const wasPlayed = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime !== null
+
+            if (isPlaying) {
+                throw new Error("The video you selected is currently playing.")
+            }
+
+            if (wasPlayed && !box.options.loop) {
+                throw new Error("The video you selected has already been played.")
             }
 
             const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item, areBerriesSpent)
@@ -648,7 +651,7 @@ export class QueueService {
 
         if (response.nextVideo) {
             // Send chat message for subscribers
-            message.contents = "Currently playing: " + response.nextVideo.video.name
+            message.contents = `Currently playing: "${response.nextVideo.video.name}".`
 
             // Create a new sync job
             syncQueue.add(
