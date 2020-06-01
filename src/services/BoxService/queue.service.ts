@@ -183,12 +183,15 @@ export class QueueService {
                 throw new Error("The video you selected could not be found.")
             }
 
-            if (box.playlist[targetVideoIndex].startTime !== null) {
-                if (box.playlist[targetVideoIndex].endTime !== null) {
-                    throw new Error("The video you selected has already been played.")
-                } else {
-                    throw new Error("The video you selected is currently playing.")
-                }
+            const isPlaying = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime === null
+            const wasPlayed = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime !== null
+
+            if (isPlaying) {
+                throw new Error("The video you selected is currently playing.")
+            }
+
+            if (wasPlayed && !box.options.loop) {
+                throw new Error("The video you selected has already been played.")
             }
 
             const feedback = new SystemMessage({
@@ -559,6 +562,7 @@ export class QueueService {
 
         if (nextVideoIndex !== -1) {
             box.playlist[nextVideoIndex].startTime = transitionTime
+            box.playlist[nextVideoIndex].endTime = null
             box.playlist[nextVideoIndex].isPreselected = false
             // If the state is true (the video was preselected with berries), it stays true
             // If the video was skipped/played now with berries, the 'withBerries' flag will be true

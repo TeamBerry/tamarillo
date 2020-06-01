@@ -65,7 +65,7 @@ describe("Queue Service", () => {
             open: false,
             options: {
                 random: true,
-                refresh: false
+                loop: false
             }
         })
 
@@ -267,7 +267,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: false
+                        loop: false
                     }
                 },
                 {
@@ -280,7 +280,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: false
+                        loop: false
                     }
                 }
             ])
@@ -366,7 +366,7 @@ describe("Queue Service", () => {
                 open: true,
                 options: {
                     random: false,
-                    refresh: false
+                    loop: false
                 }
             })
         })
@@ -499,7 +499,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: false
                     }
                 },
                 {
@@ -558,7 +558,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: false
                     }
                 },
                 {
@@ -622,7 +622,71 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef343e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in loop + random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef343f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true
                     }
                 }
             ])
@@ -632,6 +696,7 @@ describe("Queue Service", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
             await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
             await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef343e7')
         })
 
         it('Refuses the order if the box is closed', async () => {
@@ -676,7 +741,7 @@ describe("Queue Service", () => {
             }
         })
 
-        it('Refuses if the video has been played', async () => {
+        it('Refuses if the video has been played (non-loop)', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -688,6 +753,23 @@ describe("Queue Service", () => {
             } catch (error) {
                 expect(error.message).to.equal("The video you selected has already been played.")
             }
+        })
+
+        it('Accepts the played video in loop mode', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef343e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef343f0'
+            }
+
+            const result = await queueService.onVideoPreselected(preselectRequest)
+
+            const box = await Box.findById('9cb763b6e72611381ef343e7')
+
+            const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef343f0')
+
+            expect(preselectedVideo.isPreselected).to.equal(true)
+            expect(result.feedback.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
         })
 
         it('Refuses if the non-admin user does not have enough berries', async () => {
@@ -898,7 +980,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: true
                     }
                 },
                 {
@@ -957,7 +1039,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: true
                     }
                 },
                 {
@@ -1021,7 +1103,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: true
                     }
                 }
             ])
@@ -1250,7 +1332,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: true
                     }
                 },
                 {
@@ -1309,7 +1391,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: true
                     }
                 },
                 {
@@ -1373,7 +1455,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        refresh: true
+                        loop: true
                     }
                 }
             ])
@@ -1934,7 +2016,7 @@ describe("Queue Service", () => {
                 open: true,
                 options: {
                     random: true,
-                    refresh: false
+                    loop: false
                 }
             })
 
