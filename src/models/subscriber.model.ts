@@ -47,7 +47,8 @@ export class SubscriberClass {
 
 const subscriberSchema = new Schema(
     {
-        boxToken: String,
+        boxToken: { type: Schema.Types.ObjectId, ref: "Box" },
+        // Cannot always be an ObjectId, has to account for anonymous accounts
         userToken: String,
         connexions: [
             {

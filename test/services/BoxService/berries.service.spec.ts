@@ -3,8 +3,8 @@ const expect = chai.expect
 
 import berriesService from '../../../src/services/BoxService/berries.service'
 import { Subscriber } from '../../../src/models/subscriber.model'
+import { User } from "../../../src/models/user.model"
 const Box = require('../../../src/models/box.model')
-const User = require('../../../src/models/user.model')
 
 describe("Berries Service", () => {
     before(async () => {

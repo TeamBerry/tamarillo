@@ -40,4 +40,4 @@ const userSchema = new Schema(
 
 export interface UserDocument extends UserClass, Document { }
 
-module.exports = model("User", userSchema)
+export const User = model<UserDocument>("User", userSchema)

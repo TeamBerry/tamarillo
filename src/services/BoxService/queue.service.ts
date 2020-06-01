@@ -10,13 +10,13 @@ import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 
 const BoxSchema = require("./../../models/box.model")
-const User = require("./../../models/user.model")
 import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope, PlayingItem } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
 import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
+import { User } from '../../models/user.model'
 
 const PLAY_NEXT_BERRY_COST = 10
 const SKIP_BERRY_COST = 30
@@ -183,12 +183,15 @@ export class QueueService {
                 throw new Error("The video you selected could not be found.")
             }
 
-            if (box.playlist[targetVideoIndex].startTime !== null) {
-                if (box.playlist[targetVideoIndex].endTime !== null) {
-                    throw new Error("The video you selected has already been played.")
-                } else {
-                    throw new Error("The video you selected is currently playing.")
-                }
+            const isPlaying = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime === null
+            const wasPlayed = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime !== null
+
+            if (isPlaying) {
+                throw new Error("The video you selected is currently playing.")
+            }
+
+            if (wasPlayed && !box.options.loop) {
+                throw new Error("The video you selected has already been played.")
             }
 
             const feedback = new SystemMessage({
@@ -287,12 +290,15 @@ export class QueueService {
                 throw new Error('The video you selected could not be found.')
             }
 
-            if (box.playlist[targetVideoIndex].startTime !== null) {
-                if (box.playlist[targetVideoIndex].endTime !== null) {
-                    throw new Error("The video you selected has already been played.")
-                } else {
-                    throw new Error("The video you selected is currently playing.")
-                }
+            const isPlaying = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime === null
+            const wasPlayed = box.playlist[targetVideoIndex].startTime !== null && box.playlist[targetVideoIndex].endTime !== null
+
+            if (isPlaying) {
+                throw new Error("The video you selected is currently playing.")
+            }
+
+            if (wasPlayed && !box.options.loop) {
+                throw new Error("The video you selected has already been played.")
             }
 
             const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item, areBerriesSpent)
@@ -376,31 +382,42 @@ export class QueueService {
     public async addVideoToQueue(video, boxToken: string, userToken: string) {
         const box = await BoxSchema.findById(boxToken)
 
-        if (box.open === false) {
+        if (!box.open) {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        const submission: QueueItem = {
-            video: video._id,
-            startTime: null,
-            endTime: null,
-            submittedAt: new Date(),
-            submitted_by: userToken,
-            isPreselected: false,
-            stateForcedWithBerries: false
+        let updatedBox
+
+        const isVideoAlreadyInQueue = box.playlist.find((queueItem: QueueItem) => queueItem.video.toString() === video._id.toString())
+        if (isVideoAlreadyInQueue) {
+            updatedBox = await BoxSchema
+                .findById(boxToken)
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
+        } else {
+            const submission: QueueItem = {
+                video: video._id,
+                startTime: null,
+                endTime: null,
+                submittedAt: new Date(),
+                submitted_by: userToken,
+                isPreselected: false,
+                stateForcedWithBerries: false
+            }
+
+            box.playlist.unshift(submission)
+
+            updatedBox = await BoxSchema
+                .findOneAndUpdate(
+                    { _id: boxToken },
+                    { $set: { playlist: box.playlist } },
+                    { new: true }
+                )
+                .populate("creator", "_id name")
+                .populate("playlist.video")
+                .populate("playlist.submitted_by", "_id name")
         }
-
-        box.playlist.unshift(submission)
-
-        const updatedBox = await BoxSchema
-            .findOneAndUpdate(
-                { _id: boxToken },
-                { $set: { playlist: box.playlist } },
-                { new: true }
-            )
-            .populate("creator", "_id name")
-            .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name")
 
         return updatedBox
     }
@@ -548,6 +565,7 @@ export class QueueService {
 
         if (nextVideoIndex !== -1) {
             box.playlist[nextVideoIndex].startTime = transitionTime
+            box.playlist[nextVideoIndex].endTime = null
             box.playlist[nextVideoIndex].isPreselected = false
             // If the state is true (the video was preselected with berries), it stays true
             // If the video was skipped/played now with berries, the 'withBerries' flag will be true
@@ -593,7 +611,7 @@ export class QueueService {
                 video: item.video,
                 startTime: null,
                 endTime: null,
-                submittedAt: new Date(),
+                submittedAt: item.submittedAt,
                 submitted_by: item.submitted_by,
                 isPreselected: false,
                 stateForcedWithBerries: false
@@ -633,7 +651,7 @@ export class QueueService {
 
         if (response.nextVideo) {
             // Send chat message for subscribers
-            message.contents = "Currently playing: " + response.nextVideo.video.name
+            message.contents = `Currently playing: "${response.nextVideo.video.name}".`
 
             // Create a new sync job
             syncQueue.add(

@@ -59,6 +59,7 @@
         "chai": "^4.2.0",
         "chai-as-promised": "^7.1.1",
         "eslint": "^6.8.0",
+        "migrate-mongo": "^7.2.1",
         "mocha": "^5.2.0",
         "nyc": "^14.1.1",
         "supertest": "^4.0.2",
