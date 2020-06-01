@@ -980,7 +980,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        loop: true
+                        loop: false
                     }
                 },
                 {
@@ -1039,7 +1039,7 @@ describe("Queue Service", () => {
                     open: true,
                     options: {
                         random: true,
-                        loop: true
+                        loop: false
                     }
                 },
                 {
