@@ -336,7 +336,8 @@ class BoxService {
                         const dispatchedMessage: Message = new Message({
                             author: {
                                 _id: author._id,
-                                name: author.name
+                                name: author.name,
+                                color: author.settings.color
                             },
                             contents: message.contents,
                             source: message.source,
