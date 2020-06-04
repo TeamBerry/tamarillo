@@ -17,6 +17,7 @@ import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.m
 import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 import { User } from '../../models/user.model'
+import { YoutubeVideoListResponse } from '../../models/youtube.model'
 
 const PLAY_NEXT_BERRY_COST = 10
 const SKIP_BERRY_COST = 30
@@ -687,12 +688,16 @@ export class QueueService {
 
         try {
             if (!video) {
-                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=${link}&key=${process.env.YOUTUBE_API_KEY}`)
+                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,status&id=${link}&key=${process.env.YOUTUBE_API_KEY}`)
 
-                const youtubeResponse = youtubeRequest.data
+                const youtubeResponse: YoutubeVideoListResponse = youtubeRequest.data
 
                 if (youtubeResponse.items.length === 0) {
                     throw Error('The link does not match any video.')
+                }
+
+                if (!youtubeResponse.items[0].status.embeddable) {
+                    throw Error(`This video unfortunately cannot be played outside of YouTube. Please try to find another video not restricted.`)
                 }
 
                 video = await Video.create({

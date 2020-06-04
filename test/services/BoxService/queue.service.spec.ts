@@ -207,12 +207,19 @@ describe("Queue Service", () => {
             name: 'Destroid - Annihilate',
         }
 
-        // On Video submission
         it("Refuses the submission if the video does not exist", async () => {
             try {
                 await queueService.onVideoSubmitted({ link: 'notFound', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
             } catch (error) {
                 expect(error.message).to.equal("The link does not match any video.")
+            }
+        })
+
+        it("Refuses the submission if the video cannot be played remotely", async () => {
+            try {
+                await queueService.onVideoSubmitted({ link: 'CwiHSG_tYaQ', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
+            } catch (error) {
+                expect(error.message).to.equal("This video unfortunately cannot be played outside of YouTube. Please try to find another video not restricted.")
             }
         })
 
