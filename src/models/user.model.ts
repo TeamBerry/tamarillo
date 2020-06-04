@@ -19,7 +19,7 @@ export class UserClass {
         this.settings = user && user.settings || {
             theme: 'dark',
             picture: null,
-            color: 'DF62A9'
+            color: '#DF62A9'
         }
     }
 }
@@ -33,7 +33,7 @@ const userSchema = new Schema(
         settings: {
             theme: { type: String, default: 'dark' },
             picture: { type: String, default: 'default-picture' },
-            color: { type: String, default: 'DF62A9' }
+            color: { type: String, default: '#DF62A9' }
         }
     },
     {
