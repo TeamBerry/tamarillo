@@ -8,6 +8,7 @@ export class UserClass {
     public settings: {
         theme: 'light' | 'dark'
         picture: string
+        color: string
     }
 
     constructor(user?: Partial<UserClass>) {
@@ -17,7 +18,8 @@ export class UserClass {
         this.resetToken = user && user.resetToken || null
         this.settings = user && user.settings || {
             theme: 'dark',
-            picture: null
+            picture: null,
+            color: 'DF62A9'
         }
     }
 }
@@ -30,7 +32,8 @@ const userSchema = new Schema(
         resetToken: { type: String, default: null },
         settings: {
             theme: { type: String, default: 'dark' },
-            picture: { type: String, default: 'default-picture' }
+            picture: { type: String, default: 'default-picture' },
+            color: { type: String, default: 'DF62A9' }
         }
     },
     {
