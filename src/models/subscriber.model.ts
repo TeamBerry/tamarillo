@@ -1,4 +1,5 @@
 import { Document, model, Schema } from "mongoose"
+import { Role } from "./acl.model"
 
 
 export interface Connexion {
@@ -36,12 +37,14 @@ export class SubscriberClass {
      */
     public connexions: Array<Connexion>
     public berries: number
+    public role: Role
 
     constructor(subscriber: SubscriberClass) {
         this.boxToken = subscriber.boxToken ?? null
         this.userToken = subscriber.userToken ?? null
         this.connexions = subscriber.connexions ?? []
         this.berries = subscriber.berries ?? 0
+        this.role = subscriber.role ?? 'simple'
     }
 }
 
@@ -57,7 +60,8 @@ const subscriberSchema = new Schema(
                 socket: String
             }
         ],
-        berries: { type: Number, default: 0 }
+        berries: { type: Number, default: 0 },
+        role: { type: String, default: 'simple' }
     },
     {
         timestamps: true

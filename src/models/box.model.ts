@@ -1,6 +1,7 @@
 import { model, Schema } from "mongoose"
 
 import { QueueItem } from "@teamberry/muscadine"
+import { ACLConfig } from "./acl.model"
 
 export class Box {
     public creator: string
@@ -18,6 +19,8 @@ export class Box {
         // Users will be able to accumulate berries and use them to gain temporary access to admin actions (skip, play now...)
         berries: boolean
     }
+    // Obtained from the user. Can be edited independently for each box
+    public acl: ACLConfig
     // The number of users in the box
     public users?: number
 }
@@ -43,6 +46,11 @@ const boxSchema = new Schema(
             random: { type: Boolean, default: false },
             loop: { type: Boolean, default: false },
             berries: { type: Boolean, default: true }
+        },
+        acl: {
+            moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },
+            vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext'] },
+            simple: { type: Array, default: ['addVideo'] }
         }
     },
     {
