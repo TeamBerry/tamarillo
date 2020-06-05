@@ -9,6 +9,7 @@ export class UserClass {
         theme: 'light' | 'dark'
         picture: string
         color: string
+        isColorblind: boolean
     }
 
     constructor(user?: Partial<UserClass>) {
@@ -19,7 +20,8 @@ export class UserClass {
         this.settings = user && user.settings || {
             theme: 'dark',
             picture: null,
-            color: '#DF62A9'
+            color: '#DF62A9',
+            isColorblind: false
         }
     }
 }
@@ -33,7 +35,8 @@ const userSchema = new Schema(
         settings: {
             theme: { type: String, default: 'dark' },
             picture: { type: String, default: 'default-picture' },
-            color: { type: String, default: '#DF62A9' }
+            color: { type: String, default: '#DF62A9' },
+            isColorblind: { type: Boolean, default: false }
         }
     },
     {
