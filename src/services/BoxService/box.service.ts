@@ -63,6 +63,22 @@ class BoxService {
                         { boxToken: connexionRequest.boxToken, userToken: connexionRequest.userToken }
                     )
 
+                    const box = await BoxSchema.findById(request.boxToken)
+
+                    if (!box) {
+                        const boxErrorMessage: FeedbackMessage = new FeedbackMessage({
+                            context: 'error',
+                            contents: 'The box you are trying to join does not exist. Please check your access link or URL.',
+                            scope: connexionRequest.boxToken
+                        })
+                        socket.emit("denied", boxErrorMessage)
+                    }
+
+                    let role = 'simple'
+                    if (box.creator.toString() === request.userToken) {
+                        role = 'admin'
+                    }
+
                     if (!userSubscription) {
                         userSubscription = await Subscriber.create({
                             boxToken: connexionRequest.boxToken,
@@ -73,7 +89,8 @@ class BoxService {
                                     socket: connexionRequest.socket
                                 }
                             ],
-                            berries: 0
+                            berries: 0,
+                            role
                         })
                     } else {
                         userSubscription = await Subscriber.findByIdAndUpdate(
@@ -93,6 +110,9 @@ class BoxService {
 
                     // Join Box room
                     socket.join(connexionRequest.boxToken)
+
+                    // Emit permissions for the simple role.
+                    socket.emit('permissions', role === 'simple' ? box.acl.simple : ['isAdmin'])
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
