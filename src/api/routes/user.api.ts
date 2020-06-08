@@ -8,7 +8,7 @@ const Box = require("./../../models/box.model")
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
-import { User } from "../../models/user.model"
+import { User, UserClass } from "../../models/user.model"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -24,6 +24,7 @@ export class UserApi {
         this.router.get("/favorites", this.favorites)
         this.router.post("/favorites", this.updateFavorites)
         this.router.patch("/settings", this.patchSettings)
+        this.router.patch('/acl', this.patchACL)
         this.router.post("/", this.store)
         this.router.put("/:user", this.update)
         this.router.get("/:user", this.show)
@@ -34,7 +35,9 @@ export class UserApi {
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingUser = await User.findById(request.params.user)
+            const matchingUser = await User
+                .findById(request.params.user)
+                .select('-password')
 
             if (!matchingUser) {
                 return response.status(404).send("USER_NOT_FOUND")
@@ -56,16 +59,7 @@ export class UserApi {
      * @memberof UserApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        const userId = request.params.user
-
-        try {
-            const user = await User.findById(userId)
-                .populate("favorites")
-
-            return response.status(200).send(user)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
+        return response.status(200).send(response.locals.user)
     }
 
     /**
@@ -155,7 +149,7 @@ export class UserApi {
 
     public async patchSettings(request: Request, response: Response): Promise<Response> {
         try {
-            const settings = request.body
+            const settings: Partial<UserClass['settings']> = request.body
 
             if (_.isEmpty(request.body)) {
                 return response.status(412).send("MISSING_PARAMETERS")
@@ -175,6 +169,30 @@ export class UserApi {
             )
 
             return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send()
+        }
+    }
+
+    public async patchACL(request: Request, response: Response): Promise<Response> {
+        try {
+            const acl: UserClass['acl'] = request.body
+
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send("MISSING_PARAMETERS")
+            }
+
+            const updatedUser = await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                {
+                    $set: { acl }
+                },
+                {
+                    new: true
+                }
+            )
+
+            return response.status(200).send(updatedUser.acl)
         } catch (error) {
             return response.status(500).send()
         }

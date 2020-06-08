@@ -9,7 +9,7 @@ import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist } from './../../../src/models/user-playlist.model'
 import authService from "../../../src/api/services/auth.service"
 import { Video } from "../../../src/models/video.model"
-import { User } from "../../../src/models/user.model"
+import { User, UserDocument } from "../../../src/models/user.model"
 
 describe("User API", () => {
     const expressApp = express()
@@ -44,7 +44,14 @@ describe("User API", () => {
             password: 'Pikachu',
             settings: {
                 theme: 'light',
-                picture: '9ca0df5f86abeb66da97ba5d-picture'
+                picture: '9ca0df5f86abeb66da97ba5d-picture',
+                color: '#CD3E1D',
+                isColorblind: false
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
             }
         })
 
@@ -64,7 +71,14 @@ describe("User API", () => {
             password: 'Piano',
             settings: {
                 theme: 'dark',
-                picture: 'default-picture'
+                picture: 'default-picture',
+                color: '#07D302',
+                isColorblind: false
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
             }
         })
 
@@ -122,6 +136,12 @@ describe("User API", () => {
                 .get('/9ca0df5f86abeb66da97ba5d')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
+                .then((response) => {
+                    const user: UserDocument = response.body
+
+                    expect(user.name).to.equal('Ash Ketchum')
+                    expect(user.password).to.be.undefined
+                })
         })
     })
 
@@ -150,6 +170,42 @@ describe("User API", () => {
 
                     expect(user.settings.theme).to.equal("dark")
                     expect(user.settings.picture).to.equal("9ca0df5f86abeb66da97ba5d-picture")
+                })
+        })
+    })
+
+    describe("Update ACL Config", () => {
+        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
+            return supertest(expressApp)
+                .patch('/acl')
+                .expect(401)
+        })
+
+        it("Sends a 412 if no config are given", () => {
+            return supertest(expressApp)
+                .patch('/acl')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(412)
+        })
+
+        it("Sends a 200 with the updated ACL", () => {
+            return supertest(expressApp)
+                .patch('/acl')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({
+                    moderator: ['addVideo', 'removeVideo', 'forceNext'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: []
+                })
+                .expect(200)
+                .then((response) => {
+                    const aclConfig: UserDocument['acl'] = response.body
+
+                    expect(aclConfig).to.deep.equal({
+                        moderator: ['addVideo', 'removeVideo', 'forceNext'],
+                        vip: ['addVideo', 'removeVideo', 'forceNext'],
+                        simple: []
+                    })
                 })
         })
     })
