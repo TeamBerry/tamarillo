@@ -1,5 +1,6 @@
 import { Document, model, Schema } from "mongoose"
 import { Role } from "./acl.model"
+import { UserClass } from "./user.model"
 
 
 export interface Connection {
@@ -82,6 +83,7 @@ export interface PopulatedSubscriberDocument extends Omit<SubscriberDocument, 'u
     userToken?: {
         _id: string
         name: string
+        settings?: UserClass['settings']
     }
 }
 

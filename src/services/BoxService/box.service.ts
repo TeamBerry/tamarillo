@@ -12,7 +12,7 @@ const boxQueue = new Queue("box")
 const berriesQueue = new Queue("berries")
 
 // Models
-import { Subscriber, ConnectionRequest, BerryCount } from "../../models/subscriber.model"
+import { Subscriber, ConnectionRequest, BerryCount, PopulatedSubscriberDocument } from "../../models/subscriber.model"
 import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
 
 // Import services that need to be managed
@@ -20,7 +20,6 @@ import chatService from "./chat.service"
 import queueService from "./queue.service"
 import { BoxJob } from "../../models/box.job"
 import berriesService from "./berries.service"
-import { User } from "../../models/user.model"
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -339,10 +338,12 @@ class BoxService {
 
             // Handling chat messages
             socket.on("chat", async (message: Message) => {
-                // Get author full subscriber details
                 if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
-                    const author = await User.findById(message.author)
+                    const author: PopulatedSubscriberDocument = await Subscriber
+                        .findOne({ userToken: 'message.author._id', boxToken: message.scope })
+                        .populate('userToken', 'user', 'name settings')
+                        .lean()
 
                     if (!author) {
                         const errorMessage = new FeedbackMessage({
@@ -355,9 +356,10 @@ class BoxService {
                     } else {
                         const dispatchedMessage: Message = new Message({
                             author: {
-                                _id: author._id,
-                                name: author.name,
-                                color: author.settings.color
+                                _id: author.userToken._id,
+                                name: author.userToken.name,
+                                color: author.userToken.settings.color,
+                                role: author.role
                             },
                             contents: message.contents,
                             source: message.source,
