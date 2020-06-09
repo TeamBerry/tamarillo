@@ -12,7 +12,7 @@ const boxQueue = new Queue("box")
 const berriesQueue = new Queue("berries")
 
 // Models
-import { Subscriber, ConnexionRequest, BerryCount } from "../../models/subscriber.model"
+import { Subscriber, ConnectionRequest, BerryCount } from "../../models/subscriber.model"
 import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
 
 // Import services that need to be managed
@@ -42,7 +42,7 @@ class BoxService {
              * When an user joins the box, they will have to auth themselves.
              */
             socket.on("auth", async request => {
-                const connexionRequest: ConnexionRequest = {
+                const connexionRequest: ConnectionRequest = {
                     origin: request.origin,
                     boxToken: request.boxToken,
                     userToken: request.userToken,
