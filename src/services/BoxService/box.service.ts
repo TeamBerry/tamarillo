@@ -341,8 +341,8 @@ class BoxService {
                 if (await chatService.isMessageValid(message)) {
                     // We get the author of the message
                     const author: PopulatedSubscriberDocument = await Subscriber
-                        .findOne({ userToken: 'message.author._id', boxToken: message.scope })
-                        .populate('userToken', 'user', 'name settings')
+                        .findOne({ userToken: message.author._id, boxToken: message.scope })
+                        .populate('userToken', 'name settings', 'User')
                         .lean()
 
                     if (!author) {
