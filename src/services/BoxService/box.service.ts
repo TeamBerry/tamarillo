@@ -20,6 +20,7 @@ import chatService from "./chat.service"
 import queueService from "./queue.service"
 import { BoxJob } from "../../models/box.job"
 import berriesService from "./berries.service"
+import { RoleChangeRequest } from "../../models/role-change.model"
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -271,11 +272,7 @@ class BoxService {
              * This has to only send the link and its timestamp. If non-sockets want to know what's playing in a box, they'll listen to
              * a webhook. This is only for in-box requests.
              *
-             * @param request has this structure :
-             * {
-             *  "boxToken": the document ID of the box
-             *  "userToken": the document ID of the user
-             * }
+             * @param {BoxScope} request
              */
             socket.on("start", async (request: BoxScope) => {
                 const message = new FeedbackMessage({
@@ -378,6 +375,10 @@ class BoxService {
 
                     socket.emit("chat", response)
                 }
+            })
+
+            socket.on("roleChange", async (roleChangeRequest: RoleChangeRequest) => {
+
             })
 
             socket.on("disconnect", async () => {
