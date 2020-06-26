@@ -248,9 +248,9 @@ describe.only("ACL Service", () => {
 
             expect(feedbackForTarget.context).to.equal('success')
             expect(feedbackForTarget.scope).to.equal(request.scope.boxToken)
-            expect(feedbackForTarget.contents).to.equal("Brock promoted you to VIP! Your new privileges will appear soon.")
+            expect(feedbackForTarget.contents).to.equal("Brock promoted you to VIP! Your new privileges will appear in a few moments.")
 
-            const promotedMember = await Subscriber.findById('9ca0df5f86abeb66da97ba60').lean()
+            const promotedMember = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba60' }).lean()
             expect(promotedMember.role).to.equal('vip')
         })
 
@@ -275,9 +275,9 @@ describe.only("ACL Service", () => {
 
             expect(feedbackForTarget.context).to.equal('success')
             expect(feedbackForTarget.scope).to.equal(request.scope.boxToken)
-            expect(feedbackForTarget.contents).to.equal("Ash Ketchum promoted you to Moderator! Your new privileges will appear soon.")
+            expect(feedbackForTarget.contents).to.equal("Ash Ketchum promoted you to Moderator! Your new privileges will appear in a few moments.")
 
-            const promotedMember = await Subscriber.findById('9ca0df5f86abeb66da97ba61').lean()
+            const promotedMember = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba61' }).lean()
             expect(promotedMember.role).to.equal('moderator')
         })
 
@@ -300,11 +300,11 @@ describe.only("ACL Service", () => {
             expect(feedbackForSource.scope).to.equal(request.scope.boxToken)
             expect(feedbackForSource.contents).to.equal("Shirona is no longer one of your VIPs on this box.")
 
-            expect(feedbackForTarget.context).to.equal('success')
+            expect(feedbackForTarget.context).to.equal('info')
             expect(feedbackForTarget.scope).to.equal(request.scope.boxToken)
             expect(feedbackForTarget.contents).to.equal("You are no longer a VIP of this room. Your display will refresh in a few moments.")
 
-            const demotedMember = await Subscriber.findById('9ca0df5f86abeb66da97ba63').lean()
+            const demotedMember = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba63' }).lean()
             expect(demotedMember.role).to.equal('vip')
         })
 
@@ -325,13 +325,13 @@ describe.only("ACL Service", () => {
 
             expect(feedbackForSource.context).to.equal('success')
             expect(feedbackForSource.scope).to.equal(request.scope.boxToken)
-            expect(feedbackForSource.contents).to.equal("Brock is no longer one of your moderators on this box.")
+            expect(feedbackForSource.contents).to.equal("Brock is no longer one of your Moderators on this box.")
 
-            expect(feedbackForTarget.context).to.equal('success')
+            expect(feedbackForTarget.context).to.equal('info')
             expect(feedbackForTarget.scope).to.equal(request.scope.boxToken)
-            expect(feedbackForTarget.contents).to.equal("Ash Ketchum demoted you from your role of Moderator. Your display will refresh in a few moments.")
+            expect(feedbackForTarget.contents).to.equal("You are no longer a Moderator of this room. Your display will refresh in a few moments.")
 
-            const demotedMember = await Subscriber.findById('9ca0df5f86abeb66da97ba5e').lean()
+            const demotedMember = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5e' }).lean()
             expect(demotedMember.role).to.equal('simple')
         })
     })

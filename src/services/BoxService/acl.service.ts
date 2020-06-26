@@ -9,6 +9,13 @@ class ACLService {
     }
 
     // Step 1: update the role of the target subscriber
+    /**
+     * Changes the role of the user, per the request
+     *
+     * @param {RoleChangeRequest} request
+     * @returns {Promise<[FeedbackMessage, FeedbackMessage]>} Feedback message for the requester first, then for the target
+     * @memberof ACLService
+     */
     public async onRoleChangeRequested(request: RoleChangeRequest): Promise<[FeedbackMessage, FeedbackMessage]> {
         const target: PopulatedSubscriberDocument = await Subscriber
             .findOne(
@@ -40,40 +47,54 @@ class ACLService {
             throw new Error("You cannot change the role of the box creator.")
         }
 
-        if (source.role !== request.scope.userToken && request.role === 'moderator') {
+        if (source.role !== 'admin' && request.role === 'moderator') {
             throw new Error("Only the box creator can promote moderators.")
         }
 
-        if (source.role !== request.scope.userToken && target.role === 'moderator') {
+        if (source.role !== 'admin' && target.role === 'moderator') {
             throw new Error("Only the box creator can demote moderators.")
         }
+
+        // Update the role of the subscriber
+        await Subscriber.findByIdAndUpdate(
+            target._id,
+            {
+                $set: { role: request.role }
+            },
+            {
+                new: true
+            }
+        )
 
         let feedbackForSource: FeedbackMessage
         let feedbackForTarget: FeedbackMessage
 
         if (
             (request.role === 'moderator' && (target.role === 'vip' || target.role === 'simple'))
-            || (request.role === 'vip' && (target.role === 'simple'))
+            || (request.role === 'vip' && target.role === 'simple')
         ) {
             feedbackForSource = new FeedbackMessage({
                 context: 'success',
+                scope: request.scope.boxToken,
                 contents: `${target.userToken.name} is now one of your ${request.role === 'vip' ? 'VIPs' : 'Moderators'} on this box.`
             })
             feedbackForTarget = new FeedbackMessage({
                 context: 'success',
+                scope: request.scope.boxToken,
                 contents: `${source.userToken.name} promoted you to ${request.role === 'vip' ? 'VIP' : 'Moderator'}! Your new privileges will appear in a few moments.`
             })
         } else {
             feedbackForSource = new FeedbackMessage({
                 context: 'success',
+                scope: request.scope.boxToken,
                 contents: `${target.userToken.name} is no longer one of your ${request.role === 'vip' ? 'VIPs' : 'Moderators'} on this box.`
             })
             feedbackForTarget = new FeedbackMessage({
                 context: 'info',
-                contents: `${source.userToken.name} promoted you to ${request.role === 'vip' ? 'VIP' : 'Moderator'}! Your new privileges will appear in a few moments.`
+                scope: request.scope.boxToken,
+                contents: `You are no longer a ${request.role === 'vip' ? 'VIP' : 'Moderator'} of this room. Your display will refresh in a few moments.`
             })
         }
-
 
         return [feedbackForSource, feedbackForTarget]
     }

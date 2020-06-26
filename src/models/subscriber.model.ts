@@ -1,7 +1,6 @@
 import { Document, model, Schema } from "mongoose"
-import { Role } from "./acl.model"
 import { UserClass } from "./user.model"
-
+import { Role } from "@teamberry/muscadine"
 
 export interface Connection {
     /**
