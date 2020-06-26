@@ -160,7 +160,7 @@ export class BoxApi {
 
             const targetId = request.params.box
 
-            const { _id, description, lang, name, options, private: isPrivate } = request.body
+            const { _id, description, lang, name, options, acl, private: isPrivate } = request.body
 
             if (targetId !== _id) {
                 return response.status(412).send("IDENTIFIER_MISMATCH")
@@ -174,6 +174,7 @@ export class BoxApi {
                         lang,
                         name,
                         options,
+                        acl,
                         private: isPrivate
                     }
                 },

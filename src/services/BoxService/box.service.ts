@@ -464,6 +464,8 @@ class BoxService {
 
                     io.in(boxToken).emit('chat', message)
 
+                    // TODO: Update permissions for everyone
+
                     this.sendBoxToSubscribers(boxToken)
                     break
 
