@@ -10,7 +10,7 @@ import { Subscriber } from "../../../src/models/subscriber.model"
 import { RoleChangeRequest } from "../../../src/models/role-change.model"
 import { FeedbackMessage } from "@teamberry/muscadine"
 
-describe.only("ACL Service", () => {
+describe("ACL Service", () => {
     before(async () => {
         await Box.deleteMany({})
         await User.deleteMany({})
