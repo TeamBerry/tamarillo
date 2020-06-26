@@ -3,8 +3,7 @@ import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
-import { Subscriber } from "../../models/subscriber.model"
-import { User } from "../../models/user.model"
+import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
@@ -161,7 +160,7 @@ export class BoxApi {
 
             const targetId = request.params.box
 
-            const { _id, description, lang, name, options, private: isPrivate } = request.body
+            const { _id, description, lang, name, options, acl, private: isPrivate } = request.body
 
             if (targetId !== _id) {
                 return response.status(412).send("IDENTIFIER_MISMATCH")
@@ -175,6 +174,7 @@ export class BoxApi {
                         lang,
                         name,
                         options,
+                        acl,
                         private: isPrivate
                     }
                 },
@@ -385,20 +385,23 @@ export class BoxApi {
 
     public async users(request: Request, response: Response): Promise<Response> {
         try {
-            const subscribersOfBox: Array<string> = (
-                await Subscriber.find({
+
+            const activeSubscribers: Array<PopulatedSubscriberDocument> = await Subscriber
+                .find({
                     "boxToken": request.params.box,
                     "userToken": { $not: /^user-[a-zA-Z0-9]{20}/ },
                     "connexions.0": { $exists: true }
                 })
-            )
-                .map(subscriber => subscriber.userToken)
+                .populate('userToken', 'name', 'User')
+                .lean()
 
-            const users = await User
-                .find({ _id: { $in: subscribersOfBox } })
-                .select('-password')
+            const subscribers: Array<ActiveSubscriber> = activeSubscribers.map(activeSubscriber => ({
+                ...activeSubscriber.userToken,
+                origin: activeSubscriber.connexions[0].origin,
+                role: activeSubscriber.role
+            }))
 
-            return response.status(200).send(users)
+            return response.status(200).send(subscribers)
         } catch (error) {
             return response.status(500).send(error)
         }

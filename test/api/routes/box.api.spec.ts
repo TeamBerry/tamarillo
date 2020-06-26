@@ -10,7 +10,7 @@ import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 import authService from '../../../src/api/services/auth.service'
-import { Subscriber } from '../../../src/models/subscriber.model'
+import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
 
 describe("Box API", () => {
@@ -678,7 +678,9 @@ describe("Box API", () => {
                             origin: "Blueberry",
                             socket: 'D327c6d_dE3AA'
                         }
-                    ]
+                    ],
+                    role: 'simple',
+                    berries: 12
                 },
                 {
                     boxToken: '9cb763b6e72611381ef043e7',
@@ -688,7 +690,9 @@ describe("Box API", () => {
                             origin: "Blueberry",
                             socket: 'D327c6d_dE3AB'
                         }
-                    ]
+                    ],
+                    role: 'moderator',
+                    berries: 163
                 }
             ])
         })
@@ -708,12 +712,16 @@ describe("Box API", () => {
                 .get('/9cb763b6e72611381ef043e4/users')
                 .expect(200)
                 .then((response) => {
-                    const users = response.body
+                    const users: Array<ActiveSubscriber> = response.body
 
                     expect(users).to.have.lengthOf(1)
 
-                    expect(users[0].name).to.equal('Shirona')
-                    expect(users[0].password).to.be.undefined
+                    expect(users[0]).to.deep.equal({
+                        name: 'Shirona',
+                        _id: '9ca0df5f86abeb66da97ba5e',
+                        role: 'simple',
+                        origin: 'Blueberry',
+                    })
                 })
         })
     })
