@@ -22,6 +22,7 @@ import { BoxJob } from "../../models/box.job"
 import berriesService from "./berries.service"
 import { RoleChangeRequest } from "../../models/role-change.model"
 import aclService from "./acl.service"
+import { Box } from "../../models/box.model"
 const BoxSchema = require("./../../models/box.model")
 
 /**
@@ -384,9 +385,12 @@ class BoxService {
 
                     // Send feedback to target
                     const targetSubscriber = await Subscriber.findOne({ userToken: roleChangeRequest.scope.userToken, boxToken: roleChangeRequest.scope.boxToken })
+                    const boxACL = await BoxSchema.findById(roleChangeRequest.scope.boxToken).select('acl')
+                    const newPermissions = boxACL
+
                     for (const connection of targetSubscriber.connexions) {
                         io.to(connection.socket).emit("chat", feedbackForTarget)
-                        // TODO: Emit new permissions as well
+                        io.to(connection.socket).emit("permissions", newPermissions.acl[targetSubscriber.role])
                     }
                 } catch (error) {
                     const response = new FeedbackMessage({
