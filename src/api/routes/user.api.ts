@@ -25,13 +25,10 @@ export class UserApi {
         this.router.post("/favorites", this.updateFavorites)
         this.router.patch("/settings", this.patchSettings)
         this.router.patch('/acl', this.patchACL)
-        this.router.post("/", this.store)
-        this.router.put("/:user", this.update)
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
         this.router.post('/:user/picture', [auth.isAuthorized, upload.single('picture')], this.uploadProfilePicture)
-        this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -60,30 +57,6 @@ export class UserApi {
      */
     public async show(request: Request, response: Response): Promise<Response> {
         return response.status(200).send(response.locals.user)
-    }
-
-    /**
-     * Stores a new user in the database
-     *
-     * @param {Request} request The request body contains the user to create
-     * @param {Response} response
-     * @returns {Promise<Response>} The newly created user or the following error code:
-     * - 500 Server Error if something happens
-     * @memberof UserApi
-     */
-    public async store(request: Request, response: Response): Promise<Response> {
-        try {
-            const newUser = await User.create(request.body)
-
-            return response.status(201).send(newUser)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public update(req: Request, res: Response) {
-
     }
 
     /**
@@ -196,11 +169,6 @@ export class UserApi {
         } catch (error) {
             return response.status(500).send()
         }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public destroy(req: Request, res: Response) {
-
     }
 
     /**

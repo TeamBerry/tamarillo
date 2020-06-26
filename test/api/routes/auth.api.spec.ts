@@ -8,6 +8,10 @@ const expect = chai.expect
 import AuthApi from './../../../src/api/routes/auth.api'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 import { User } from "../../../src/models/user.model"
+import { Session } from "../../../src/models/session.model"
+import authService from "../../../src/api/services/auth.service"
+import { Subscriber } from "../../../src/models/subscriber.model"
+const Box = require('./../../../src/models/box.model')
 
 describe("Auth API", () => {
 
@@ -235,6 +239,168 @@ describe("Auth API", () => {
                         expect(resetUser.password).to.not.be.null
                     })
             })
+        })
+    })
+
+    describe("Deactivate Account", () => {
+        let ashJWT: Session = null
+        let foreignJWT: Session = null
+
+        before(async () => {
+            const ashUser = await User.create({
+                _id: '9ca0df5f86abeb66da97ba5d',
+                name: 'Ash Ketchum',
+                mail: 'ash@pokemon.com',
+                password: 'Pikachu',
+                settings: {
+                    theme: 'light',
+                    picture: '9ca0df5f86abeb66da97ba5d-picture',
+                    color: '#CD3E1D',
+                    isColorblind: false
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                }
+            })
+
+            await UserPlaylist.create({
+                _id: "8da1e01fda34eb8c1b9db46c",
+                name: "Favorites",
+                isPrivate: false,
+                user: "9ca0df5f86abeb66da97ba5d",
+                videos: [],
+                isDeletable: false
+            })
+
+            const shironaUser = await User.create({
+                _id: '9ca0df5f86abeb66da97ba5e',
+                name: 'Shirona',
+                mail: 'shirona@sinnoh-league.com',
+                password: 'Piano',
+                settings: {
+                    theme: 'dark',
+                    picture: 'default-picture',
+                    color: '#07D302',
+                    isColorblind: false
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                }
+            })
+
+            await UserPlaylist.create({
+                _id: "8da1e01fda34eb8c1b9db46d",
+                name: "Favorites",
+                isPrivate: false,
+                user: "9ca0df5f86abeb66da97ba5e",
+                videos: ['9bc72f3d7edc6312d0ef2e48'],
+                isDeletable: false
+            })
+
+            ashJWT = authService.createSession(ashUser)
+            foreignJWT = authService.createSession(shironaUser)
+
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef043e4',
+                    description: null,
+                    lang: 'en',
+                    name: 'Test box',
+                    playlist: [],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    private: true,
+                    open: true,
+                },
+                {
+                    _id: '9cb763b6e72611381ef043e5',
+                    description: 'Closed box',
+                    lang: 'en',
+                    name: 'Closed box',
+                    playlist: [],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    private: false,
+                    open: false,
+                },
+                {
+                    _id: '9cb763b6e72611381ef043e6',
+                    description: 'Open box to delete',
+                    lang: 'en',
+                    name: 'Open box to delete',
+                    playlist: [],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    private: true,
+                    open: true,
+                }
+            ])
+
+            await Subscriber.create([
+                {
+                    boxToken: '9cb763b6e72611381ef043e4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [
+                        {
+                            origin: 'Blueberry',
+                            socket: ''
+                        }
+                    ],
+                    berries: 0
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef043e4',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [
+                        {
+                            origin: 'Blueberry',
+                            socket: ''
+                        }
+                    ],
+                    berries: 13,
+                    role: 'simple'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef043e6',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [
+                        {
+                            origin: 'Cranberry',
+                            socket: ''
+                        }
+                    ],
+                    berries: 0
+                }
+            ])
+        })
+
+        after(async () => {
+            await User.deleteMany({})
+            await Box.deleteMany({})
+            await Subscriber.deleteMany({})
+            await UserPlaylist.deleteMany({})
+        })
+
+        it('Fails if the user still has boxes', () => {
+            return supertest(expressApp)
+                .post('/deactivate')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(412, 'USER_STILL_HAS_BOXES')
+        })
+
+        it('Deletes the account', () => {
+            return supertest(expressApp)
+                .post('/deactivate')
+                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .expect(200)
+                .then(async () => {
+                    expect(await User.count({ _id: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)
+                    expect(await Subscriber.count({ userToken: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)
+                    expect(await UserPlaylist.count({ user: '9ca0df5f86abeb66da97ba5e' })).to.equal(0)
+                    expect(await Subscriber.count({ userToken: '9ca0df5f86abeb66da97ba5d'})).to.equal(2)
+                    expect(await UserPlaylist.count({ user: '9ca0df5f86abeb66da97ba5d'})).to.equal(1)
+                })
         })
     })
 })
