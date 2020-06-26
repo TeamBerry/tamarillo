@@ -383,10 +383,12 @@ class BoxService {
                     socket.emit("chat", feedbackForSource)
 
                     // Send feedback to target
-                    const targetSubscriber = await Subscriber.findOne({ userToken: roleChangeRequest.scope.userToken })
-                    io.in(roleChangeRequest.scope.boxToken).to(targetSubscriber.connexions[0].socket).emit(feedbackForTarget)
+                    const targetSubscriber = await Subscriber.findOne({ userToken: roleChangeRequest.scope.userToken, boxToken: roleChangeRequest.scope.boxToken })
+                    for (const connection of targetSubscriber.connexions) {
+                        io.to(connection.socket).emit("chat", feedbackForTarget)
+                        // TODO: Emit new permissions as well
+                    }
                 } catch (error) {
-                    console.log('ROLE CHANGE ERROR: ', error)
                     const response = new FeedbackMessage({
                         contents: error.message,
                         scope: roleChangeRequest.scope.boxToken,
