@@ -7,7 +7,11 @@ import * as bcrypt from 'bcrypt'
 import { MailJob } from "../../models/mail.job"
 import authService from "../services/auth.service"
 import { UserPlaylist } from "../../models/user-playlist.model"
-import { UserClass, User } from '../../models/user.model'
+import { User } from '../../models/user.model'
+import { Subscriber } from "../../models/subscriber.model"
+const Box = require("./../../models/box.model")
+
+const auth = require("./../auth.middleware")
 
 const dotenv = require("dotenv")
 dotenv.config()
@@ -27,6 +31,7 @@ export class AuthApi {
         this.router.post("/reset", this.triggerPasswordReset.bind(this))
         this.router.get("/reset/:token", this.checkResetToken)
         this.router.post("/reset/:token", this.resetPassword.bind(this))
+        this.router.post("/deactivate", auth.isAuthorized, this.deactivateAccount.bind(this))
     }
 
     /**
@@ -204,6 +209,22 @@ export class AuthApi {
             return response.status(200).send()
         } catch (error) {
             console.log(error)
+            return response.status(500).send()
+        }
+    }
+
+    public async deactivateAccount(request: Request, response: Response): Promise<Response> {
+        if (await Box.count({ creator: response.locals.auth.user }) > 0) {
+            return response.status(412).send('USER_STILL_HAS_BOXES')
+        }
+
+        try {
+            await UserPlaylist.deleteMany({ user: response.locals.auth.user })
+            await Subscriber.deleteMany({ userToken: response.locals.auth.user })
+            await User.deleteOne({ _id: response.locals.auth.user })
+
+            return response.status(200).send()
+        } catch (error) {
             return response.status(500).send()
         }
     }
