@@ -49,21 +49,21 @@
         "socket.io": "^2.3.0"
     },
     "devDependencies": {
-        "@types/bcrypt": "^3.0.0",
-        "@types/chai": "^4.2.11",
-        "@types/mocha": "^5.2.7",
-        "@types/mongoose": "^5.7.8",
-        "@types/node": "^9.6.55",
-        "@typescript-eslint/eslint-plugin": "^2.19.2",
-        "@typescript-eslint/parser": "^2.19.2",
-        "chai": "^4.2.0",
-        "chai-as-promised": "^7.1.1",
-        "eslint": "^6.8.0",
-        "migrate-mongo": "^7.2.1",
-        "mocha": "^5.2.0",
-        "nyc": "^14.1.1",
-        "supertest": "^4.0.2",
-        "ts-node": "^4.1.0",
-        "typescript": "^3.8.3"
+        "@types/bcrypt": "3.0.0",
+        "@types/chai": "4.2.11",
+        "@types/mocha": "5.2.7",
+        "@types/mongoose": "5.7.8",
+        "@types/node": "9.6.55",
+        "@typescript-eslint/eslint-plugin": "2.19.2",
+        "@typescript-eslint/parser": "2.19.2",
+        "chai": "4.2.0",
+        "chai-as-promised": "7.1.1",
+        "eslint": "6.8.0",
+        "migrate-mongo": "7.2.1",
+        "mocha": "5.2.0",
+        "nyc": "14.1.1",
+        "supertest": "4.0.2",
+        "ts-node": "4.1.0",
+        "typescript": "3.8.3"
     }
 }
