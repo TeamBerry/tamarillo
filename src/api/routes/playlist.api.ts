@@ -288,7 +288,6 @@ export class PlaylistApi {
         if (playlist.user instanceof User) {
             return decodedToken.user.toString() === playlist.user._id.toString()
         } else {
-            console.log(decodedToken.user.toString() === playlist.user.toString())
             return decodedToken.user.toString() === playlist.user.toString()
         }
     }
