@@ -383,8 +383,6 @@ describe("Playlists API", () => {
                     const updatedPlaylist: UserPlaylistDocument = response.body
 
                     expect(updatedPlaylist.videos).to.have.lengthOf(1)
-                    expect(updatedPlaylist.videos[0].name).to.equal('[MV] REOL - ヒビカセ / Hibikase')
-                    expect(updatedPlaylist.videos[0].link).to.equal('UC_qla6FQwM')
 
                     const newVideo: VideoDocument = await Video.findOne({ link: 'UC_qla6FQwM' })
                     expect(newVideo.name).to.equal('[MV] REOL - ヒビカセ / Hibikase')
