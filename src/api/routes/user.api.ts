@@ -8,7 +8,7 @@ const Box = require("./../../models/box.model")
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
-import { User } from "../../models/user.model"
+import { User, UserClass } from "../../models/user.model"
 const auth = require("./../auth.middleware")
 
 export class UserApi {
@@ -24,17 +24,17 @@ export class UserApi {
         this.router.get("/favorites", this.favorites)
         this.router.post("/favorites", this.updateFavorites)
         this.router.patch("/settings", this.patchSettings)
-        this.router.post("/", this.store)
-        this.router.put("/:user", this.update)
+        this.router.patch('/acl', this.patchACL)
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
         this.router.post('/:user/picture', [auth.isAuthorized, upload.single('picture')], this.uploadProfilePicture)
-        this.router.delete("/:user", this.destroy)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingUser = await User.findById(request.params.user)
+            const matchingUser = await User
+                .findById(request.params.user)
+                .select('-password')
 
             if (!matchingUser) {
                 return response.status(404).send("USER_NOT_FOUND")
@@ -56,40 +56,7 @@ export class UserApi {
      * @memberof UserApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        const userId = request.params.user
-
-        try {
-            const user = await User.findById(userId)
-                .populate("favorites")
-
-            return response.status(200).send(user)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
-    }
-
-    /**
-     * Stores a new user in the database
-     *
-     * @param {Request} request The request body contains the user to create
-     * @param {Response} response
-     * @returns {Promise<Response>} The newly created user or the following error code:
-     * - 500 Server Error if something happens
-     * @memberof UserApi
-     */
-    public async store(request: Request, response: Response): Promise<Response> {
-        try {
-            const newUser = await User.create(request.body)
-
-            return response.status(201).send(newUser)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public update(req: Request, res: Response) {
-
+        return response.status(200).send(response.locals.user)
     }
 
     /**
@@ -155,7 +122,7 @@ export class UserApi {
 
     public async patchSettings(request: Request, response: Response): Promise<Response> {
         try {
-            const settings = request.body
+            const settings: Partial<UserClass['settings']> = request.body
 
             if (_.isEmpty(request.body)) {
                 return response.status(412).send("MISSING_PARAMETERS")
@@ -180,9 +147,28 @@ export class UserApi {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public destroy(req: Request, res: Response) {
+    public async patchACL(request: Request, response: Response): Promise<Response> {
+        try {
+            const acl: UserClass['acl'] = request.body
 
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send("MISSING_PARAMETERS")
+            }
+
+            const updatedUser = await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                {
+                    $set: { acl }
+                },
+                {
+                    new: true
+                }
+            )
+
+            return response.status(200).send(updatedUser.acl)
+        } catch (error) {
+            return response.status(500).send()
+        }
     }
 
     /**

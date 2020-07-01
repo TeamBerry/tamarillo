@@ -1,24 +1,25 @@
 import { Document, model, Schema } from "mongoose"
+import { UserClass } from "./user.model"
+import { Role } from "@teamberry/muscadine"
 
-
-export interface Connexion {
+export interface Connection {
     /**
      * Origin of the connexion (Cranbery: mobile, Blueberry: web)
      *
      * @type {('Cranberry' | 'Blueberry')}
-     * @memberof Connexion
+     * @memberof Connection
      */
     origin: 'Cranberry' | 'Blueberry'
     /**
      * Socket ID (handled by socket.io)
      *
      * @type {string}
-     * @memberof Connexion
+     * @memberof Connection
      */
     socket: string
 }
 
-export interface ConnexionRequest extends Connexion {
+export interface ConnectionRequest extends Connection {
     boxToken: string
     userToken: string
 }
@@ -31,18 +32,27 @@ export class SubscriberClass {
     /**
      * Lists all the connexions the user has linking to the box
      *
-     * @type {Array<Connexion>}
+     * @type {Array<Connection>}
      * @memberof SubscriberClass
      */
-    public connexions: Array<Connexion>
+    public connexions: Array<Connection>
     public berries: number
+    public role: Role
 
     constructor(subscriber: SubscriberClass) {
         this.boxToken = subscriber.boxToken ?? null
         this.userToken = subscriber.userToken ?? null
         this.connexions = subscriber.connexions ?? []
         this.berries = subscriber.berries ?? 0
+        this.role = subscriber.role ?? 'simple'
     }
+}
+
+export interface ActiveSubscriber {
+    _id: string
+    name: string
+    role: Role
+    origin: string
 }
 
 const subscriberSchema = new Schema(
@@ -57,13 +67,23 @@ const subscriberSchema = new Schema(
                 socket: String
             }
         ],
-        berries: { type: Number, default: 0 }
+        berries: { type: Number, default: 0 },
+        role: { type: String, default: 'simple' }
     },
     {
         timestamps: true
     }
 )
 
+
 export interface SubscriberDocument extends SubscriberClass, Document { }
+
+export interface PopulatedSubscriberDocument extends Omit<SubscriberDocument, 'userToken'> {
+    userToken?: {
+        _id: string
+        name: string
+        settings?: UserClass['settings']
+    }
+}
 
 export const Subscriber = model<SubscriberDocument>("Subscriber", subscriberSchema)

@@ -65,6 +65,25 @@ export interface VideoListResponseItem {
         licensedContent: boolean
         projection: string
     }
+    status?: {
+        uploadStatus: 'deleted' | 'failed' | 'processed' | 'rejected' | 'uploaded'
+        privacyStatus: 'private' | 'public' | 'unlisted'
+        /**
+         * This value indicates whether the video can be embedded on another website.
+         *
+         * @type {boolean}
+         */
+        embeddable: boolean
+        /**
+         * This value indicates whether the extended video statistics on the video's watch page are publicly viewable.
+         * By default, those statistics are viewable, and statistics like a video's viewcount and ratings will still be
+         * publicly visible even if this property's value is set to false.
+         *
+         * @type {boolean}
+         */
+        publicStatsViewable: boolean
+        madeForKids: boolean
+    }
 }
 
 export interface VideoThumbnails {

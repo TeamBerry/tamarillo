@@ -1,4 +1,5 @@
 import { Document, model, Schema } from "mongoose"
+import { ACLConfig } from './acl.model'
 
 export class UserClass {
     public name: string
@@ -8,7 +9,10 @@ export class UserClass {
     public settings: {
         theme: 'light' | 'dark'
         picture: string
+        color: string
+        isColorblind: boolean
     }
+    public acl: ACLConfig
 
     constructor(user?: Partial<UserClass>) {
         this.name = user && user.name || null
@@ -17,7 +21,14 @@ export class UserClass {
         this.resetToken = user && user.resetToken || null
         this.settings = user && user.settings || {
             theme: 'dark',
-            picture: null
+            picture: null,
+            color: '#DF62A9',
+            isColorblind: false
+        }
+        this.acl = user && user.acl || {
+            moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+            vip: ['addVideo', 'removeVideo', 'forceNext'],
+            simple: ['addVideo']
         }
     }
 }
@@ -30,7 +41,14 @@ const userSchema = new Schema(
         resetToken: { type: String, default: null },
         settings: {
             theme: { type: String, default: 'dark' },
-            picture: { type: String, default: 'default-picture' }
+            picture: { type: String, default: 'default-picture' },
+            color: { type: String, default: '#DF62A9' },
+            isColorblind: { type: Boolean, default: false }
+        },
+        acl: {
+            moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },
+            vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext'] },
+            simple: { type: Array, default: ['addVideo'] }
         }
     },
     {
