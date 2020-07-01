@@ -30,11 +30,13 @@ describe("User API", () => {
         await Video.create([{
             _id: '9bc72f3d7edc6312d0ef2e47',
             name: 'First Video',
-            link: '4c6e3f_aZ0d'
+            link: '4c6e3f_aZ0d',
+            duration: ''
         }, {
             _id: '9bc72f3d7edc6312d0ef2e48',
             name: 'Second Video',
-            link: 'aC9d3edD3e2'
+                link: 'aC9d3edD3e2',
+                duration:''
         }])
 
         const ashUser = await User.create({
@@ -100,6 +102,7 @@ describe("User API", () => {
             isPrivate: true,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
+            isDeletable: true
         })
 
         await UserPlaylist.create({
@@ -108,6 +111,7 @@ describe("User API", () => {
             isPrivate: false,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
+            isDeletable: true
         })
     })
 
