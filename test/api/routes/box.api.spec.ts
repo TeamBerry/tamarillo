@@ -12,6 +12,7 @@ import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
+import { Schema, Types } from 'mongoose'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -118,7 +119,8 @@ describe("Box API", () => {
                         socket: ''
                     }
                 ],
-                berries: 0
+                berries: 0,
+                role: 'simple'
             },
             {
                 boxToken: '9cb763b6e72611381ef043e4',
@@ -129,7 +131,8 @@ describe("Box API", () => {
                         socket: ''
                     }
                 ],
-                berries: 0
+                berries: 0,
+                role: 'simple'
             },
             {
                 boxToken: '9cb763b6e72611381ef043e6',
@@ -140,7 +143,8 @@ describe("Box API", () => {
                         socket: ''
                     }
                 ],
-                berries: 0
+                berries: 0,
+                role: 'simple'
             }
         ])
 
@@ -375,17 +379,20 @@ describe("Box API", () => {
 
             await UserPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')
 
-            await Video.create({
-                _id: '9bc72f3d7edc6312d0ef2e47',
-                name: 'First Video',
-                link: '4c6e3f_aZ0d'
-            })
-
-            await Video.create({
-                _id: '9bc72f3d7edc6312d0ef2e48',
-                name: 'Second Video',
-                link: 'aC9d3edD3e2'
-            })
+            await Video.create([
+                {
+                    _id: '9bc72f3d7edc6312d0ef2e47',
+                    name: 'First Video',
+                    link: '4c6e3f_aZ0d',
+                    duration: 'PT5M2S'
+                },
+                {
+                    _id: '9bc72f3d7edc6312d0ef2e48',
+                    name: 'Second Video',
+                    link: 'aC9d3edD3e2',
+                    duration: 'PT5M2S'
+                }
+            ])
 
             await Box.create({
                 _id: '9cb763b6e72611381ef043e8',
@@ -460,7 +467,8 @@ describe("Box API", () => {
                 name: 'Existing playlist with videos',
                 user: '9ca0df5f86abeb66da97ba5d',
                 isPrivate: true,
-                videos: ['9bc72f3d7edc6312d0ef2e48']
+                videos: ['9bc72f3d7edc6312d0ef2e48'],
+                isDeletable: false
             })
         })
 
