@@ -201,7 +201,6 @@ describe("Box API", () => {
         })
     })
 
-
     describe("Gets a single box", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
@@ -394,7 +393,8 @@ describe("Box API", () => {
                 }
             ])
 
-            await Box.create({
+            await Box.create([
+                {
                 _id: '9cb763b6e72611381ef043e8',
                 description: 'Box with empty playlist',
                 lang: 'English',
@@ -403,9 +403,8 @@ describe("Box API", () => {
                 ],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: false,
-            })
-
-            await Box.create({
+                },
+                {
                 _id: '9cb763b6e72611381ef043e9',
                 description: 'Box with playlist of unique videos only',
                 lang: 'English',
@@ -428,9 +427,8 @@ describe("Box API", () => {
                 ],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: false,
-            })
-
-            await Box.create({
+                },
+                {
                 _id: '9cb763b6e72611381ef043ea',
                 description: 'Box with playlist with duplicate entry',
                 lang: 'English',
@@ -460,16 +458,27 @@ describe("Box API", () => {
                 ],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: false,
-            })
+                }
+            ])
 
-            await UserPlaylist.create({
+            await UserPlaylist.create([
+                {
                 _id: '7dec3a584ec1317ade113a58',
                 name: 'Existing playlist with videos',
                 user: '9ca0df5f86abeb66da97ba5d',
                 isPrivate: true,
                 videos: ['9bc72f3d7edc6312d0ef2e48'],
                 isDeletable: false
-            })
+                },
+                {
+                    _id: '7dec3a584ec1317ade113a59',
+                    name: 'Existing playlist with videos',
+                    user: '9ca0df5f86abeb66da97ba5e',
+                    isPrivate: true,
+                    videos: [],
+                    isDeletable: false
+                }
+            ])
         })
 
         after(async () => {
@@ -490,154 +499,27 @@ describe("Box API", () => {
                 .expect(401, 'UNAUTHORIZED')
         })
 
-        it("Sends a 412 if the playlist body for creation is missing some parameters", () => {
-            const playlistSettings: Partial<UserPlaylistDocument> = {
-                name: 'Test New Playlist 2',
-                isPrivate: false
-            };
-
-            return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043ea/convert')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send(playlistSettings)
-                .expect(412, 'MISSING_PARAMETERS')
-        })
-
         it("Sends a 401 if there's a playlist specified as target but is not the user's", () => {
-            const playlistSettings: Partial<UserPlaylistDocument> = {
-                name: 'Test New Playlist 2',
-                isPrivate: false,
-                user: {
-                    _id: '9ca0df5f86abeb66da97ba5d',
-                    name: 'Ask Ketchum'
-                }
-            };
-
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e8/convert')
                 .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .send(playlistSettings)
+                .send({_id: '7dec3a584ec1317ade113a58'})
                 .expect(401, 'UNAUTHORIZED')
         })
 
         it("Sends a 412 if the source box has no videos in its playlist", () => {
-            const playlistSettings: Partial<UserPlaylistDocument> = {
-                name: 'Test New Playlist 2',
-                isPrivate: false,
-                user: {
-                    _id: '9ca0df5f86abeb66da97ba5d',
-                    name: 'Ask Ketchum'
-                }
-            };
-
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e8/convert')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send(playlistSettings)
+                .send({_id: '7dec3a584ec1317ade113a58'})
                 .expect(412, 'EMPTY_PLAYLIST')
         })
 
-        it("Creates a new playlist if no playlist target is specified", () => {
-            const playlistSettings: Partial<UserPlaylistDocument> = {
-                name: 'Test New Playlist',
-                isPrivate: false,
-                user: {
-                    _id: '9ca0df5f86abeb66da97ba5d',
-                    name: 'Ask Ketchum'
-                }
-            };
-
-            return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e9/convert')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send(playlistSettings)
-                .expect(200)
-                .then(async (response) => {
-                    const playlist: Partial<UserPlaylistDocument> = {
-                        name: 'Test New Playlist',
-                        isPrivate: false,
-                        user: {
-                            _id: '9ca0df5f86abeb66da97ba5d',
-                            name: 'Ash Ketchum'
-                        },
-                        videos: [
-                            {
-                                _id: '9bc72f3d7edc6312d0ef2e47',
-                                name: 'First Video',
-                                link: '4c6e3f_aZ0d'
-                            },
-                            {
-                                _id: '9bc72f3d7edc6312d0ef2e48',
-                                name: 'Second Video',
-                                link: 'aC9d3edD3e2'
-                            }
-                        ]
-                    }
-
-                    const createdPlaylist: UserPlaylistDocument = response.body
-
-                    expect(createdPlaylist.name).to.equal(playlist.name)
-                    expect(createdPlaylist.videos).to.deep.equal(playlist.videos)
-
-                    await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
-                })
-        })
-
-        it("Creates a new playlist with only unique videos from the source box", () => {
-            const playlistSettings: Partial<UserPlaylistDocument> = {
-                name: 'Test New Playlist 2',
-                isPrivate: false,
-                user: {
-                    _id: '9ca0df5f86abeb66da97ba5d',
-                    name: 'Ask Ketchum'
-                }
-            };
-
-            return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043ea/convert')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send(playlistSettings)
-                .expect(200)
-                .then(async (response) => {
-                    const playlist: Partial<UserPlaylistDocument> = {
-                        name: 'Test New Playlist 2',
-                        isPrivate: false,
-                        user: {
-                            _id: '9ca0df5f86abeb66da97ba5d',
-                            name: 'Ash Ketchum'
-                        },
-                        videos: [
-                            {
-                                _id: '9bc72f3d7edc6312d0ef2e47',
-                                name: 'First Video',
-                                link: '4c6e3f_aZ0d'
-                            },
-                            {
-                                _id: '9bc72f3d7edc6312d0ef2e48',
-                                name: 'Second Video',
-                                link: 'aC9d3edD3e2'
-                            }
-                        ]
-                    }
-
-                    const createdPlaylist: UserPlaylistDocument = response.body
-
-                    expect(createdPlaylist.name).to.equal(playlist.name)
-                    expect(createdPlaylist.videos).to.deep.equal(playlist.videos)
-
-                    await UserPlaylist.findByIdAndDelete(createdPlaylist._id)
-                })
-        })
-
         it("Updates a playlist with unique videos if an existing playlist is specified as target", () => {
-            const playlistSettings: Partial<UserPlaylistDocument> = {
-                _id: '7dec3a584ec1317ade113a58'
-            };
-
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043ea/convert')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send(playlistSettings)
+                .send({_id: '7dec3a584ec1317ade113a58'})
                 .expect(200)
                 .then(async (response) => {
                     const playlist: Partial<UserPlaylistDocument> = {

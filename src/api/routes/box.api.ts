@@ -4,6 +4,8 @@ import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
+import { UserDocument } from './../../models/user.model'
+import { Types } from "mongoose"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
@@ -330,27 +332,16 @@ export class BoxApi {
     public async convertPlaylist(request: Request, response: Response): Promise<Response> {
         // Don't instanciate anything yet because the model will add an objectId when we need to compare against
         // its existence
-        let inputPlaylist: Partial<UserPlaylistDocument> = request.body
+        const inputPlaylist: UserPlaylistDocument = await UserPlaylist.findById(request.body._id)
+
+        if (!inputPlaylist) {
+            return response.status(412).send('PLAYLIST_DOES_NOT_EXIST')
+        }
 
         const decodedToken = response.locals.auth
         const box = response.locals.box
 
-        // If the playlist given as the _id property, then it's an existing one
-        if (inputPlaylist.hasOwnProperty('_id')) {
-            inputPlaylist = await UserPlaylist
-                .findById(inputPlaylist._id)
-                .populate('videos', 'name link')
-                .populate('user', 'name')
-        } else {
-            inputPlaylist = new UserPlaylistClass(request.body)
-        }
-
-        // If there's no user, the request is rejected
-        if (inputPlaylist.user._id === null || inputPlaylist.name === null) {
-            return response.status(412).send('MISSING_PARAMETERS')
-        }
-
-        if (inputPlaylist.user._id.toString() !== decodedToken.user.toString()) {
+        if (inputPlaylist.user.toString() !== decodedToken.user.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -362,17 +353,12 @@ export class BoxApi {
             box.playlist.forEach((queueItem: QueueItem) => {
                 // If the playlist doesn't have the video, we add it to the playlist
                 const { video }: QueueItem['video'] = queueItem
-                if (_.findIndex(inputPlaylist.videos, { _id: video._id }) === -1) {
-                    inputPlaylist.videos.push({
-                        _id: video._id,
-                        name: video.name,
-                        link: video.link
-                    })
+                if (!inputPlaylist.videos.includes(video._id)) {
+                    inputPlaylist.videos.push(video._id)
                 }
             })
 
-            let createdPlaylist: UserPlaylistDocument = await UserPlaylist.create(inputPlaylist)
-            createdPlaylist = await createdPlaylist
+            const createdPlaylist: UserPlaylistDocument = await (await inputPlaylist.save())
                 .populate({ path: 'user', select: 'name' })
                 .populate({ path: 'videos', select: 'link name' })
                 .execPopulate()

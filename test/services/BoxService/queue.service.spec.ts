@@ -73,72 +73,86 @@ describe("Queue Service", () => {
             {
                 _id: '9cb81150594b2e75f06ba8fe',
                 link: 'Ivi1e-yCPcI',
-                name: 'Destroid - Annihilate'
+                name: 'Destroid - Annihilate',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba900',
                 link: '6OmwKZ9r07o',
                 name: 'ODDS&ENDS',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba90a',
                 link: 'j6okxJ1CYJM',
-                name: 'The Piano Before Cynthia'
+                name: 'The Piano Before Cynthia',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba90b',
                 link: 'SeSOzTr_yfA',
-                name: 'The Evil King'
+                name: 'The Evil King',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba90c',
                 link: '0he85BszwL8',
-                name: 'Connected'
+                name: 'Connected',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba90d',
                 link: 'Kn8Vs_kKQMc',
-                name: 'Sand Planet'
+                name: 'Sand Planet',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba90e',
                 link: 'AvTH7J2shuI',
-                name: 'Two-Faced lovers'
+                name: 'Two-Faced lovers',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba90f',
                 link: 'UC_qla6FQwM',
-                name: 'Hibikase'
+                name: 'Hibikase',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba910',
                 link: 'Z4LiNMCTV20',
-                name: 'Hyper Reality Show'
+                name: 'Hyper Reality Show',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba911',
                 link: 'hxSg2Ioz3LM',
-                name: 'Hibana'
+                name: 'Hibana',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba912',
                 link: 'uMlv9VWAxko',
-                name: 'Unhappy Refrain'
+                name: 'Unhappy Refrain',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba913',
                 link: 'aCxGqtDoB04',
-                name: 'Peace Sign'
+                name: 'Peace Sign',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba914',
                 link: 'bmkY2yc1K7Q',
-                name: 'Te wo'
+                name: 'Te wo',
+                duration: ''
             },
             {
                 _id: '9cb81150594b2e75f06ba915',
                 link: 'ZB75e7vzX0I',
-                name: `World's End Dancehall`
+                name: `World's End Dancehall`,
+                duration: ''
             }
         ])
     })
@@ -421,25 +435,29 @@ describe("Queue Service", () => {
                     userToken: '9ca0df5f86abeb66da97ba5d',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 7
+                    berries: 7,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef143e7',
                     connexions: [],
-                    berries: 11
+                    berries: 11,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef243e7',
                     connexions: [],
-                    berries: 78
+                    berries: 78,
+                    role: 'simple'
                 }
             ])
         })
@@ -902,25 +920,29 @@ describe("Queue Service", () => {
                     userToken: '9ca0df5f86abeb66da97ba5d',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 7
+                    berries: 7,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef143e7',
                     connexions: [],
-                    berries: 51
+                    berries: 51,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef243e7',
                     connexions: [],
-                    berries: 78
+                    berries: 78,
+                    role: 'simple'
                 }
             ])
         })
@@ -1336,25 +1358,29 @@ describe("Queue Service", () => {
                     userToken: '9ca0df5f86abeb66da97ba5d',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5e',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
-                    berries: 7
+                    berries: 7,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef143e7',
                     connexions: [],
-                    berries: 51
+                    berries: 51,
+                    role: 'simple'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     boxToken: '9cb763b6e72611381ef243e7',
                     connexions: [],
-                    berries: 78
+                    berries: 78,
+                    role: 'simple'
                 }
             ])
         })
