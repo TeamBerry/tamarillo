@@ -80,7 +80,7 @@ describe("Playlists API", () => {
             isPrivate: false,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
-            isDeletable: false
+            isDeletable: true
         })
 
         await UserPlaylist.create({
