@@ -47,17 +47,20 @@ describe("Playlists API", () => {
             password: 'Metagr0ss',
         })
 
-        await Video.create({
-            _id: '9bc72f3d7edc6312d0ef2e47',
-            name: 'First Video',
-            link: '4c6e3f_aZ0d'
-        })
-
-        await Video.create({
-            _id: '9bc72f3d7edc6312d0ef2e48',
-            name: 'Second Video',
-            link: 'aC9d3edD3e2'
-        })
+        await Video.create([
+            {
+                _id: '9bc72f3d7edc6312d0ef2e47',
+                name: 'First Video',
+                link: '4c6e3f_aZ0d',
+                duration: ''
+            },
+            {
+                _id: '9bc72f3d7edc6312d0ef2e48',
+                name: 'Second Video',
+                link: 'aC9d3edD3e2',
+                duration: ''
+            }
+        ])
 
         ashJWT = authService.createSession(ashUser)
         foreignJWT = authService.createSession(shironaUser)
@@ -77,6 +80,7 @@ describe("Playlists API", () => {
             isPrivate: false,
             user: "9ca0df5f86abeb66da97ba5d",
             videos: [],
+            isDeletable: true
         })
 
         await UserPlaylist.create({

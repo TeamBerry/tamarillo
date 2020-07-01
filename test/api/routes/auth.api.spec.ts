@@ -347,7 +347,8 @@ describe("Auth API", () => {
                             socket: ''
                         }
                     ],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 },
                 {
                     boxToken: '9cb763b6e72611381ef043e4',
@@ -370,7 +371,8 @@ describe("Auth API", () => {
                             socket: ''
                         }
                     ],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 }
             ])
         })

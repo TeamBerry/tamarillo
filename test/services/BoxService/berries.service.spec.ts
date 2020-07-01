@@ -48,13 +48,15 @@ describe("Berries Service", () => {
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 boxToken: '9cb763b6e72611381ef043e4',
                 connexions: [],
-                berries: 0
+                berries: 0,
+                role: 'admin'
             },
             {
                 userToken: '9ca0df5f86abeb66da97ba5e',
                 boxToken: '9cb763b6e72611381ef043e4',
                 connexions: [],
-                berries: 750
+                berries: 750,
+                role: 'simple'
             }
         ])
     })

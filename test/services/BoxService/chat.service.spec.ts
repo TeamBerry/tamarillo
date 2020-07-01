@@ -9,7 +9,7 @@ describe("Chat Service", () => {
     describe("Spam control", () => {
         it("Refuses messages if they don't have a scope", async () => {
             const invalidMessage: Message = {
-                author: '5cdelqmpekda',
+                author: { _id: '5cdelqmpekda' },
                 contents: 'This is an invalid test message',
                 source: '54cxpsdjqhdjad',
                 scope: null,
@@ -24,7 +24,7 @@ describe("Chat Service", () => {
 
         it("Validates message if they have a scope", async () => {
             const invalidMessage: Message = {
-                author: '5cdelqmpekda',
+                author: { _id: '5cdelqmpekda' },
                 contents: 'This is an invalid test message',
                 source: '54cxpsdjqhdjad',
                 scope: 'box',

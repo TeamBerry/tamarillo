@@ -101,7 +101,10 @@ export class AuthApi {
             await UserPlaylist.create({
                 name: 'Favorites',
                 isPrivate: false,
-                user: createdUser._id,
+                user: {
+                    _id: createdUser._id,
+                    name: createdUser.name
+                },
                 isDeletable: false
             })
 
