@@ -7,13 +7,13 @@ export class UserPlaylistClass {
         _id: string
         name: string
     }
-    public videos: Array<{
+    public videos?: Array<{
         _id: string
         name: string
         link: string
     }>
-    public createdAt: Date
-    public updatedAt: Date
+    public createdAt?: Date
+    public updatedAt?: Date
     public isDeletable: boolean
 
     constructor(data: UserPlaylistClass) {

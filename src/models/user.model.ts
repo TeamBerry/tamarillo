@@ -5,14 +5,14 @@ export class UserClass {
     public name: string
     public mail: string
     public password: string
-    public resetToken: string
-    public settings: {
+    public resetToken?: string
+    public settings?: {
         theme: 'light' | 'dark'
         picture: string
         color: string
         isColorblind: boolean
     }
-    public acl: ACLConfig
+    public acl?: ACLConfig
 
     constructor(user?: Partial<UserClass>) {
         this.name = user && user.name || null
