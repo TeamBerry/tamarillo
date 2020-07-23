@@ -50,7 +50,7 @@
     },
     "devDependencies": {
         "@types/bcrypt": "3.0.0",
-        "@types/chai": "4.2.11",
+        "@types/chai": "4.2.12",
         "@types/mocha": "7.0.2",
         "@types/mongoose": "5.7.29",
         "@types/node": "9.6.56",
