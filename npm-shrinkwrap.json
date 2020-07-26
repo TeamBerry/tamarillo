@@ -504,9 +504,9 @@
       "integrity": "sha512-tHq6qdbT9U1IRSGf14CL0pUlULksvY9OZ+5eEgl1N7t+OA3tGvNpxJCzuKQlsNgCVwbAs670L1vcVQi8j9HjnA=="
     },
     "@types/mocha": {
-      "version": "7.0.2",
-      "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-7.0.2.tgz",
-      "integrity": "sha512-ZvO2tAcjmMi8V/5Z3JsyofMe3hasRcaw88cto5etSVMwVQfeivGAlEYmaQgceUSVYFofVjT+ioHsATjdWcFt1w==",
+      "version": "8.0.0",
+      "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-8.0.0.tgz",
+      "integrity": "sha512-jWeYcTo3sCH/rMgsdYXDTO85GNRyTCII5dayMIu/ZO4zbEot1E3iNGaOwpLReLUHjeNQFkgeNNVYlY4dX6azQQ==",
       "dev": true
     },
     "@types/mongodb": {
@@ -4238,12 +4238,6 @@
           "version": "4.17.19",
           "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.19.tgz",
           "integrity": "sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==",
-          "dev": true
-        },
-        "lodash": {
-          "version": "4.17.15",
-          "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.15.tgz",
-          "integrity": "sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==",
           "dev": true
         },
         "mongodb": {
