@@ -53,7 +53,7 @@
         "@types/chai": "4.2.12",
         "@types/mocha": "7.0.2",
         "@types/mongoose": "5.7.32",
-        "@types/node": "9.6.56",
+        "@types/node": "9.6.57",
         "@typescript-eslint/eslint-plugin": "2.34.0",
         "@typescript-eslint/parser": "2.34.0",
         "chai": "4.2.0",
