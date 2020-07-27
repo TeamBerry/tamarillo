@@ -265,13 +265,13 @@ describe("Queue Service", () => {
         it("Sends message with user name if user exists", async () => {
             const { feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
 
-            expect(feedback.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
+            expect(feedbackMessage.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
         })
 
         it("Sends generic message if the submitter is the system (no user given)", async () => {
             const { feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: null, boxToken: '9cb763b6e72611381ef043e4' })
 
-            expect(feedback.contents).to.equal(`The video "Destroid - Annihilate" has been added to the queue.`)
+            expect(feedbackMessage.contents).to.equal(`The video "Destroid - Annihilate" has been added to the queue.`)
         })
     })
 
