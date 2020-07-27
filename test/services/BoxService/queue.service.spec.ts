@@ -221,7 +221,57 @@ describe("Queue Service", () => {
                         loop: true,
                         berries: true,
                         videoMaxDurationLimit: 3
-                    }
+                    },
+                    acl: {
+                        moderator: [
+                          'addVideo',
+                          'removeVideo',
+                          'promoteVIP',
+                          'demoteVIP',
+                          'forceNext',
+                          'forcePlay'
+                        ],
+                        vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
+                        simple: [ 'addVideo' ]
+                      }
+                }
+            ])
+
+            await Subscriber.create([
+                {
+                    boxToken: '9cb763b6e72611381ef043e4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef053f4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063f4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063f4',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [],
+                    berries: 0,
+                    role: 'simple'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063f4',
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    connexions: [],
+                    berries: 0,
+                    role: 'vip'
                 }
             ])
         })
@@ -229,6 +279,7 @@ describe("Queue Service", () => {
         after(async () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e4')
             await Box.findByIdAndDelete('9cb763b6e72611381ef053f4')
+            await Subscriber.deleteMany({})
         })
 
         const video = {
@@ -256,7 +307,12 @@ describe("Queue Service", () => {
 
         it("Refuses video if the box is closed", async () => {
             try {
-                await queueService.addVideoToQueue(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
+                await queueService.addVideoToQueue({
+                    _id: '9cb81150594b2e75f06ba8fe',
+                    link: 'Ivi1e-yCPcI',
+                    name: 'Destroid - Annihilate',
+                    duration: 'PT5M11S'
+                }, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
             } catch (error) {
                 expect(error.message).to.equal('This box is closed. Submission is disallowed.')
             }
@@ -264,24 +320,63 @@ describe("Queue Service", () => {
 
         it("Refuses the submission if the video is too long for the restriction put in place", async () => {
             try {
-                await queueService.addVideoToQueue(video, '9cb763b6e72611381ef063f4', '9ca0df5f86abeb66da97ba5d')
+                await queueService.addVideoToQueue({
+                    _id: '9cb81150594b2e75f06ba8fe',
+                    link: 'Ivi1e-yCPcI',
+                    name: 'Destroid - Annihilate',
+                    duration: 'PT5M11S'
+                }, '9cb763b6e72611381ef063f4', '9ca0df5f86abeb66da97ba5e')
                 expect.fail()
             } catch (error) {
                 expect(error.message).to.equal('This video exceeds the limit of 3 minutes. Please submit a shorter video.')
             }
         })
 
-        it('Accepts the video even if it already is in the queue, without adding it', async () => {
-            const updatedBox = await queueService.addVideoToQueue(video, '9cb763b6e72611381ef053f4', '9ca0df5f86abeb66da97ba5d')
+        it("Accept a video that exceeds the duration if the user has the power to bypass the restriction", async () => {
+            const updatedBox = await queueService.addVideoToQueue({
+                _id: '9cb81150594b2e75f06ba8fe',
+                link: 'Ivi1e-yCPcI',
+                name: 'Destroid - Annihilate',
+                duration: 'PT5M11S'
+            }, '9cb763b6e72611381ef063f4', '9ca0df5f86abeb66da97ba5d')
 
             expect(updatedBox.playlist).to.length(1)
 
-            const updatedBoxAgain = await queueService.addVideoToQueue(video, '9cb763b6e72611381ef053f4', '9ca0df5f86abeb66da97ba5d')
+            const updatedBoxAgain = await queueService.addVideoToQueue({
+                _id: '9cb81150594b2e75f06ba900',
+                link: '6OmwKZ9r07o',
+                name: 'ODDS&ENDS',
+                duration: 'PT5M48S'
+            }, '9cb763b6e72611381ef063f4', '9ca0df5f86abeb66da97ba5f')
+            expect(updatedBoxAgain.playlist).to.length(2)
+        })
+
+        it('Accepts the video even if it already is in the queue, without adding it', async () => {
+            const updatedBox = await queueService.addVideoToQueue({
+                _id: '9cb81150594b2e75f06ba8fe',
+                link: 'Ivi1e-yCPcI',
+                name: 'Destroid - Annihilate',
+                duration: 'PT5M11S'
+            }, '9cb763b6e72611381ef053f4', '9ca0df5f86abeb66da97ba5d')
+
+            expect(updatedBox.playlist).to.length(1)
+
+            const updatedBoxAgain = await queueService.addVideoToQueue({
+                _id: '9cb81150594b2e75f06ba8fe',
+                link: 'Ivi1e-yCPcI',
+                name: 'Destroid - Annihilate',
+                duration: 'PT5M11S'
+            }, '9cb763b6e72611381ef053f4', '9ca0df5f86abeb66da97ba5d')
             expect(updatedBoxAgain.playlist).to.length(1)
         })
 
         it("Accepts the video and sends back the updated box", async () => {
-            const updatedBox = await queueService.addVideoToQueue(video, '9cb763b6e72611381ef043e4', '9ca0df5f86abeb66da97ba5d')
+            const updatedBox = await queueService.addVideoToQueue({
+                _id: '9cb81150594b2e75f06ba8fe',
+                link: 'Ivi1e-yCPcI',
+                name: 'Destroid - Annihilate',
+                duration: 'PT5M11S'
+            }, '9cb763b6e72611381ef043e4', '9ca0df5f86abeb66da97ba5d')
 
             expect(updatedBox.playlist.length).to.eql(1)
         })

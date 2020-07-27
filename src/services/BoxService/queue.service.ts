@@ -18,6 +18,7 @@ import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 import { User } from '../../models/user.model'
 import { YoutubeVideoListResponse } from '../../models/youtube.model'
+import aclService from './acl.service'
 
 const PLAY_NEXT_BERRY_COST = 10
 const SKIP_BERRY_COST = 30
@@ -388,7 +389,10 @@ export class QueueService {
 
         let updatedBox
 
-        if (box.options.videoMaxDurationLimit !== 0 && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60) {
+        if (box.options.videoMaxDurationLimit !== 0
+            && !await aclService.isAuthorized({ userToken, boxToken }, 'bypassVideoDurationLimit')
+            && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60
+        ) {
             throw new Error(`This video exceeds the limit of ${box.options.videoMaxDurationLimit} minutes. Please submit a shorter video.`)
         }
 
