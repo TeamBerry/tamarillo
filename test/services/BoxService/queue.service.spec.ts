@@ -74,25 +74,25 @@ describe("Queue Service", () => {
                 _id: '9cb81150594b2e75f06ba8fe',
                 link: 'Ivi1e-yCPcI',
                 name: 'Destroid - Annihilate',
-                duration: ''
+                duration: 'PT5M11S'
             },
             {
                 _id: '9cb81150594b2e75f06ba900',
                 link: '6OmwKZ9r07o',
                 name: 'ODDS&ENDS',
-                duration: ''
+                duration: 'PT5M48S'
             },
             {
                 _id: '9cb81150594b2e75f06ba90a',
                 link: 'j6okxJ1CYJM',
                 name: 'The Piano Before Cynthia',
-                duration: ''
+                duration: 'PT2M4S'
             },
             {
                 _id: '9cb81150594b2e75f06ba90b',
                 link: 'SeSOzTr_yfA',
                 name: 'The Evil King',
-                duration: ''
+                duration: 'PT3M45S'
             },
             {
                 _id: '9cb81150594b2e75f06ba90c',
@@ -206,6 +206,22 @@ describe("Queue Service", () => {
                         loop: true,
                         berries: true
                     }
+                },
+                {
+                    _id: '9cb763b6e72611381ef063f4',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with a 3 Minute duration restriction',
+                    playlist: [
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true,
+                        berries: true,
+                        videoMaxDurationLimit: 3
+                    }
                 }
             ])
         })
@@ -219,6 +235,7 @@ describe("Queue Service", () => {
             _id: '9cb81150594b2e75f06ba8fe',
             link: 'Ivi1e-yCPcI',
             name: 'Destroid - Annihilate',
+            duration: 'PT5M11S'
         }
 
         it("Refuses the submission if the video does not exist", async () => {
@@ -237,12 +254,20 @@ describe("Queue Service", () => {
             }
         })
 
-        // Add video to queue
         it("Refuses video if the box is closed", async () => {
             try {
                 await queueService.addVideoToQueue(video, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
             } catch (error) {
                 expect(error.message).to.equal('This box is closed. Submission is disallowed.')
+            }
+        })
+
+        it("Refuses the submission if the video is too long for the restriction put in place", async () => {
+            try {
+                await queueService.addVideoToQueue(video, '9cb763b6e72611381ef063f4', '9ca0df5f86abeb66da97ba5d')
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal('This video exceeds the limit of 3 minutes. Please submit a shorter video.')
             }
         })
 

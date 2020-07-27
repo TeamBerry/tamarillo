@@ -388,6 +388,10 @@ export class QueueService {
 
         let updatedBox
 
+        if (box.options.videoMaxDurationLimit !== 0 && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60) {
+            throw new Error(`This video exceeds the limit of ${box.options.videoMaxDurationLimit} minutes. Please submit a shorter video.`)
+        }
+
         const isVideoAlreadyInQueue = box.playlist.find((queueItem: QueueItem) => queueItem.video.toString() === video._id.toString())
         if (isVideoAlreadyInQueue) {
             updatedBox = await BoxSchema
