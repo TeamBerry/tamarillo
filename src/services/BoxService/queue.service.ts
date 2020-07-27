@@ -447,7 +447,20 @@ export class QueueService {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        (playlist.videos as unknown as Array<string>).forEach((video: string) => {
+        const playlistVideos = playlist.videos as unknown as Array<string>
+
+        const videos = await Video.find({ _id: { $in: playlistVideos } }).lean()
+
+        let addableVideos: Array<string> = playlistVideos
+
+        // If there's a max duration limit to enforce and the user cannot bypass it
+        if (box.options.videoMaxDurationLimit !== 0 && !await aclService.isAuthorized({ boxToken, userToken }, 'bypassVideoDurationLimit')) {
+            addableVideos = videos
+                .filter(video => moment.duration(video.duration).asSeconds() < box.options.videoMaxDurationLimit * 60)
+                .map(v => v._id)
+        }
+
+        addableVideos.forEach((video: string) => {
             box.playlist.unshift({
                 video,
                 startTime: null,

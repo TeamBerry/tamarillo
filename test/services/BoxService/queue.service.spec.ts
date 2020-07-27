@@ -134,7 +134,7 @@ describe("Queue Service", () => {
                 _id: '9cb81150594b2e75f06ba912',
                 link: 'uMlv9VWAxko',
                 name: 'Unhappy Refrain',
-                duration: ''
+                duration: 'PT3M46S'
             },
             {
                 _id: '9cb81150594b2e75f06ba913',
@@ -146,7 +146,7 @@ describe("Queue Service", () => {
                 _id: '9cb81150594b2e75f06ba914',
                 link: 'bmkY2yc1K7Q',
                 name: 'Te wo',
-                duration: ''
+                duration: 'PT3M31S'
             },
             {
                 _id: '9cb81150594b2e75f06ba915',
@@ -423,23 +423,138 @@ describe("Queue Service", () => {
                         random: true,
                         loop: false
                     }
+                },
+                {
+                    _id: '9cb763b6e72611381ef053e8',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with a 3 Minute duration restriction',
+                    playlist: [
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true,
+                        berries: true,
+                        videoMaxDurationLimit: 3
+                    },
+                    acl: {
+                        moderator: [
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
+                        ],
+                        vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
+                        simple: ['addVideo']
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef063e8',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with a 3 Minute duration restriction',
+                    playlist: [
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true,
+                        berries: true,
+                        videoMaxDurationLimit: 3
+                    },
+                    acl: {
+                        moderator: [
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
+                        ],
+                        vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
+                        simple: ['addVideo']
+                    }
                 }
             ])
 
-            await UserPlaylist.create({
-                _id: "8da1e01fda34eb8c1b9db46e",
-                name: "Favorites",
-                isPrivate: false,
-                user: "9ca0df5f86abeb66da97ba5d",
-                videos: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba914', '9cb81150594b2e75f06ba912'],
-                isDeletable: false
-            })
+            await UserPlaylist.create([
+                {
+                    _id: "8da1e01fda34eb8c1b9db46e",
+                    name: "Favorites",
+                    isPrivate: false,
+                    user: "9ca0df5f86abeb66da97ba5d",
+                    videos: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba914', '9cb81150594b2e75f06ba912'],
+                    isDeletable: false
+                },
+                {
+                    _id: "8da1e01fda34eb8c1b9db56e",
+                    name: "Favorites 2",
+                    isPrivate: false,
+                    user: "9ca0df5f86abeb66da97ba5d",
+                    videos: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba914', '9cb81150594b2e75f06ba912', '9cb81150594b2e75f06ba90a'],
+                    isDeletable: false
+                },
+                {
+                    _id: "8da1e01fda34eb8c1b9db66e",
+                    name: "Favorites",
+                    isPrivate: false,
+                    user: "9ca0df5f86abeb66da97ba5e",
+                    videos: ['9cb81150594b2e75f06ba8fe', '9cb81150594b2e75f06ba914', '9cb81150594b2e75f06ba912', '9cb81150594b2e75f06ba90a'],
+                    isDeletable: false
+                }
+            ])
+
+            await Subscriber.create([
+                {
+                    boxToken: '9cb763b6e72611381ef053e8',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef053e8',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [],
+                    berries: 0,
+                    role: 'simple'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063e8',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063e8',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [],
+                    berries: 0,
+                    role: 'simple'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063e8',
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    connexions: [],
+                    berries: 0,
+                    role: 'vip'
+                }
+            ])
         })
 
         after(async () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e4')
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e8')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef053e8')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef063e8')
             await UserPlaylist.deleteMany({})
+            await Subscriber.deleteMany({})
         })
 
         it("Refuses playlist if the playlist does not exist", async () => {
@@ -473,6 +588,20 @@ describe("Queue Service", () => {
             const updatedBox = await queueService.addPlaylistToQueue(userPlaylist, '9cb763b6e72611381ef043e8', '9ca0df5f86abeb66da97ba5d')
 
             expect(updatedBox.playlist.length).to.equal(3)
+        })
+
+        it("Filters videos that exceed the duration setting if the user does not have the power to bypass it", async () => {
+            const userPlaylist = await UserPlaylist.findById('8da1e01fda34eb8c1b9db56e')
+            const updatedBox = await queueService.addPlaylistToQueue(userPlaylist, '9cb763b6e72611381ef053e8', '9ca0df5f86abeb66da97ba5e')
+
+            expect(updatedBox.playlist.length).to.equal(1)
+        })
+
+        it("Doesn't filter videos on their duration if the user has the power to bypass it", async () => {
+            const userPlaylist = await UserPlaylist.findById('8da1e01fda34eb8c1b9db66e')
+            const updatedBox = await queueService.addPlaylistToQueue(userPlaylist, '9cb763b6e72611381ef063e8', '9ca0df5f86abeb66da97ba5d')
+
+            expect(updatedBox.playlist.length).to.equal(4)
         })
     })
 
