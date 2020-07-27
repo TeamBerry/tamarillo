@@ -13,7 +13,7 @@ const berriesQueue = new Queue("berries")
 
 // Models
 import { Subscriber, ConnectionRequest, BerryCount, PopulatedSubscriberDocument } from "../../models/subscriber.model"
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage, QueueItem } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -139,27 +139,49 @@ class BoxService {
             socket.on("video", async (videoSubmissionRequest: VideoSubmissionRequest) => {
                 // Emitting feedback to the chat
                 try {
-                    // Dispatching request to the Playlist Service
-                    const response = await queueService.onVideoSubmitted(videoSubmissionRequest)
+                    // Submitting video
+                    let response: Partial<{ feedbackMessage: SystemMessage, updatedBox: any, syncPacket: SyncPacket }> = await queueService.onVideoSubmitted(videoSubmissionRequest)
 
-                    // Emit notification to all chat users that a video has been added by someone
-                    io.in(videoSubmissionRequest.boxToken).emit("chat", response.feedback)
+                    // Increase berry count
+                    await berriesService.increaseBerryCount({ userToken: videoSubmissionRequest.userToken, boxToken: videoSubmissionRequest.boxToken })
 
-                    // Emit box refresh to all the subscribers
+                    console.log(response)
+                    io.in(videoSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
                     io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
 
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
                     const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
                     if (currentVideoIndex === -1) {
                         this.transitionToNextVideo(videoSubmissionRequest.boxToken)
+                    } else {
+                    // If the queue was not empty, apply eventual next / now flags so the video is preselected or plays now
+                        if (videoSubmissionRequest.flag === 'next') { // The video is submitted in preselection
+                            const targetVideo: QueueItem = response.updatedBox.playlist.find((video: QueueItem) => video.video.link === videoSubmissionRequest.link)
+                            response = await queueService.onVideoPreselected({ item: targetVideo._id.toString(), boxToken: videoSubmissionRequest.boxToken, userToken: videoSubmissionRequest.userToken })
+
+                            console.log(response)
+                            io.in(videoSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
+                            io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
+                        }
+
+                        if (videoSubmissionRequest.flag === 'now') { // The video is submitted and played now
+                            const targetVideo: QueueItem = response.updatedBox.playlist.find((video: QueueItem) => video.video.link === videoSubmissionRequest.link)
+                            response = await queueService.onVideoForcePlayed({ item: targetVideo._id.toString(), boxToken: videoSubmissionRequest.boxToken, userToken: videoSubmissionRequest.userToken })
+
+                            console.log(response)
+                            io.in(videoSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
+                            io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
+                            io.in(videoSubmissionRequest.boxToken).emit("sync", response.syncPacket)
+                        }
                     }
 
-                    const newBerriesCount: number = await berriesService.increaseBerryCount({ userToken: videoSubmissionRequest.userToken, boxToken: videoSubmissionRequest.boxToken })
+                    // Find subscriber to get their refreshed number of berries
+                    const targetSubscriber = await Subscriber.findOne({ userToken: videoSubmissionRequest.userToken, boxToken: videoSubmissionRequest.boxToken })
 
                     socket.emit('berries', {
                         userToken: videoSubmissionRequest.userToken,
                         boxToken: videoSubmissionRequest.boxToken,
-                        berries: newBerriesCount
+                        berries: targetSubscriber.berries
                     } as BerryCount)
                 } catch (error) {
                     const message = new FeedbackMessage({
@@ -176,7 +198,7 @@ class BoxService {
                 try {
                     const response = await queueService.onPlaylistSubmitted(playlistSubmissionRequest)
 
-                    io.in(playlistSubmissionRequest.boxToken).emit("chat", response.feedback)
+                    io.in(playlistSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
                     io.in(playlistSubmissionRequest.boxToken).emit("box", response.updatedBox)
 
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
@@ -200,7 +222,7 @@ class BoxService {
                     // Remove the video from the playlist (_id is sent)
                     const response = await queueService.onVideoCancelled(videoCancelRequest)
 
-                    io.in(videoCancelRequest.boxToken).emit("chat", response.feedback)
+                    io.in(videoCancelRequest.boxToken).emit("chat", response.feedbackMessage)
                     io.in(videoCancelRequest.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
                     const message = new FeedbackMessage({
@@ -225,7 +247,7 @@ class BoxService {
                         berries: targetSubscriber.berries
                     })
 
-                    io.in(videoPreselectRequest.boxToken).emit("chat", response.feedback)
+                    io.in(videoPreselectRequest.boxToken).emit("chat", response.feedbackMessage)
                     io.in(videoPreselectRequest.boxToken).emit("box", response.updatedBox)
                 } catch (error) {
                     const message = new FeedbackMessage({

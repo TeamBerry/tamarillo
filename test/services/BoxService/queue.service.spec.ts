@@ -419,12 +419,12 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043e8'
             }
 
-            const { feedback, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
+            const { feedbackMessage, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
 
             const box = await Box.findById('9cb763b6e72611381ef043e6')
 
             expect(box.playlist).to.have.lengthOf(1)
-            expect(feedback.contents).to.equal('Ash Ketchum has removed the video "The Piano Before Cynthia" from the queue.')
+            expect(feedbackMessage.contents).to.equal('Ash Ketchum has removed the video "The Piano Before Cynthia" from the queue.')
         })
     })
 
@@ -827,7 +827,7 @@ describe("Queue Service", () => {
 
             expect(targetSubscription.berries).to.equal(1)
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedback.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
+            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
         })
 
         it('Accepts the played video in loop mode', async () => {
@@ -844,7 +844,7 @@ describe("Queue Service", () => {
             const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef343f0')
 
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedback.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
+            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
         })
 
         it('Preselects a video if no other video is preselected', async () => {
@@ -861,7 +861,7 @@ describe("Queue Service", () => {
             const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
 
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedback.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
+            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
         })
 
         it('Preselects a video and unselects the preselected one if it is different', async () => {
@@ -901,7 +901,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            expect(result.feedback.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
+            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
