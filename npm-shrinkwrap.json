@@ -800,9 +800,9 @@
       "integrity": "sha1-ml9pkFGx5wczKPKgCJaLZOopVdI="
     },
     "array-move": {
-      "version": "2.2.1",
-      "resolved": "https://registry.npmjs.org/array-move/-/array-move-2.2.1.tgz",
-      "integrity": "sha512-qQpEHBnVT6HAFgEVUwRdHVd8TYJThrZIT5wSXpEUTPwBaYhPLclw12mEpyUvRWVdl1VwPOqnIy6LqTFN3cSeUQ=="
+      "version": "3.0.0",
+      "resolved": "https://registry.npmjs.org/array-move/-/array-move-3.0.0.tgz",
+      "integrity": "sha512-kqK1ZKiAVfIdfiJjC3zpAGPg3OEkjeeKuOILwS1b+oh34dI6GTg9szgRT+oKWw48RuVF8RGjlWCSYkn6NU+Jvw=="
     },
     "array-union": {
       "version": "2.1.0",
