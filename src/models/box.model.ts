@@ -18,6 +18,8 @@ export class Box {
         loop: boolean
         // Users will be able to accumulate berries and use them to gain temporary access to admin actions (skip, play now...)
         berries: boolean
+        // Indicates the maximum allowed duration of a video for submission
+        videoMaxDurationLimit: number
     }
     // Obtained from the user. Can be edited independently for each box
     public acl: ACLConfig
@@ -45,7 +47,8 @@ const boxSchema = new Schema(
         options: {
             random: { type: Boolean, default: false },
             loop: { type: Boolean, default: false },
-            berries: { type: Boolean, default: true }
+            berries: { type: Boolean, default: true },
+            videoMaxDurationLimit: { type: Number, default: 0 }
         },
         acl: {
             moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },
