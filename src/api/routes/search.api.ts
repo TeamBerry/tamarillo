@@ -13,7 +13,7 @@ export class SearchApi {
         this.init()
     }
 
-    public init = () => {
+    public init = (): void => {
         this.router.get("/", this.search)
     }
 

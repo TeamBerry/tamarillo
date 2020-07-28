@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import mongoose = require("mongoose")
 const dotenv = require("dotenv")
 dotenv.config()

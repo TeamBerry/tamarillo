@@ -12,7 +12,7 @@ const syncQueue = new Queue("sync")
 const BoxSchema = require("./../../models/box.model")
 import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope, PlayingItem } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
-import { Video } from "../../models/video.model"
+import { Video, VideoDocument } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
 import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
@@ -241,7 +241,7 @@ export class QueueService {
                 .populate("playlist.submitted_by", "_id name")
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
             }
 
             // Feedback messages
@@ -305,7 +305,7 @@ export class QueueService {
             const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item, areBerriesSpent)
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
 
                 const playingVideo = updatedBox.playlist.find(video => video._id.toString() === request.item)
                 feedbackMessage.context = 'berries'
@@ -322,7 +322,7 @@ export class QueueService {
         }
     }
 
-    public async onVideoSkipped(scope: BoxScope) {
+    public async onVideoSkipped(scope: BoxScope): Promise<{ syncPacket: SyncPacket, updatedBox: Box, feedbackMessage: SystemMessage}> {
         try {
             const user = await User.findById(scope.userToken)
 
@@ -353,7 +353,7 @@ export class QueueService {
             const playingVideo = updatedBox.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
 
                 feedbackMessage.context = 'berries'
                 feedbackMessage.contents = `${user.name} has spent ${SKIP_BERRY_COST} berries to skip the current video. Currently playing: "${playingVideo.video.name}".`
@@ -374,13 +374,13 @@ export class QueueService {
     /**
      * Adds the obtained video to the queue of the box
      *
-     * @param {any} video The video to add to the queue
+     * @param {VideoDocument} video The video to add to the queue
      * @param {string} boxToken The doucment ID of the box
      * @param {string} userToken The document ID of the user who submitted the video
-     * @returns
+     * @returns {Promise<any>} The updated box
      * @memberof PlaylistService
      */
-    public async addVideoToQueue(video, boxToken: string, userToken: string) {
+    public async addVideoToQueue(video: Partial<VideoDocument>, boxToken: string, userToken: string): Promise<any> {
         const box = await BoxSchema.findById(boxToken)
 
         if (!box.open) {
@@ -439,7 +439,7 @@ export class QueueService {
      * @returns
      * @memberof QueueService
      */
-    public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string) {
+    public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string): Promise<any> {
 
         const box = await BoxSchema.findById(boxToken)
 

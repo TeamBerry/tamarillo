@@ -25,7 +25,7 @@ export class AuthApi {
         this.init()
     }
 
-    public init() {
+    public init(): void {
         this.router.post("/login", this.login)
         this.router.post("/signup", this.signup.bind(this))
         this.router.post("/reset", this.triggerPasswordReset.bind(this))

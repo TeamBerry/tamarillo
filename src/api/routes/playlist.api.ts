@@ -15,7 +15,7 @@ export class PlaylistApi {
         this.init()
     }
 
-    public init() {
+    public init(): void {
         // This API is public but the results might change depending on the presence of a JWT
         this.router.get('/', auth.canBeAuthorized, this.index)
 

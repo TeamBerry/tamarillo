@@ -23,7 +23,7 @@ export class MailWatcher {
      *
      * @memberof MailWatcher
      */
-    public listen() {
+    public listen(): void {
         // When I detect a "mail" job, I send it to the service
         mailQueue.process((job, done) => {
             mailService
