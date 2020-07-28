@@ -1,4 +1,4 @@
-import arrayMove from 'array-move'
+const arrayMove = require('array-move')
 import * as _ from "lodash"
 const axios = require("axios")
 import moment = require("moment")
