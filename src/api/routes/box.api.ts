@@ -2,10 +2,8 @@ import { QueueItem } from "@teamberry/muscadine"
 import { NextFunction, Request, Response, Router } from "express"
 import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
-import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
+import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
-import { UserDocument } from './../../models/user.model'
-import { Types } from "mongoose"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
@@ -20,7 +18,7 @@ export class BoxApi {
         this.init()
     }
 
-    public init() {
+    public init(): void {
         this.router.get("/", auth.canBeAuthorized, this.index)
         this.router.get("/:box", this.show)
         this.router.post("/", this.store)

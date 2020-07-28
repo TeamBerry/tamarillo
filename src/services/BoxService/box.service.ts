@@ -22,7 +22,6 @@ import { BoxJob } from "../../models/box.job"
 import berriesService from "./berries.service"
 import { RoleChangeRequest } from "../../models/role-change.model"
 import aclService from "./acl.service"
-import { Box } from "../../models/box.model"
 const BoxSchema = require("./../../models/box.model")
 
 /**

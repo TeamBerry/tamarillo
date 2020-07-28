@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 
