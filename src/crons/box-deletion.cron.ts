@@ -68,5 +68,5 @@ export class BoxDeletionCron {
 }
 
 const boxDeletionCron = new BoxDeletionCron()
-boxDeletionCron.process()
+void boxDeletionCron.process()
 export default boxDeletionCron

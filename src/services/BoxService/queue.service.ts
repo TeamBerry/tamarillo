@@ -241,7 +241,7 @@ export class QueueService {
                 .populate("playlist.submitted_by", "_id name")
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
             }
 
             // Feedback messages
@@ -305,7 +305,7 @@ export class QueueService {
             const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item, areBerriesSpent)
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
 
                 const playingVideo = updatedBox.playlist.find(video => video._id.toString() === request.item)
                 feedbackMessage.context = 'berries'
@@ -353,7 +353,7 @@ export class QueueService {
             const playingVideo = updatedBox.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
 
                 feedbackMessage.context = 'berries'
                 feedbackMessage.contents = `${user.name} has spent ${SKIP_BERRY_COST} berries to skip the current video. Currently playing: "${playingVideo.video.name}".`

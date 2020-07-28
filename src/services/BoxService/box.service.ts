@@ -152,7 +152,7 @@ class BoxService {
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
                     const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
                     if (currentVideoIndex === -1) {
-                        this.transitionToNextVideo(videoSubmissionRequest.boxToken)
+                        void this.transitionToNextVideo(videoSubmissionRequest.boxToken)
                     } else {
                     // If the queue was not empty, apply eventual next / now flags so the video is preselected or plays now
                         if (videoSubmissionRequest.flag === 'next') { // The video is submitted in preselection
@@ -204,7 +204,7 @@ class BoxService {
                     // If the playlist was over before the submission of the new video, the manager service relaunches the play
                     const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
                     if (currentVideoIndex === -1) {
-                        this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
+                        void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
                     }
                 } catch (error) {
                     const message = new FeedbackMessage({
@@ -304,7 +304,7 @@ class BoxService {
                     const response = await this.onUserJoined(startSyncRequest.boxToken)
 
                     if (response.item !== null) {
-                        message.contents = 'Currently playing: "' + response.item.video.name + '"'
+                        message.contents = `Currently playing: ${response.item.video.name}`
 
                         // Emit the response back to the client
                         socket.emit("sync", response)
@@ -432,7 +432,7 @@ class BoxService {
                         { 'connexions.socket': socket.id },
                         { $pull: { connexions: { socket: socket.id } } }
                     )
-                    berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
+                    void berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
                 } catch (error) {
                     // Graceful catch (silent)
                 }
@@ -478,7 +478,7 @@ class BoxService {
                     io.in(boxToken).emit('chat', message)
 
                     // Remove subscribers
-                    Subscriber.deleteMany({ boxToken })
+                    void Subscriber.deleteMany({ boxToken })
                     break
 
                 case "update":
@@ -488,7 +488,7 @@ class BoxService {
 
                     // TODO: Update permissions for everyone
 
-                    this.sendBoxToSubscribers(boxToken)
+                    void this.sendBoxToSubscribers(boxToken)
                     break
 
                 default:
@@ -503,7 +503,7 @@ class BoxService {
             const { boxToken, order } = job.data
 
             if (order === 'next') {
-                this.transitionToNextVideo(boxToken)
+                void this.transitionToNextVideo(boxToken)
             }
 
             done()
