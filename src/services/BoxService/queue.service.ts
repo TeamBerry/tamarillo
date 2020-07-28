@@ -380,7 +380,7 @@ export class QueueService {
      * @returns {Promise<any>} The updated box
      * @memberof PlaylistService
      */
-    public async addVideoToQueue(video: VideoDocument, boxToken: string, userToken: string): Promise<any> {
+    public async addVideoToQueue(video: Partial<VideoDocument>, boxToken: string, userToken: string): Promise<any> {
         const box = await BoxSchema.findById(boxToken)
 
         if (!box.open) {
