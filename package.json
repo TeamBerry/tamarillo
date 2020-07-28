@@ -52,7 +52,7 @@
         "@types/bcrypt": "3.0.0",
         "@types/chai": "4.2.12",
         "@types/mocha": "8.0.0",
-        "@types/mongoose": "5.7.32",
+        "@types/mongoose": "5.7.34",
         "@types/node": "9.6.57",
         "@typescript-eslint/eslint-plugin": "3.7.1",
         "@typescript-eslint/parser": "3.7.1",
