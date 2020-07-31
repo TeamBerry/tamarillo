@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 
@@ -68,5 +69,5 @@ export class BoxDeletionCron {
 }
 
 const boxDeletionCron = new BoxDeletionCron()
-boxDeletionCron.process()
+void boxDeletionCron.process()
 export default boxDeletionCron

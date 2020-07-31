@@ -25,10 +25,11 @@ export class AuthApi {
         this.init()
     }
 
-    public init() {
+    public init(): void {
         this.router.post("/login", this.login)
         this.router.post("/signup", this.signup.bind(this))
         this.router.post("/reset", this.triggerPasswordReset.bind(this))
+        this.router.put("/", auth.isAuthorized, this.updatePassword.bind(this))
         this.router.get("/reset/:token", this.checkResetToken)
         this.router.post("/reset/:token", this.resetPassword.bind(this))
         this.router.post("/deactivate", auth.isAuthorized, this.deactivateAccount.bind(this))
@@ -101,7 +102,10 @@ export class AuthApi {
             await UserPlaylist.create({
                 name: 'Favorites',
                 isPrivate: false,
-                user: createdUser._id,
+                user: {
+                    _id: createdUser._id,
+                    name: createdUser.name
+                },
                 isDeletable: false
             })
 
@@ -209,6 +213,31 @@ export class AuthApi {
             return response.status(200).send()
         } catch (error) {
             console.log(error)
+            return response.status(500).send()
+        }
+    }
+
+    /**
+     * Updates the password of an user.
+     *
+     * @param {Request} request
+     * @param {Response} response
+     * @returns {Promise<Response>}
+     * @memberof AuthApi
+     */
+    public async updatePassword(request: Request, response: Response): Promise<Response> {
+        try {
+            const password = await bcrypt.hash(request.body.password, this.SALT_ROUNDS)
+
+            await User.findByIdAndUpdate(
+                response.locals.auth.user,
+                {
+                    $set: { password, resetToken: null }
+                }
+            )
+
+            return response.status(200).send()
+        } catch (error) {
             return response.status(500).send()
         }
     }

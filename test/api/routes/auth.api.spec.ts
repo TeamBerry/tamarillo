@@ -242,6 +242,94 @@ describe("Auth API", () => {
         })
     })
 
+    describe("Update password", () => {
+        let ashJWT: Session = null
+        let shironaJWT: Session = null
+
+        before(async () => {
+            const ashUser = await User.create({
+                _id: '9ca0df5f86abeb66da97ba5d',
+                name: 'Ash Ketchum',
+                mail: 'ash@pokemon.com',
+                password: 'Pikachu',
+                resetToken: null,
+                settings: {
+                    theme: 'light',
+                    picture: '9ca0df5f86abeb66da97ba5d-picture',
+                    color: '#CD3E1D',
+                    isColorblind: false
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                }
+            })
+
+            const shironaUser = await User.create({
+                _id: '9ca0df5f86abeb66da97ba5e',
+                name: 'Shirona',
+                mail: 'shirona@sinnoh-league.com',
+                password: 'Piano',
+                resetToken: 'yuaxPLMxE1R1XiA7lvRd',
+                settings: {
+                    theme: 'dark',
+                    picture: 'default-picture',
+                    color: '#07D302',
+                    isColorblind: false
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                }
+            })
+
+            ashJWT = authService.createSession(ashUser)
+            shironaJWT = authService.createSession(shironaUser)
+        })
+
+        after(async () => {
+            await User.deleteMany({})
+        })
+
+        it("Updates the password", () => {
+            const reset = {
+                password: "butterfree"
+            }
+
+            return supertest(expressApp)
+                .put('/')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .send(reset)
+                .expect(200)
+                .then(async () => {
+                    const user = await User.findById('9ca0df5f86abeb66da97ba5d').lean()
+
+                    expect(user.password).to.not.equal('Pikachu')
+                    expect(user.resetToken).to.be.null
+                })
+        })
+
+        it("Updates the password and voids the reset token", () => {
+            const reset = {
+                password: "butterfree"
+            }
+
+            return supertest(expressApp)
+                .put('/')
+                .set('Authorization', `Bearer ${shironaJWT.bearer}`)
+                .send(reset)
+                .expect(200)
+                .then(async () => {
+                    const user = await User.findById('9ca0df5f86abeb66da97ba5d').lean()
+
+                    expect(user.password).to.not.equal('Piano')
+                    expect(user.resetToken).to.be.null
+                })
+        })
+    })
+
     describe("Deactivate Account", () => {
         let ashJWT: Session = null
         let foreignJWT: Session = null
@@ -347,7 +435,8 @@ describe("Auth API", () => {
                             socket: ''
                         }
                     ],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 },
                 {
                     boxToken: '9cb763b6e72611381ef043e4',
@@ -370,7 +459,8 @@ describe("Auth API", () => {
                             socket: ''
                         }
                     ],
-                    berries: 0
+                    berries: 0,
+                    role: 'simple'
                 }
             ])
         })

@@ -1,4 +1,4 @@
-import arrayMove from 'array-move'
+const arrayMove = require('array-move')
 import * as _ from "lodash"
 const axios = require("axios")
 import moment = require("moment")
@@ -12,12 +12,13 @@ const syncQueue = new Queue("sync")
 const BoxSchema = require("./../../models/box.model")
 import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope, PlayingItem } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
-import { Video } from "../../models/video.model"
+import { Video, VideoDocument } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
 import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 import { User } from '../../models/user.model'
 import { YoutubeVideoListResponse } from '../../models/youtube.model'
+import aclService from './acl.service'
 
 const PLAY_NEXT_BERRY_COST = 10
 const SKIP_BERRY_COST = 30
@@ -33,10 +34,10 @@ export class QueueService {
      * Once it's done, it emits a confirmation message to the user.
      *
      * @param {VideoSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
-     * @returns {Promise<{ feedback: SystemMessage, updatedBox: any }>} A promise with a feedback message and the populated updated Box
+     * @returns {Promise<{ feedbackMessage: SystemMessage, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof PlaylistService
      */
-    public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedback: SystemMessage, updatedBox: any }> {
+    public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
             // Obtaining video from database. Creating it if needed
             const video = await this.getVideoDetails(request.link)
@@ -54,20 +55,20 @@ export class QueueService {
                 message = `The video "${video.name}" has been added to the queue.`
             }
 
-            const feedback = new SystemMessage({
+            const feedbackMessage = new SystemMessage({
                 contents: message,
                 scope: request.boxToken,
                 context: 'info'
             })
 
-            return { feedback, updatedBox }
+            return { feedbackMessage, updatedBox }
         } catch (error) {
             // If the box is closed, the error is sent back to the socket method.
             throw new Error(error.message)
         }
     }
 
-    public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedback: SystemMessage, updatedBox: any }> {
+    public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
             // Get the playlist
             const playlist = await UserPlaylist.findById(request.playlistId)
@@ -84,13 +85,13 @@ export class QueueService {
 
             const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
 
-            const feedback = new SystemMessage({
+            const feedbackMessage = new SystemMessage({
                 contents: `${user.name} has added his playlist "${playlist.name}" (${playlist.videos.length} videos) to the queue.`,
                 scope: request.boxToken,
                 context: 'info'
             })
 
-            return { feedback, updatedBox }
+            return { feedbackMessage, updatedBox }
         } catch (error) {
             throw Error(error.message)
         }
@@ -100,10 +101,10 @@ export class QueueService {
      * Removing a video from the queue of a box.
      *
      * @param {QueueItemActionRequest} request
-     * @returns {Promise<{ feedback: SystemMessage, updatedBox: any }>}
+     * @returns {Promise<{ feedbackMessage: SystemMessage, updatedBox: any }>}
      * @memberof PlaylistService
      */
-    public async onVideoCancelled(request: QueueItemActionRequest): Promise<{ feedback: SystemMessage, updatedBox: any }> {
+    public async onVideoCancelled(request: QueueItemActionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -135,13 +136,13 @@ export class QueueService {
 
             const message = `${user.name} has removed the video "${targetVideo.name}" from the queue.`
 
-            const feedback = new SystemMessage({
+            const feedbackMessage = new SystemMessage({
                 contents: message,
                 scope: request.boxToken,
                 context: 'info'
             })
 
-            return { feedback, updatedBox }
+            return { feedbackMessage, updatedBox }
         } catch (error) {
             throw new Error(error.message)
         }
@@ -152,10 +153,10 @@ export class QueueService {
      * all the other parameters of the box
      *
      * @param {QueueItemActionRequest} request
-     * @returns {Promise<{ feedback: FeedbackMessage, updatedBox: any }>}
+     * @returns {Promise<{ feedbackMessage: SystemMessage, updatedBox: any }>}
      * @memberof QueueService
      */
-    public async onVideoPreselected(request: QueueItemActionRequest): Promise<{ feedback: SystemMessage, updatedBox: any }> {
+    public async onVideoPreselected(request: QueueItemActionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -175,7 +176,7 @@ export class QueueService {
             }
 
             const alreadySelectedVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video.isPreselected)
-            const targetVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video._id.toString() === request.item)
+            const targetVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video._id.toString() === request.item.toString())
 
             // Before we do anything, securities:
             // - The target video has to exist
@@ -195,7 +196,7 @@ export class QueueService {
                 throw new Error("The video you selected has already been played.")
             }
 
-            const feedback = new SystemMessage({
+            const feedbackMessage = new SystemMessage({
                 contents: '',
                 scope: request.boxToken,
                 context: 'info'
@@ -210,11 +211,10 @@ export class QueueService {
 
                 box.playlist[alreadySelectedVideoIndex].isPreselected = false
                 if (areBerriesSpent) {
-                    feedback.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to remove the preslection on "$OLD_VIDEO$".`
-                    feedback.context = 'berries'
+                    feedbackMessage.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to remove the preslection on "$OLD_VIDEO$".`
+                    feedbackMessage.context = 'berries'
                 } else {
-                    feedback.contents = `${user.name} has removed the preselection on "$OLD_VIDEO$".`
-                    // feedback.feedbackType = 'berries'
+                    feedbackMessage.contents = `${user.name} has removed the preselection on "$OLD_VIDEO$".`
                 }
             }
 
@@ -223,10 +223,10 @@ export class QueueService {
                 box.playlist[targetVideoIndex].isPreselected = true
                 if (areBerriesSpent) {
                     box.playlist[targetVideoIndex].stateForcedWithBerries = true
-                    feedback.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to preselect the video "$NEW_VIDEO$". It will be the next video to play.`
-                    feedback.context = 'berries'
+                    feedbackMessage.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to preselect the video "$NEW_VIDEO$". It will be the next video to play.`
+                    feedbackMessage.context = 'berries'
                 } else {
-                    feedback.contents = `${user.name} has preselected the video "$NEW_VIDEO$". It will be the next video to play.`
+                    feedbackMessage.contents = `${user.name} has preselected the video "$NEW_VIDEO$". It will be the next video to play.`
                 }
             }
 
@@ -241,25 +241,25 @@ export class QueueService {
                 .populate("playlist.submitted_by", "_id name")
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
             }
 
             // Feedback messages
-            if (feedback.contents.includes('$OLD_VIDEO$')) {
-                feedback.contents = feedback.contents.replace(/\$OLD_VIDEO\$/gm, `${updatedBox.playlist[alreadySelectedVideoIndex].video.name}`)
+            if (feedbackMessage.contents.includes('$OLD_VIDEO$')) {
+                feedbackMessage.contents = feedbackMessage.contents.replace(/\$OLD_VIDEO\$/gm, `${updatedBox.playlist[alreadySelectedVideoIndex].video.name}`)
             }
 
-            if (feedback.contents.includes('$NEW_VIDEO$')) {
-                feedback.contents = feedback.contents.replace(/\$NEW_VIDEO\$/gm, `${updatedBox.playlist[targetVideoIndex].video.name}`)
+            if (feedbackMessage.contents.includes('$NEW_VIDEO$')) {
+                feedbackMessage.contents = feedbackMessage.contents.replace(/\$NEW_VIDEO\$/gm, `${updatedBox.playlist[targetVideoIndex].video.name}`)
             }
 
-            return { feedback, updatedBox }
+            return { feedbackMessage, updatedBox }
         } catch (error) {
             throw new Error(error.message)
         }
     }
 
-    public async onVideoForcePlayed(request: QueueItemActionRequest) {
+    public async onVideoForcePlayed(request: QueueItemActionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any, syncPacket: SyncPacket }> {
         try {
             const user = await User.findById(request.userToken)
 
@@ -305,7 +305,7 @@ export class QueueService {
             const { syncPacket, feedbackMessage, updatedBox } = await this.transitionToNextVideo(request.boxToken, request.item, areBerriesSpent)
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
 
                 const playingVideo = updatedBox.playlist.find(video => video._id.toString() === request.item)
                 feedbackMessage.context = 'berries'
@@ -322,7 +322,7 @@ export class QueueService {
         }
     }
 
-    public async onVideoSkipped(scope: BoxScope) {
+    public async onVideoSkipped(scope: BoxScope): Promise<{ syncPacket: SyncPacket, updatedBox: Box, feedbackMessage: SystemMessage}> {
         try {
             const user = await User.findById(scope.userToken)
 
@@ -353,7 +353,7 @@ export class QueueService {
             const playingVideo = updatedBox.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             if (areBerriesSpent) {
-                berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
+                await berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
 
                 feedbackMessage.context = 'berries'
                 feedbackMessage.contents = `${user.name} has spent ${SKIP_BERRY_COST} berries to skip the current video. Currently playing: "${playingVideo.video.name}".`
@@ -374,13 +374,13 @@ export class QueueService {
     /**
      * Adds the obtained video to the queue of the box
      *
-     * @param {any} video The video to add to the queue
+     * @param {VideoDocument} video The video to add to the queue
      * @param {string} boxToken The doucment ID of the box
      * @param {string} userToken The document ID of the user who submitted the video
-     * @returns
+     * @returns {Promise<any>} The updated box
      * @memberof PlaylistService
      */
-    public async addVideoToQueue(video, boxToken: string, userToken: string) {
+    public async addVideoToQueue(video: Partial<VideoDocument>, boxToken: string, userToken: string): Promise<any> {
         const box = await BoxSchema.findById(boxToken)
 
         if (!box.open) {
@@ -388,6 +388,13 @@ export class QueueService {
         }
 
         let updatedBox
+
+        if (box.options.videoMaxDurationLimit !== 0
+            && !await aclService.isAuthorized({ userToken, boxToken }, 'bypassVideoDurationLimit')
+            && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60
+        ) {
+            throw new Error(`This video exceeds the limit of ${box.options.videoMaxDurationLimit} minutes. Please submit a shorter video.`)
+        }
 
         const isVideoAlreadyInQueue = box.playlist.find((queueItem: QueueItem) => queueItem.video.toString() === video._id.toString())
         if (isVideoAlreadyInQueue) {
@@ -432,7 +439,7 @@ export class QueueService {
      * @returns
      * @memberof QueueService
      */
-    public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string) {
+    public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string): Promise<any> {
 
         const box = await BoxSchema.findById(boxToken)
 
@@ -440,7 +447,20 @@ export class QueueService {
             throw new Error("This box is closed. Submission is disallowed.")
         }
 
-        (playlist.videos as unknown as Array<string>).forEach((video: string) => {
+        const playlistVideos = playlist.videos as unknown as Array<string>
+
+        const videos = await Video.find({ _id: { $in: playlistVideos } }).lean()
+
+        let addableVideos: Array<string> = playlistVideos
+
+        // If there's a max duration limit to enforce and the user cannot bypass it
+        if (box.options.videoMaxDurationLimit !== 0 && !await aclService.isAuthorized({ boxToken, userToken }, 'bypassVideoDurationLimit')) {
+            addableVideos = videos
+                .filter(video => moment.duration(video.duration).asSeconds() < box.options.videoMaxDurationLimit * 60)
+                .map(v => v._id)
+        }
+
+        addableVideos.forEach((video: string) => {
             box.playlist.unshift({
                 video,
                 startTime: null,

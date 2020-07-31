@@ -1,19 +1,17 @@
 import { Document, model, Schema } from "mongoose"
+import { UserDocument } from './user.model'
 
 export class UserPlaylistClass {
     public name: string
     public isPrivate?: boolean
-    public user?: {
-        _id: string
-        name: string
-    }
-    public videos: Array<{
+    public user?: string | Partial<UserDocument>
+    public videos?: Array<string> | Array<{
         _id: string
         name: string
         link: string
     }>
-    public createdAt: Date
-    public updatedAt: Date
+    public createdAt?: Date
+    public updatedAt?: Date
     public isDeletable: boolean
 
     constructor(data: UserPlaylistClass) {

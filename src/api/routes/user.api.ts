@@ -20,7 +20,7 @@ export class UserApi {
         this.init()
     }
 
-    public init() {
+    public init(): void {
         this.router.get("/favorites", this.favorites)
         this.router.post("/favorites", this.updateFavorites)
         this.router.patch("/settings", this.patchSettings)

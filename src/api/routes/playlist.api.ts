@@ -4,6 +4,7 @@ const axios = require("axios")
 
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
+import { User } from "../../models/user.model"
 const auth = require("./../auth.middleware")
 
 export class PlaylistApi {
@@ -14,20 +15,20 @@ export class PlaylistApi {
         this.init()
     }
 
-    public init() {
+    public init(): void {
         // This API is public but the results might change depending on the presence of a JWT
         this.router.get('/', auth.canBeAuthorized, this.index)
 
         // All next APIs require authentication
         this.router.use(auth.isAuthorized)
-        this.router.get("/:playlist", this.show)
+        this.router.get("/:playlist", this.show.bind(this))
         this.router.post("/", this.store)
-        this.router.put("/:playlist", this.update)
-        this.router.delete("/:playlist", this.destroy)
+        this.router.put("/:playlist", this.update.bind(this))
+        this.router.delete("/:playlist", this.destroy.bind(this))
 
         // Manipulate videos in playlists
-        this.router.post("/:playlist/videos", this.addVideoToPlaylist)
-        this.router.delete("/:playlist/videos/:video", this.removeVideoFromPlaylist)
+        this.router.post("/:playlist/videos", this.addVideoToPlaylist.bind(this))
+        this.router.delete("/:playlist/videos/:video", this.removeVideoFromPlaylist.bind(this))
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -80,7 +81,7 @@ export class PlaylistApi {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylistClass = response.locals.playlist
 
-        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -134,7 +135,7 @@ export class PlaylistApi {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylistClass = response.locals.playlist
 
-        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -179,7 +180,7 @@ export class PlaylistApi {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylistClass = response.locals.playlist
 
-        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -208,7 +209,7 @@ export class PlaylistApi {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylistClass = response.locals.playlist
 
-        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -259,7 +260,7 @@ export class PlaylistApi {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylistClass = response.locals.playlist
 
-        if (decodedToken.user.toString() !== playlist.user._id.toString()) {
+        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
@@ -280,6 +281,14 @@ export class PlaylistApi {
             return response.status(200).send(updatedPlaylist)
         } catch (error) {
             return response.status(500).send(error)
+        }
+    }
+
+    private verifyPlaylistOwnership(decodedToken, playlist: UserPlaylistClass) {
+        if (playlist.user instanceof User) {
+            return decodedToken.user.toString() === playlist.user._id.toString()
+        } else {
+            return decodedToken.user.toString() === playlist.user.toString()
         }
     }
 }

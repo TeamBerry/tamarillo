@@ -24,7 +24,7 @@ export class UploadService {
         this.s3 = new AWS.S3()
     }
 
-    public async storeProfilePicture(user: string, uploadedFile: MulterFile) {
+    public async storeProfilePicture(user: string, uploadedFile: MulterFile): Promise<string> {
         if (!uploadedFile) {
             return null
         }
