@@ -4,6 +4,7 @@ import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
+import QueueApi from "./queue.api"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../auth.middleware")
@@ -29,6 +30,7 @@ export class BoxApi {
         this.router.get("/:box/users", this.users)
 
         this.router.use(auth.isAuthorized)
+        this.router.use("/:box/queue", QueueApi)
         this.router.post('/:box/convert', this.convertPlaylist)
 
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
