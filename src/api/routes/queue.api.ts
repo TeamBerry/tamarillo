@@ -18,7 +18,7 @@ export class QueueApi {
 
         // All subsequent routes require authentication
         this.router.use(auth.isAuthorized)
-        this.router.use(boxMiddleware.boxPrivacy)
+        this.router.use([boxMiddleware.boxPrivacy, boxMiddleware.boxMustBeOpen])
         this.router.post("/", this.submitVideo)
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)

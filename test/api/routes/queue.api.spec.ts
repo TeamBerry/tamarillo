@@ -449,13 +449,5 @@ describe("Queue API", () => {
                 .send({ link: 'CwiHSG_tYaQ' })
                 .expect(404, 'EMBED_NOT_ALLOWED')
         })
-
-        it("Refuses video if the box is closed", async () => {
-            return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e5/queue')
-                .set('Authorization', `Bearer ${ashJWT.bearer}`)
-                .send({ _id: '9cb81150594b2e75f06ba8fe' })
-                .expect(403, 'BOX_CLOSED')
-        })
     })
 });

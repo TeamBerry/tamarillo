@@ -114,6 +114,29 @@ describe("Box Middleware", () => {
                     vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
                     simple: ['addVideo']
                 }
+            },
+            {
+                _id: '9cb763b6e72611381ef043e5',
+                description: 'Closed box',
+                lang: 'English',
+                name: 'Closed box',
+                playlist: [
+                    {
+                        _id: '9cb763b6e72611381ef043e9',
+                        video: '9cb81150594b2e75f06ba90a',
+                        startTime: null,
+                        endTime: null,
+                        submittedAt: "2019-05-31T09:19:41+0000",
+                        submitted_by: '9ca0df5f86abeb66da97ba5d',
+                        isPreselected: false
+                    }
+                ],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                open: false,
+                options: {
+                    random: true,
+                    loop: false
+                }
             }
         ])
 
@@ -290,6 +313,16 @@ describe("Box Middleware", () => {
 
                     expect(queue).to.length(1)
                 })
+        })
+    })
+
+    describe("Box Open", () => {
+        it("Refuses request if the box is closed", async () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef043e5/queue')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .send({ _id: '9cb81150594b2e75f06ba8fe' })
+                .expect(403, 'BOX_CLOSED')
         })
     })
 })

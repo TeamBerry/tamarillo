@@ -26,3 +26,29 @@ module.exports.boxPrivacy = async (request: Request, response: Response, next: N
 
     next()
 }
+
+/**
+ * Rejects the request if the box is closed
+ */
+module.exports.boxMustBeOpen = async (request: Request, response: Response, next: NextFunction) => {
+    const matchingBox = response.locals.box
+
+    if (!matchingBox.open) {
+        return response.status(403).send('BOX_CLOSED')
+    }
+
+    next()
+}
+
+/**
+ * Rejects the request if the box is open
+ */
+module.exports.boxMustBeClosed = async (request: Request, response: Response, next: NextFunction) => {
+    const matchingBox = response.locals.box
+
+    if (!matchingBox.open) {
+        return response.status(403).send('BOX_OPEN')
+    }
+
+    next()
+}
