@@ -24,7 +24,7 @@ export class QueueApi {
         // All subsequent routes require authentication
         this.router.use(auth.isAuthorized)
         this.router.use([boxMiddleware.boxPrivacy, boxMiddleware.boxMustBeOpen])
-        this.router.post("/", this.addVideoToQueue.bind(this))
+        this.router.post("/", this.addVideo.bind(this))
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)
         this.router.put("/:video/skip", this.skipVideo)
@@ -49,13 +49,19 @@ export class QueueApi {
         return response.status(200).send(response.locals.box.playlist)
     }
 
-    public async addVideoToQueue(request: Request, response: Response): Promise<Response> {
+    public async addVideo(request: Request, response: Response): Promise<Response> {
         const box = response.locals.box
         const decodedToken = response.locals.auth
 
+        const { link }: { link: string } = request.body ?? null
+
+        if (!link) {
+            return response.status(412).send('MISSING_PARAMETERS')
+        }
+
         try {
             let updatedBox
-            const video = await this.getVideoDetails(request.body.link)
+            const video = await this.getVideoDetails(link)
 
             if (box.options.videoMaxDurationLimit !== 0
                 && !await aclService.isAuthorized({ userToken: decodedToken.user, boxToken: request.params.box }, 'bypassVideoDurationLimit')
