@@ -1,9 +1,12 @@
 import { NextFunction, Request, Response } from "express"
+
 import { Subscriber } from "../../models/subscriber.model"
 
-// This middleware always happens AFTER the box param evaluation, so the box will always exist in locals
+/**
+ * This middleware always happens AFTER the box param evaluation, so the box will always exist in locals
+ * It also happens after the auth middleware, so it has access to the auth data if it exists
+ */
 module.exports.boxPrivacy = async (request: Request, response: Response, next: NextFunction) => {
-    console.log('EVAL OF BOX PRIVACY')
     const matchingBox = response.locals.box
 
     // If the box has its privacy setting enabled, only users that already joined it can access

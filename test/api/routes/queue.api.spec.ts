@@ -291,33 +291,14 @@ describe("Queue API", () => {
             await Subscriber.deleteMany({})
         })
 
-        it("Sends a 404 if the box does not exist", () => {
-            return supertest(expressApp)
-                .get('/9cb763b6e72611381ef053f5/queue')
-                .expect(404, 'BOX_NOT_FOUND')
-        })
-
-        it("Sends a 404 if the box is private and the user is not authenticated", () => {
-            return supertest(expressApp)
-                .get('/9cb763b6e72611381ef053f4/queue')
-                .expect(404, 'BOX_NOT_FOUND')
-        })
-
-        it("Sends a 404 if the box is private, the user is authenticated but never accessed the box", () => {
-            return supertest(expressApp)
-                .get('/9cb763b6e72611381ef053f4/queue')
-                .set('Authorization', `Bearer ${shironaJWT.bearer}`)
-                .expect(404, 'BOX_NOT_FOUND')
-        })
-
-        it("Sends a 200 with the box queue if the box is private but the user is authenticated and has access to the box", () => {
+        it("Sends the private box queue", () => {
             return supertest(expressApp)
                 .get('/9cb763b6e72611381ef053f4/queue')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
                 .expect(200)
         })
 
-        it("Sends a 200 with the box queue if the box is public", () => {
+        it("Sends the public box queue", () => {
             return supertest(expressApp)
                 .get('/9cb763b6e72611381ef063f4/queue')
                 .expect(200)
