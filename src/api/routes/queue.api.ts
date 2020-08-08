@@ -143,7 +143,7 @@ export class QueueApi {
                 const youtubeResponse: YoutubeVideoListResponse = youtubeRequest.data
 
                 if (youtubeResponse.items.length === 0) {
-                    throw Error('NO_VIDEO')
+                    throw Error('VIDEO_NOT_FOUND')
                 }
 
                 if (!youtubeResponse.items[0].status.embeddable) {

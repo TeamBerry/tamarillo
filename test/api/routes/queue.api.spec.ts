@@ -447,7 +447,7 @@ describe("Queue API", () => {
                 .post('/9cb763b6e72611381ef043e4/queue')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send({ link: 'CwiHSG_tYaQ' })
-                .expect(404, 'EMBED_NOT_ALLOWED')
+                .expect(403, 'EMBED_NOT_ALLOWED')
         })
 
         it("Refuses the submission if the video is too long for the restriction put in place", async () => {
