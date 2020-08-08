@@ -350,6 +350,18 @@ describe("Queue API", () => {
                         random: true,
                         loop: true,
                         berries: true
+                    },
+                    acl: {
+                        moderator: [
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
+                        ],
+                        vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
+                        simple: []
                     }
                 },
                 {
@@ -412,6 +424,13 @@ describe("Queue API", () => {
                     role: 'simple'
                 },
                 {
+                    boxToken: '9cb763b6e72611381ef053f4',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [],
+                    berries: 0,
+                    role: 'simple'
+                },
+                {
                     boxToken: '9cb763b6e72611381ef063f4',
                     userToken: '9ca0df5f86abeb66da97ba5f',
                     connexions: [],
@@ -439,6 +458,14 @@ describe("Queue API", () => {
                 .post('/9cb763b6e72611381ef043e4/queue')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(412, 'MISSING_PARAMETERS')
+        })
+
+        it("Refuses the submission if the user does not have sufficient ACL powers", async () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef053f4/queue')
+                .set('Authorization', `Bearer ${shironaJWT.bearer}`)
+                .send({ link: 'Ivi1e-yCPcI' })
+                .expect(403)
         })
 
         it("Refuses the submission if the video does not exist", async () => {

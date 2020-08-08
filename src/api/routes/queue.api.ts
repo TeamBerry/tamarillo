@@ -60,7 +60,7 @@ export class QueueApi {
         }
 
         if (!await aclService.isAuthorized({ userToken: decodedToken.user, boxToken: request.params.box }, 'addVideo')) {
-            return response.status(401).send()
+            return response.status(403).send()
         }
 
         try {
