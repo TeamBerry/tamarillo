@@ -21,7 +21,11 @@ export class BoxApi {
 
     public init(): void {
         this.router.get("/", auth.canBeAuthorized, this.index)
-        this.router.get("/:box", this.show)
+        this.router.get("/:box", auth.canBeAuthorized, this.show)
+        this.router.use("/:box/queue", QueueApi)
+
+        // All subsequent routes require authentication
+        this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
@@ -29,8 +33,6 @@ export class BoxApi {
         this.router.post("/:box/open", this.open.bind(this))
         this.router.get("/:box/users", this.users)
 
-        this.router.use(auth.isAuthorized)
-        this.router.use("/:box/queue", QueueApi)
         this.router.post('/:box/convert', this.convertPlaylist)
 
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
@@ -305,6 +307,7 @@ export class BoxApi {
                 return response.status(412).send("BOX_IS_OPEN")
             }
 
+            // TODO: Restrict deletion to box creator
             const deletedBox = await Box.findOneAndRemove({ _id: targetId })
 
             // Create job to alert people in the box and have them removed
