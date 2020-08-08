@@ -4,7 +4,7 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import QueueApi from './../../../src/api/routes/queue.api'
+import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
@@ -13,7 +13,7 @@ import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
 
-describe.only("Queue API", () => {
+describe("Queue API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
@@ -22,7 +22,7 @@ describe.only("Queue API", () => {
 
     before(async () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
-        expressApp.use('/boxes/', QueueApi)
+        expressApp.use('/', BoxApi)
 
         await Box.deleteMany({})
         await User.deleteMany({})
@@ -175,6 +175,160 @@ describe.only("Queue API", () => {
         await Subscriber.deleteMany({})
     })
 
+    describe("Get box queue", () => {
+        before(async () => {
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef053f4',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with a video already added to it',
+                    playlist: [
+                        {
+                            isPreselected: false,
+                            stateForcedWithBerries: false,
+                            _id: '9cb763b6e72611381ef04401',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: '2020-04-23T15:50:31.921Z',
+                            endTime: null,
+                            submittedAt: '2020-04-23T15:50:30.896Z',
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    private: true,
+                    options: {
+                        random: true,
+                        loop: true,
+                        berries: true
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef063f4',
+                    description: null,
+                    lang: 'English',
+                    name: 'Box with a 3 Minute duration restriction',
+                    playlist: [
+                        {
+                            isPreselected: false,
+                            stateForcedWithBerries: false,
+                            _id: '9cb763b6e72611381ef04401',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: '2020-04-23T15:50:31.921Z',
+                            endTime: null,
+                            submittedAt: '2020-04-23T15:50:30.896Z',
+                            submitted_by: '9ca0df5f86abeb66da97ba5d'
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    private: false,
+                    options: {
+                        random: true,
+                        loop: true,
+                        berries: true,
+                        videoMaxDurationLimit: 3
+                    },
+                    acl: {
+                        moderator: [
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
+                        ],
+                        vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
+                        simple: ['addVideo']
+                    }
+                }
+            ])
+
+            await Subscriber.create([
+                {
+                    boxToken: '9cb763b6e72611381ef043e4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef053f4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063f4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063f4',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [],
+                    berries: 0,
+                    role: 'simple'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef063f4',
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    connexions: [],
+                    berries: 0,
+                    role: 'vip'
+                }
+            ])
+        })
+
+        after(async () => {
+            await Box.findByIdAndDelete('9cb763b6e72611381ef043e4')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef053f4')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef063f4')
+            await Subscriber.deleteMany({})
+        })
+
+        it("Sends a 404 if the box does not exist", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef053f5/queue')
+                .expect(404, 'BOX_NOT_FOUND')
+        })
+
+        it("Sends a 404 if the box is private and the user is not authenticated", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef053f4/queue')
+                .expect(404, 'BOX_NOT_FOUND')
+        })
+
+        it("Sends a 404 if the box is private, the user is authenticated but never accessed the box", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef053f4/queue')
+                .set('Authorization', `Bearer ${shironaJWT.bearer}`)
+                .expect(404, 'BOX_NOT_FOUND')
+        })
+
+        it("Sends a 200 with the box queue if the box is private but the user is authenticated and has access to the box", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef053f4/queue')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .expect(200)
+        })
+
+        it("Sends a 200 with the box queue if the box is public", () => {
+            return supertest(expressApp)
+                .get('/9cb763b6e72611381ef063f4/queue')
+                .expect(200)
+                .then((response) => {
+                    const queue = response.body
+
+                    expect(queue).to.length(1)
+                })
+        })
+    })
+
     describe("Submit video to box", () => {
         before(async () => {
             await Box.create([
@@ -309,7 +463,7 @@ describe.only("Queue API", () => {
 
         it("Refuses the submission if the video cannot be played remotely", async () => {
             return supertest(expressApp)
-                .post('9cb763b6e72611381ef043e4/queue')
+                .post('/9cb763b6e72611381ef043e4/queue')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send({ link: 'CwiHSG_tYaQ' })
                 .expect(404, 'EMBED_NOT_ALLOWED')
@@ -317,7 +471,7 @@ describe.only("Queue API", () => {
 
         it("Refuses video if the box is closed", async () => {
             return supertest(expressApp)
-                .post('9cb763b6e72611381ef043e5/queue')
+                .post('/9cb763b6e72611381ef043e5/queue')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send({ _id: '9cb81150594b2e75f06ba8fe' })
                 .expect(403, 'BOX_CLOSED')
