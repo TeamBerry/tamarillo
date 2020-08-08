@@ -13,7 +13,7 @@ import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
 
-describe("Queue API", () => {
+describe.only("Queue API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
@@ -448,6 +448,59 @@ describe("Queue API", () => {
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send({ link: 'CwiHSG_tYaQ' })
                 .expect(404, 'EMBED_NOT_ALLOWED')
+        })
+
+        it("Refuses the submission if the video is too long for the restriction put in place", async () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef063f4/queue')
+                .set('Authorization', `Bearer ${shironaJWT.bearer}`)
+                .send({ link: 'Ivi1e-yCPcI' })
+                .expect(403, 'DURATION_EXCEEDED')
+        })
+
+        describe("Accepts a video that exceeds the duration if the user has the power to bypass the restriction", async () => {
+            it("User is admin", () => {
+                return supertest(expressApp)
+                    .post('/9cb763b6e72611381ef063f4/queue')
+                    .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                    .send({ link: 'Ivi1e-yCPcI' })
+                    .expect(200)
+            })
+
+            it("User has ACL powers", () => {
+                return supertest(expressApp)
+                    .post('/9cb763b6e72611381ef063f4/queue')
+                    .set('Authorization', `Bearer ${brockJWT.bearer}`)
+                    .send({ link: 'Ivi1e-yCPcI' })
+                    .expect(200)
+            })
+        })
+
+        it("Accepts the video even if it already is in the queue, without adding it", async () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef053f4/queue')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .send({ link: 'Ivi1e-yCPcI' })
+                .send({ link: 'Ivi1e-yCPcI' })
+                .expect(200)
+                .then((response) => {
+                    const updatedBox = response.body
+
+                    expect(updatedBox.playlist).to.length(1)
+                })
+        })
+
+        it("Accepts the video and sends back the updated box", async () => {
+            return supertest(expressApp)
+                .post('/9cb763b6e72611381ef043e4/queue')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .send({ link: 'Ivi1e-yCPcI' })
+                .expect(200)
+                .then((response) => {
+                    const updatedBox = response.body
+
+                    expect(updatedBox.playlist).to.length(1)
+                })
         })
     })
 });

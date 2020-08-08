@@ -1,9 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express"
+const axios = require("axios")
+import moment = require("moment")
+
 import { QueueItem } from "@teamberry/muscadine"
+import aclService from "../../services/BoxService/acl.service"
+import { Video, VideoDocument } from "../../models/video.model"
+import { YoutubeVideoListResponse } from "../../models/youtube.model"
 const auth = require("./../auth.middleware")
 const boxMiddleware = require("./../middlewares/box.middleware")
-
-const Box = require("./../../models/box.model")
+const BoxSchema = require("./../../models/box.model")
 
 export class QueueApi {
     public router: Router
@@ -19,7 +24,7 @@ export class QueueApi {
         // All subsequent routes require authentication
         this.router.use(auth.isAuthorized)
         this.router.use([boxMiddleware.boxPrivacy, boxMiddleware.boxMustBeOpen])
-        this.router.post("/", this.submitVideo)
+        this.router.post("/", this.addVideoToQueue.bind(this))
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)
         this.router.put("/:video/skip", this.skipVideo)
@@ -44,8 +49,65 @@ export class QueueApi {
         return response.status(200).send(response.locals.box.playlist)
     }
 
-    public async submitVideo(request: Request, response: Response): Promise<Response> {
-        return response.status(503).send('UNDER_CONSTRUCTION')
+    public async addVideoToQueue(request: Request, response: Response): Promise<Response> {
+        const box = response.locals.box
+        const decodedToken = response.locals.auth
+
+        try {
+            let updatedBox
+            const video = await this.getVideoDetails(request.body.link)
+
+            if (box.options.videoMaxDurationLimit !== 0
+                && !await aclService.isAuthorized({ userToken: decodedToken.user, boxToken: request.params.box }, 'bypassVideoDurationLimit')
+                && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60
+            ) {
+                return response.status(403).send('DURATION_EXCEEDED')
+            }
+
+            const isVideoAlreadyInQueue = box.playlist.find((queueItem: QueueItem) => queueItem.video._id.toString() === video._id.toString())
+            if (isVideoAlreadyInQueue) {
+                updatedBox = await BoxSchema
+                    .findById(request.params.box)
+                    .populate("creator", "_id name")
+                    .populate("playlist.video")
+                    .populate("playlist.submitted_by", "_id name")
+            } else {
+                const submission: QueueItem = {
+                    video: video._id,
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: new Date(),
+                    submitted_by: decodedToken.user,
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                }
+
+                box.playlist.unshift(submission)
+
+                updatedBox = await BoxSchema
+                    .findOneAndUpdate(
+                        { _id: request.params.box },
+                        { $set: { playlist: box.playlist } },
+                        { new: true }
+                    )
+                    .populate("creator", "_id name")
+                    .populate("playlist.video")
+                    .populate("playlist.submitted_by", "_id name")
+            }
+
+            return response.status(200).send(updatedBox)
+        } catch (error) {
+            switch (error.message) {
+                case 'NO_VIDEO':
+                    return response.status(404).send(error.message)
+
+                case 'EMBED_NOT_ALLOWED':
+                    return response.status(403).send(error.message)
+
+                default:
+                    return response.status(500).send()
+            }
+        }
     }
 
     public async playNext(request: Request, response: Response): Promise<Response> {
@@ -62,6 +124,43 @@ export class QueueApi {
 
     public async removeVideo(request: Request, response: Response): Promise<Response> {
         return response.status(503).send('UNDER_CONSTRUCTION')
+    }
+
+    /**
+     * Gets the video from the database. If it doesn't exist, it will create the new video and send it back.
+     *
+     * @param {string} link the unique YouTube ID of the video
+     * @returns {any} The video
+     * @memberof PlaylistService
+     */
+    public async getVideoDetails(link: string): Promise<VideoDocument> {
+        let video = await Video.findOne({ link })
+
+        try {
+            if (!video) {
+                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,status&id=${link}&key=${process.env.YOUTUBE_API_KEY}`)
+
+                const youtubeResponse: YoutubeVideoListResponse = youtubeRequest.data
+
+                if (youtubeResponse.items.length === 0) {
+                    throw Error('NO_VIDEO')
+                }
+
+                if (!youtubeResponse.items[0].status.embeddable) {
+                    throw Error(`EMBED_NOT_ALLOWED`)
+                }
+
+                video = await Video.create({
+                    link,
+                    name: youtubeResponse.items[0].snippet.title,
+                    duration: youtubeResponse.items[0].contentDetails.duration
+                })
+            }
+
+            return video
+        } catch (error) {
+            throw new Error(error.message)
+        }
     }
 }
 
