@@ -98,7 +98,7 @@ export class QueueApi {
             return response.status(200).send(updatedBox)
         } catch (error) {
             switch (error.message) {
-                case 'NO_VIDEO':
+                case 'VIDEO_NOT_FOUND':
                     return response.status(404).send(error.message)
 
                 case 'EMBED_NOT_ALLOWED':
