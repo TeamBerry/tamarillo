@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express"
 
 import * as jwt from "jsonwebtoken"
-import { PUBLIC_KEY } from "../config/keys"
-import { User } from "../models/user.model"
+import { PUBLIC_KEY } from "../../config/keys"
+import { User } from "../../models/user.model"
 
 
 // Prevents an API from being accessed unless the user is authentified

@@ -7,7 +7,7 @@ import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../..
 import QueueApi from "./queue.api"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 const Box = require("./../../models/box.model")
 

@@ -6,7 +6,7 @@ import { QueueItem } from "@teamberry/muscadine"
 import aclService from "../../services/BoxService/acl.service"
 import { Video, VideoDocument } from "../../models/video.model"
 import { YoutubeVideoListResponse } from "../../models/youtube.model"
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 const boxMiddleware = require("./../middlewares/box.middleware")
 const BoxSchema = require("./../../models/box.model")
 
