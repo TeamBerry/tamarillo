@@ -86,10 +86,6 @@ export class QueueService {
             // Finding the user who submitted the video
             const user = await User.findById(request.userToken)
 
-            if (!user) {
-                throw new Error('No user was found. The submission has been rejected.')
-            }
-
             const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
 
             const feedbackMessage = new SystemMessage({
