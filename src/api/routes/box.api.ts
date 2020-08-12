@@ -63,7 +63,7 @@ export class BoxApi {
         try {
             let query: unknown = { open: true, private: { $ne: true } }
 
-            const decodedToken = response.locals.auth
+            const decodedToken = response.locals.auth ?? null
             if (decodedToken) {
                 query = {
                     open: true,
