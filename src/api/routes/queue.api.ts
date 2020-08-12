@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 
-import { QueueItem,  VideoSubmissionRequest, QueueItemActionRequest } from "@teamberry/muscadine"
+import { QueueItem,  VideoSubmissionRequest, QueueItemActionRequest, BoxScope } from "@teamberry/muscadine"
 const auth = require("./../middlewares/auth.middleware")
 const boxMiddleware = require("./../middlewares/box.middleware")
 
@@ -54,7 +54,7 @@ export class QueueApi {
 
         try {
             queueActionsQueue.add({
-                type: 'playNext',
+                type: 'addVideo',
                 requestContents: {
                     boxToken: request.params.box,
                     userToken: decodedToken.user,
@@ -108,7 +108,21 @@ export class QueueApi {
     }
 
     public async skipVideo(request: Request, response: Response): Promise<Response> {
-        return response.status(503).send('UNDER_CONSTRUCTION')
+        const decodedToken = response.locals.auth
+
+        try {
+            queueActionsQueue.add({
+                type: 'skipVideo',
+                requestContents: {
+                    boxToken: request.params.box,
+                    userToken: decodedToken.user
+                } as BoxScope
+            })
+
+            return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send(error.message)
+        }
     }
 
     public async removeVideo(request: Request, response: Response): Promise<Response> {
