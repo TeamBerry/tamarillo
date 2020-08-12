@@ -12,6 +12,7 @@ import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
+import { QueueItem } from '@teamberry/muscadine'
 
 describe("Queue API", () => {
     const expressApp = express()
@@ -535,6 +536,438 @@ describe("Queue API", () => {
 
                     expect(updatedBox.playlist).to.length(1)
                 })
+        })
+    })
+
+    describe("Play video next", () => {
+        before(async () => {
+            await Subscriber.create([
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    connexions: [],
+                    berries: 7,
+                    role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef143e7',
+                    connexions: [],
+                    berries: 11,
+                    role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 78,
+                    role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef343e7',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                }
+            ])
+        })
+
+        after(async () => {
+            await Subscriber.deleteMany({})
+        })
+
+        beforeEach(async () => {
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef043e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef043f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    private: false,
+                    options: {
+                        random: true,
+                        loop: false,
+                        berries: true,
+                        videoMaxDurationLimit: 0
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef143e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef143f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef243e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef243f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: true,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef343e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in loop + random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef343f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true
+                    }
+                }
+            ])
+        })
+
+        afterEach(async () => {
+            await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef343e7')
+        })
+
+        it('Refuses if the video does not exist in the queue', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/8cb763b6e72611381ef043f4/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(404, 'VIDEO_NOT_FOUND')
+        })
+
+        it('Refuses if the video is playing', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f1/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(409, 'VIDEO_ALREADY_PLAYING')
+        })
+
+        it('Refuses if the video has been played (non-loop)', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f0/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(409, 'VIDEO_ALREADY_PLAYED')
+        })
+
+        it('Refuses if the non-admin user does not have enough berries', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f4/next')
+                .set('Authorization', `Bearer ${shironaJWT.bearer}`)
+                .expect(403, 'BERRIES_INSUFFICIENT')
+        })
+
+        it('Refuses if there is another video already preselected with berries', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef243e7/queue/9cb763b6e72611381ef243f4/next')
+                .set('Authorization', `Bearer ${brockJWT.bearer}`)
+                .expect(403, 'ANOTHER_TRACK_PRESELECTED')
+        })
+
+        it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef143e7/queue/9cb763b6e72611381ef143f4/next')
+                .set('Authorization', `Bearer ${brockJWT.bearer}`)
+                .expect(200)
+                .then(async () => {
+                    const box = await Box.findById('9cb763b6e72611381ef143e7')
+
+                    const preselectedVideo: QueueItem = box.playlist.find((queueItem: QueueItem) => queueItem._id.toString() === '9cb763b6e72611381ef143f4')
+
+                    const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
+
+                    expect(targetSubscription.berries).to.equal(1)
+                    expect(preselectedVideo.isPreselected).to.equal(true)
+                    expect(preselectedVideo.stateForcedWithBerries).to.equal(true)
+                })
+        })
+
+        it('Accepts the played video in loop mode', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef343e7/queue/9cb763b6e72611381ef343f0/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(200)
+                .then(async () => {
+                    const box = await Box.findById('9cb763b6e72611381ef343e7')
+
+                    const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef343f0')
+
+                    expect(preselectedVideo.isPreselected).to.equal(true)
+                })
+        })
+
+        it('Preselects a video if no other video is preselected', async () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f4/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(200)
+                .then(async () => {
+                    const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+                    const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
+
+                    expect(preselectedVideo.isPreselected).to.equal(true)
+                })
+        })
+
+        it('Preselects a video and unselects the preselected one if it is different', async () => {
+            await supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f4/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f3/next')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(200)
+                .then(async () => {
+
+                    const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+                    const previousSelectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
+                    expect(previousSelectedVideo.isPreselected).to.equal(false)
+
+                    const preselectedVideo = box.playlist.filter(video => video.isPreselected)
+                    expect(preselectedVideo).to.have.lengthOf(1)
+
+                    expect(preselectedVideo[0]._id.toString()).to.equal('9cb763b6e72611381ef043f3')
+            })
+
+        })
+
+        it('Unselects a video if it is the one preselected', async () => {
+        await supertest(expressApp)
+            .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f4/next')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+
+        return supertest(expressApp)
+            .put('/9cb763b6e72611381ef043e7/queue/9cb763b6e72611381ef043f4/next')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(200)
+            .then(async () => {
+                const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+                const previousSelectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
+                expect(previousSelectedVideo.isPreselected).to.equal(false)
+
+                const preselectedVideo = box.playlist.filter(video => video.isPreselected)
+                expect(preselectedVideo).to.have.lengthOf(0)
+            })
         })
     })
 });
