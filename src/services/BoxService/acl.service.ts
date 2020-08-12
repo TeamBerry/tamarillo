@@ -3,8 +3,13 @@ import { Subscriber, PopulatedSubscriberDocument } from "../../models/subscriber
 import { FeedbackMessage, BoxScope, Permission } from "@teamberry/muscadine"
 const Box = require("../../models/box.model")
 
+export enum ACLResult {
+    NO = 0,
+    YES = 1,
+    BERRIES = 2
+}
 class ACLService {
-    public async isAuthorized(scope: BoxScope, action: Permission): Promise<boolean> {
+    public async isAuthorized(scope: BoxScope, action: Permission): Promise<ACLResult> {
         const subscriber = await Subscriber.findOne({
             userToken: scope.userToken,
             boxToken: scope.boxToken
@@ -12,12 +17,21 @@ class ACLService {
 
         // Admin powers bypass everything
         if (subscriber.role === 'admin') {
-            return true
+            return ACLResult.YES
         }
 
         const box = await Box.findById(scope.boxToken).lean()
 
-        return box.acl[subscriber.role].includes(action)
+        if (box.acl[subscriber.role].includes(action)) {
+            return ACLResult.YES
+        } else {
+            // If berries are enabled
+            if (box.options.berries){
+                const berriesPermissions: Array<Permission> = ['forceNext', 'forcePlay', 'skipVideo']
+                return berriesPermissions.includes(action) ? ACLResult.BERRIES : ACLResult.NO
+            }
+        }
+        return ACLResult.NO
     }
 
     // Step 1: update the role of the target subscriber
