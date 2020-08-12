@@ -205,6 +205,18 @@ describe("Queue Service", () => {
                         random: true,
                         loop: true,
                         berries: true
+                    },
+                    acl: {
+                        moderator: [
+                          'addVideo',
+                          'removeVideo',
+                          'promoteVIP',
+                          'demoteVIP',
+                          'forceNext',
+                          'forcePlay'
+                        ],
+                        vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
+                        simple: []
                     }
                 },
                 {
@@ -272,7 +284,14 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 0,
                     role: 'vip'
-                }
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef053f4',
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    connexions: [],
+                    berries: 0,
+                    role: 'simple'
+                },
             ])
         })
 
@@ -305,16 +324,12 @@ describe("Queue Service", () => {
             }
         })
 
-        it("Refuses video if the box is closed", async () => {
+        it("Refuses video if the user does not have enough ACL powers", async () => {
             try {
-                await queueService.addVideoToQueue({
-                    _id: '9cb81150594b2e75f06ba8fe',
-                    link: 'Ivi1e-yCPcI',
-                    name: 'Destroid - Annihilate',
-                    duration: 'PT5M11S'
-                }, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
+                await queueService.onVideoSubmitted({ link: 'CwiHSG_tYaQ', userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef053f4' })
+                expect.fail()
             } catch (error) {
-                expect(error.message).to.equal('This box is closed. Submission is disallowed.')
+                expect(error.message).to.equal("You do not have the authorization to do this.")
             }
         })
 
@@ -332,7 +347,7 @@ describe("Queue Service", () => {
             }
         })
 
-        it("Accept a video that exceeds the duration if the user has the power to bypass the restriction", async () => {
+        it("Accepts a video that exceeds the duration if the user has the power to bypass the restriction", async () => {
             const updatedBox = await queueService.addVideoToQueue({
                 _id: '9cb81150594b2e75f06ba8fe',
                 link: 'Ivi1e-yCPcI',
@@ -386,12 +401,6 @@ describe("Queue Service", () => {
             const { feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
 
             expect(feedbackMessage.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
-        })
-
-        it("Sends generic message if the submitter is the system (no user given)", async () => {
-            const { feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: null, boxToken: '9cb763b6e72611381ef043e4' })
-
-            expect(feedbackMessage.contents).to.equal(`The video "Destroid - Annihilate" has been added to the queue.`)
         })
     })
 
@@ -449,7 +458,7 @@ describe("Queue Service", () => {
                             'forcePlay'
                         ],
                         vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
-                        simple: ['addVideo']
+                        simple: []
                     }
                 },
                 {
@@ -544,6 +553,13 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 0,
                     role: 'vip'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef043e4',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 17,
+                    role: 'simple'
                 }
             ])
         })
@@ -560,26 +576,18 @@ describe("Queue Service", () => {
         it("Refuses playlist if the playlist does not exist", async () => {
             try {
                 await queueService.onPlaylistSubmitted({ playlistId: '9da1e01fda34eb8c1b9db46e', boxToken: '9cb763b6e72611381ef043e4', userToken: '9ca0df5f86abeb66da97ba5d' })
+                expect.fail()
             } catch (error) {
                 expect(error.message).to.equal("The playlist could not be found. The submission has been rejected.")
             }
         })
 
-        it("Refuses playlist if the user does not exist", async () => {
+        it("Refuses playlist if the user does not have enough ACL powers", async () => {
             try {
-                await queueService.onPlaylistSubmitted({ playlistId: '8da1e01fda34eb8c1b9db46e', boxToken: '9cb763b6e72611381ef043e4', userToken: '8ca0df5f86abeb66da97ba5d' })
+                await queueService.onPlaylistSubmitted({ playlistId: '8da1e01fda34eb8c1b9db66e', userToken: '9ca0df5f86abeb66da97ba5e', boxToken: '9cb763b6e72611381ef053e8' })
+                expect.fail()
             } catch (error) {
-                expect(error.message).to.equal("No user was found. The submission has been rejected.")
-            }
-        })
-
-        // Add Playlist to Queue
-        it("Refuses playlist if the box is closed", async () => {
-            const userPlaylist: UserPlaylistDocument = await UserPlaylist.findById('8da1e01fda34eb8c1b9db46e')
-            try {
-                await queueService.addPlaylistToQueue(userPlaylist, '9cb763b6e72611381ef043e5', '9ca0df5f86abeb66da97ba5d')
-            } catch (error) {
-                expect(error.message).to.equal("This box is closed. Submission is disallowed.")
+                expect(error.message).to.equal("You do not have the authorization to do this.")
             }
         })
 
@@ -607,85 +615,13 @@ describe("Queue Service", () => {
 
     describe("Remove video from box", () => {
         before(async () => {
-            await Box.create({
-                _id: '9cb763b6e72611381ef043e6',
-                description: 'Box with a video playing',
-                lang: 'English',
-                name: 'Box playing',
-                playlist: [
-                    {
-                        _id: '9cb763b6e72611381ef043e8',
-                        video: '9cb81150594b2e75f06ba90a',
-                        startTime: null,
-                        endTime: null,
-                        submittedAt: "2019-05-31T09:19:41+0000",
-                        submitted_by: '9ca0df5f86abeb66da97ba5d',
-                        isPreselected: false
-                    },
-                    {
-                        _id: '9cb763b6e72611381ef043e7',
-                        video: '9cb81150594b2e75f06ba90a',
-                        startTime: "2019-05-31T09:19:44+0000",
-                        endTime: null,
-                        submittedAt: "2019-05-31T09:19:41+0000",
-                        submitted_by: '9ca0df5f86abeb66da97ba5d',
-                        isPreselected: false
-                    }
-                ],
-                creator: '9ca0df5f86abeb66da97ba5d',
-                open: true,
-                options: {
-                    random: false,
-                    loop: false
-                }
-            })
-        })
-
-        after(async () => {
-            await Box.findByIdAndDelete('9cb763b6e72611381ef043e6')
-        })
-
-        it("Refuses video if the box is closed", async () => {
-            const cancelPayload: QueueItemActionRequest = {
-                boxToken: '9cb763b6e72611381ef043e5',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef043e9'
-            }
-
-            try {
-                await queueService.onVideoCancelled(cancelPayload)
-            } catch (error) {
-                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
-
-            }
-
-        })
-
-        it("Removes the video from the queue", async () => {
-            const cancelPayload: QueueItemActionRequest = {
-                boxToken: '9cb763b6e72611381ef043e6',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef043e8'
-            }
-
-            const { feedbackMessage, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
-
-            const box = await Box.findById('9cb763b6e72611381ef043e6')
-
-            expect(box.playlist).to.have.lengthOf(1)
-            expect(feedbackMessage.contents).to.equal('Ash Ketchum has removed the video "The Piano Before Cynthia" from the queue.')
-        })
-    })
-
-    describe('Preselect a video', () => {
-        before(async () => {
             await Subscriber.create([
                 {
                     userToken: '9ca0df5f86abeb66da97ba5d',
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
                     berries: 0,
-                    role: 'simple'
+                    role: 'admin'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5e',
@@ -707,6 +643,347 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 78,
                     role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef343e7',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                }
+            ])
+        })
+
+        after(async () => {
+            await Subscriber.deleteMany({})
+        })
+
+        beforeEach(async () => {
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef043e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef043f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef043f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef143e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef143f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef143f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef243e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef243f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: true,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef243f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: false
+                    }
+                },
+                {
+                    _id: '9cb763b6e72611381ef343e7',
+                    description: 'Box with a video playing and a preselected video with berries',
+                    lang: 'English',
+                    name: 'Box playing in loop + random mode',
+                    playlist: [
+                        {
+                            _id: '9cb763b6e72611381ef343f4',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f3',
+                            video: '9cb81150594b2e75f06ba90b',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: true
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f2',
+                            video: '9cb81150594b2e75f06ba8fe',
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f1',
+                            video: '9cb81150594b2e75f06ba90a',
+                            startTime: "2019-05-31T09:21:12+0000",
+                            endTime: null,
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        },
+                        {
+                            _id: '9cb763b6e72611381ef343f0',
+                            video: '9cb81150594b2e75f06ba90c',
+                            startTime: "2019-05-31T09:19:44+0000",
+                            endTime: "2019-05-31T09:21:12+0000",
+                            submittedAt: "2019-05-31T09:19:41+0000",
+                            submitted_by: '9ca0df5f86abeb66da97ba5d',
+                            isPreselected: false,
+                            stateForcedWithBerries: false
+                        }
+                    ],
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: false,
+                    options: {
+                        random: true,
+                        loop: true
+                    }
+                }
+            ])
+        })
+
+        afterEach(async () => {
+            await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef343e7')
+        })
+
+        it("Refuses if the user does not have enough ACL powers", async () => {
+            const cancelPayload: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5e',
+                item: '9cb763b6e72611381ef043e9'
+            }
+
+            try {
+                await queueService.onVideoCancelled(cancelPayload)
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal("You do not have the authorization to do this.")
+            }
+        })
+
+        it("Removes the video from the queue", async () => {
+            const cancelPayload: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f0'
+            }
+
+            const { feedbackMessage, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
+
+            const box = await Box.findById('9cb763b6e72611381ef043e7')
+
+            expect(box.playlist).to.have.lengthOf(4)
+            expect(feedbackMessage.contents).to.equal('Ash Ketchum has removed the video "Connected" from the queue.')
+        })
+    })
+
+    describe('Preselect a video', () => {
+        before(async () => {
+            await Subscriber.create([
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    connexions: [],
+                    berries: 7,
+                    role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef143e7',
+                    connexions: [],
+                    berries: 11,
+                    role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5f',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 78,
+                    role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef343e7',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
                 }
             ])
         })
@@ -973,20 +1250,6 @@ describe("Queue Service", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef343e7')
         })
 
-        it('Refuses the order if the box is closed', async () => {
-            const preselectRequest: QueueItemActionRequest = {
-                boxToken: '9cb763b6e72611381ef043e5',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef043e9'
-            }
-
-            try {
-                await queueService.onVideoPreselected(preselectRequest)
-            } catch (error) {
-                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
-            }
-        })
-
         it('Refuses if the video does not exist in the queue', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
@@ -996,6 +1259,7 @@ describe("Queue Service", () => {
 
             try {
                 await queueService.onVideoPreselected(preselectRequest)
+                expect.fail()
             } catch (error) {
                 expect(error.message).to.equal("The video you selected could not be found.")
             }
@@ -1010,6 +1274,7 @@ describe("Queue Service", () => {
 
             try {
                 await queueService.onVideoPreselected(preselectRequest)
+                expect.fail()
             } catch (error) {
                 expect(error.message).to.equal("The video you selected is currently playing.")
             }
@@ -1024,6 +1289,7 @@ describe("Queue Service", () => {
 
             try {
                 await queueService.onVideoPreselected(preselectRequest)
+                expect.fail()
             } catch (error) {
                 expect(error.message).to.equal("The video you selected has already been played.")
             }
@@ -1170,7 +1436,7 @@ describe("Queue Service", () => {
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
                     berries: 0,
-                    role: 'simple'
+                    role: 'admin'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5e',
@@ -1192,6 +1458,13 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 78,
                     role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef343e7',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
                 }
             ])
         })
@@ -1458,20 +1731,6 @@ describe("Queue Service", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef343e7')
         })
 
-        it('Refuses the order if the box is closed', async () => {
-            const forcePlayRequest: QueueItemActionRequest = {
-                boxToken: '9cb763b6e72611381ef043e5',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef043e9'
-            }
-
-            try {
-                await queueService.onVideoForcePlayed(forcePlayRequest)
-            } catch (error) {
-                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
-            }
-        })
-
         it('Refuses the order if the video does not exist in the queue', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
@@ -1608,7 +1867,7 @@ describe("Queue Service", () => {
                     boxToken: '9cb763b6e72611381ef043e7',
                     connexions: [],
                     berries: 0,
-                    role: 'simple'
+                    role: 'admin'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5e',
@@ -1831,19 +2090,6 @@ describe("Queue Service", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
         })
 
-        it('Refuses the order if the box is closed', async () => {
-            const skipRequest: BoxScope = {
-                boxToken: '9cb763b6e72611381ef043e5',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-            }
-
-            try {
-                await queueService.onVideoSkipped(skipRequest)
-            } catch (error) {
-                expect(error.message).to.equal("The box is closed. The queue cannot be modified.")
-            }
-        })
-
         it('Refuses if the non-admin user does not have enough berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef043e7',
@@ -1960,15 +2206,6 @@ describe("Queue Service", () => {
             const currentVideo = await queueService.getCurrentVideo('9cb763b6e72611381ef043e4')
 
             expect(currentVideo).to.equal(null)
-        })
-
-        it("Throws an error if the box is closed", async () => {
-            try {
-                await queueService.getCurrentVideo('9cb763b6e72611381ef043e5')
-            } catch (error) {
-                expect(error.message).to.equal('This box is closed. Video play is disabled.')
-
-            }
         })
 
         it("Returns the currently playing video", async () => {

@@ -41,28 +41,21 @@ export class QueueService {
      */
     public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
-            // Obtaining video from database. Creating it if needed
-            const video = await this.getVideoDetails(request.link)
-
             if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
             }
+
+            // Obtaining video from database. Creating it if needed
+            const video = await this.getVideoDetails(request.link)
 
             // Finding the user who submitted the video
             const user = await User.findById(request.userToken)
 
             // Adding it to the queue of the box
             const updatedBox = await this.addVideoToQueue(video, request.boxToken, request.userToken)
-            let message: string
-
-            if (user) {
-                message = `${user.name} has added the video "${video.name}" to the queue.`
-            } else {
-                message = `The video "${video.name}" has been added to the queue.`
-            }
 
             const feedbackMessage = new SystemMessage({
-                contents: message,
+                contents: `${user.name} has added the video "${video.name}" to the queue.`,
                 scope: request.boxToken,
                 context: 'info'
             })
@@ -79,15 +72,15 @@ export class QueueService {
      */
     public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            }
+
             // Get the playlist
             const playlist = await UserPlaylist.findById(request.playlistId)
 
             if (!playlist) {
                 throw new Error('The playlist could not be found. The submission has been rejected.')
-            }
-
-            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
-                throw new Error("You do not have the authorization to do this.")
             }
 
             // Finding the user who submitted the video
@@ -123,10 +116,6 @@ export class QueueService {
             const user = await User.findById(request.userToken)
 
             const box: Box = await BoxSchema.findById(request.boxToken)
-
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
 
             if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'removeVideo') === ACLResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
@@ -181,10 +170,6 @@ export class QueueService {
             const box = await BoxSchema.findById(request.boxToken)
 
             let areBerriesSpent = false
-
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
 
             const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forceNext')
             if (ACLEvaluation === ACLResult.NO) {
@@ -287,10 +272,6 @@ export class QueueService {
 
             const box = await BoxSchema.findById(request.boxToken)
 
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
-
             let areBerriesSpent = false
 
             const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forceNext')
@@ -354,10 +335,6 @@ export class QueueService {
 
             const box = await BoxSchema.findById(scope.boxToken)
 
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
-
             let areBerriesSpent = false
 
             const ACLEvaluation = await aclService.isAuthorized({ userToken: scope.userToken, boxToken: scope.boxToken }, 'skipVideo')
@@ -412,10 +389,6 @@ export class QueueService {
      */
     public async addVideoToQueue(video: Partial<VideoDocument>, boxToken: string, userToken: string): Promise<any> {
         const box = await BoxSchema.findById(boxToken)
-
-        if (!box.open) {
-            throw new Error("This box is closed. Submission is disallowed.")
-        }
 
         let updatedBox
 
@@ -475,10 +448,6 @@ export class QueueService {
     public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string): Promise<any> {
 
         const box = await BoxSchema.findById(boxToken)
-
-        if (!box.open) {
-            throw new Error("This box is closed. Submission is disallowed.")
-        }
 
         const playlistVideos = playlist.videos as unknown as Array<string>
 
