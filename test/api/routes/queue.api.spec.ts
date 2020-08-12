@@ -456,7 +456,7 @@ describe("Queue API", () => {
 
         it("Refuses the submission if there's no link sent", async () => {
             return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e4/queue')
+                .post('/9cb763b6e72611381ef043e4/queue/video')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(412, 'MISSING_PARAMETERS')
         })
