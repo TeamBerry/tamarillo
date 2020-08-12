@@ -22,9 +22,9 @@ export class QueueApi {
         this.router.use([auth.isAuthorized, boxMiddleware.boxPrivacy, boxMiddleware.boxMustBeOpen])
         this.router.post("/video", this.addVideo.bind(this))
         this.router.post("/playlist", this.addPlaylist.bind(this))
+        this.router.put("/skip", this.skipVideo)
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)
-        this.router.put("/:video/skip", this.skipVideo)
         this.router.delete("/:video", this.removeVideo)
 
         this.router.param("video", async (request: Request, response: Response, next: NextFunction) => {

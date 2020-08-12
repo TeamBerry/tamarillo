@@ -419,6 +419,7 @@ class BoxService {
                     break
 
                 case 'addPlaylist':
+                    void this.onPlaylistSubmissionRequest(job.data.requestContents)
                     break
 
                 case 'playNext':
