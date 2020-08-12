@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express"
 
-import { QueueItem,  VideoSubmissionRequest, QueueItemActionRequest, BoxScope } from "@teamberry/muscadine"
+import { QueueItem,  VideoSubmissionRequest, QueueItemActionRequest, BoxScope, PlaylistSubmissionRequest } from "@teamberry/muscadine"
 const auth = require("./../middlewares/auth.middleware")
 const boxMiddleware = require("./../middlewares/box.middleware")
 
@@ -20,7 +20,8 @@ export class QueueApi {
 
         // All subsequent routes require authentication
         this.router.use([auth.isAuthorized, boxMiddleware.boxPrivacy, boxMiddleware.boxMustBeOpen])
-        this.router.post("/", this.addVideo.bind(this))
+        this.router.post("/video", this.addVideo.bind(this))
+        this.router.post("/playlist", this.addPlaylist.bind(this))
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)
         this.router.put("/:video/skip", this.skipVideo)
@@ -61,6 +62,29 @@ export class QueueApi {
                     link: request.body.link,
                     flag: request.body.flag ?? null
                 } as VideoSubmissionRequest
+            })
+
+            return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send(error.message)
+        }
+    }
+
+    public async addPlaylist(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+
+        if (!request.body._id) {
+            return response.status(412).send('MISSING_PARAMETERS')
+        }
+
+        try {
+            queueActionsQueue.add({
+                type: 'addPlaylist',
+                requestContents: {
+                    boxToken: request.params.box,
+                    userToken: decodedToken.user,
+                    playlistId: request.body._id
+                } as PlaylistSubmissionRequest
             })
 
             return response.status(200).send()

@@ -518,6 +518,30 @@ class BoxService {
         }
     }
 
+    public async onPlaylistSubmissionRequest(playlistSubmissionRequest: PlaylistSubmissionRequest) {
+        const targetSubscriber = await Subscriber.findOne({ userToken: playlistSubmissionRequest.userToken, boxToken: playlistSubmissionRequest.boxToken })
+
+        try {
+            const response = await queueService.onPlaylistSubmitted(playlistSubmissionRequest)
+
+            io.in(playlistSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
+            io.in(playlistSubmissionRequest.boxToken).emit("box", response.updatedBox)
+
+            // If the playlist was over before the submission of the new video, the manager service relaunches the play
+            const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
+            if (currentVideoIndex === -1) {
+                void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
+            }
+        } catch (error) {
+            const message = new FeedbackMessage({
+                contents: "Your playlist could not be submitted.",
+                scope: playlistSubmissionRequest.boxToken,
+                context: "error"
+            })
+            this.emitToSockets(targetSubscriber.connexions, 'chat', message)
+        }
+    }
+
     public async onPlayNextRequest(playNextRequest: QueueItemActionRequest): Promise<void> {
         const targetSubscriber = await Subscriber.findOne({ userToken: playNextRequest.userToken, boxToken: playNextRequest.boxToken })
         try {
