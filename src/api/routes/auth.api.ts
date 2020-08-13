@@ -11,7 +11,7 @@ import { User } from '../../models/user.model'
 import { Subscriber } from "../../models/subscriber.model"
 const Box = require("./../../models/box.model")
 
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 const dotenv = require("dotenv")
 dotenv.config()

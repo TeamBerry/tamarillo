@@ -228,6 +228,7 @@ describe("Box API", () => {
         it("Sends a 412 back if no request body is given", () => {
             return supertest(expressApp)
                 .put('/9cb763b6e72611381ef043e4')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(412, 'MISSING_PARAMETERS')
         })
 
@@ -246,6 +247,7 @@ describe("Box API", () => {
 
             return supertest(expressApp)
                 .put('/9cb763b6e72611381ef043e4')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send(updateBody)
                 .expect(412, 'IDENTIFIER_MISMATCH')
         })
@@ -265,6 +267,7 @@ describe("Box API", () => {
 
             return supertest(expressApp)
                 .put('/9cb763b6e72611381ef044e4')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send(updateBody)
                 .expect(404, 'BOX_NOT_FOUND')
         })
@@ -284,6 +287,7 @@ describe("Box API", () => {
 
             return supertest(expressApp)
                 .put('/9cb763b6e72611381ef043e4')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send(updateBody)
                 .expect(200)
                 .then((response) => {
@@ -298,6 +302,7 @@ describe("Box API", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
                 .delete('/9cb763b6e72611381ef044e4')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(404, 'BOX_NOT_FOUND')
         })
 
@@ -310,12 +315,14 @@ describe("Box API", () => {
         it("Sends a 412 BOX_IS_OPEN Error if the box is still open when attempting to close it", () => {
             return supertest(expressApp)
                 .delete('/9cb763b6e72611381ef043e6')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(412, 'BOX_IS_OPEN')
         })
 
         it("Sends a 200 with the deleted box", () => {
             return supertest(expressApp)
                 .delete('/9cb763b6e72611381ef043e7')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(200)
                 .then((response) => {
                     const deletedBox = response.body
@@ -330,12 +337,14 @@ describe("Box API", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef044e4/close')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(404, 'BOX_NOT_FOUND')
         })
 
         it("Sends a 200 with the closed box", () => {
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e4/close')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(200)
                 .then((response) => {
                     const closedBox = response.body
@@ -350,12 +359,14 @@ describe("Box API", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef044e4/open')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(404, 'BOX_NOT_FOUND')
         })
 
         it('Sends a 200 with the opened box', () => {
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e4/open')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(200)
                 .then((response) => {
                     const openedBox = response.body
@@ -594,12 +605,14 @@ describe("Box API", () => {
         it("Sends a 404 back if no box matches the id given", () => {
             return supertest(expressApp)
                 .get('/9cb763b6e72611381ef044e4/users')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(404, 'BOX_NOT_FOUND')
         })
 
         it("Sends a 200 with the users", () => {
             return supertest(expressApp)
                 .get('/9cb763b6e72611381ef043e4/users')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(200)
                 .then((response) => {
                     const users: Array<ActiveSubscriber> = response.body

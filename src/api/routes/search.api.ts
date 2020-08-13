@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express"
 import axios from 'axios'
 import { YoutubeSearchListResponse, SearchListResponseItem, YoutubeVideoListResponse, VideoListResponseItem } from "../../models/youtube.model"
 import { VideoClass } from "../../models/video.model"
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 export class SearchApi {
     public router: Router
