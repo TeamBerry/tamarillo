@@ -187,49 +187,6 @@ class BoxService {
                 }
             })
 
-            // When a video is submitted
-            socket.on("video", async (videoSubmissionRequest: VideoSubmissionRequest) => {
-                void this.onVideoSubmissionRequest(videoSubmissionRequest)
-            })
-
-            // When a playlist is submitted
-            socket.on("playlist", async (playlistSubmissionRequest: PlaylistSubmissionRequest) => {
-                try {
-                    const response = await queueService.onPlaylistSubmitted(playlistSubmissionRequest)
-
-                    io.in(playlistSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
-                    io.in(playlistSubmissionRequest.boxToken).emit("box", response.updatedBox)
-
-                    // If the playlist was over before the submission of the new video, the manager service relaunches the play
-                    const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
-                    if (currentVideoIndex === -1) {
-                        void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
-                    }
-                } catch (error) {
-                    const message = new FeedbackMessage({
-                        contents: "Your playlist could not be submitted.",
-                        scope: playlistSubmissionRequest.boxToken,
-                        context: "error"
-                    })
-                    socket.emit("chat", message)
-                }
-            })
-
-            // When a user deletes a video from the playlist
-            socket.on("cancel", async (videoCancelRequest: QueueItemActionRequest) => {
-                void this.onVideoCancelRequest(videoCancelRequest)
-            })
-
-            // When an user preselects / unselects a video
-            socket.on("preselect", async (playNextRequest: QueueItemActionRequest) => {
-                void this.onPlayNextRequest(playNextRequest)
-            })
-
-            // When a user force plays a video
-            socket.on('forcePlay', async (playNowRequest: QueueItemActionRequest) => {
-                void this.onPlayNowRequest(playNowRequest)
-            })
-
             /**
              * Every in-box communication regarding video sync between clients will go through this event.
              */
@@ -487,7 +444,6 @@ class BoxService {
                     const targetVideo: QueueItem = response.updatedBox.playlist.find((video: QueueItem) => video.video.link === videoSubmissionRequest.link)
                     response = await queueService.onVideoPreselected({ item: targetVideo._id.toString(), boxToken: videoSubmissionRequest.boxToken, userToken: videoSubmissionRequest.userToken })
 
-                    console.log(response)
                     io.in(videoSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
                     io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
                 }
@@ -496,7 +452,6 @@ class BoxService {
                     const targetVideo: QueueItem = response.updatedBox.playlist.find((video: QueueItem) => video.video.link === videoSubmissionRequest.link)
                     response = await queueService.onVideoForcePlayed({ item: targetVideo._id.toString(), boxToken: videoSubmissionRequest.boxToken, userToken: videoSubmissionRequest.userToken })
 
-                    console.log(response)
                     io.in(videoSubmissionRequest.boxToken).emit("chat", response.feedbackMessage)
                     io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
                     io.in(videoSubmissionRequest.boxToken).emit("sync", response.syncPacket)
