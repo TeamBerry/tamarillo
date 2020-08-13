@@ -62,6 +62,9 @@ export class QueueApi {
                     link: request.body.link,
                     flag: request.body.flag ?? null
                 } as VideoSubmissionRequest
+            }, {
+                attempts: 10,
+                removeOnComplete: true
             })
 
             return response.status(200).send()
@@ -85,6 +88,9 @@ export class QueueApi {
                     userToken: decodedToken.user,
                     playlistId: request.body._id
                 } as PlaylistSubmissionRequest
+            }, {
+                attempts: 10,
+                removeOnComplete: true
             })
 
             return response.status(200).send()
@@ -104,6 +110,9 @@ export class QueueApi {
                     userToken: decodedToken.user,
                     item: request.params.video
                 } as QueueItemActionRequest
+            }, {
+                attempts: 5,
+                removeOnComplete: true
             })
 
             return response.status(200).send()
@@ -123,6 +132,9 @@ export class QueueApi {
                     userToken: decodedToken.user,
                     item: request.params.video
                 } as QueueItemActionRequest
+            }, {
+                attempts: 5,
+                removeOnComplete: true
             })
 
             return response.status(200).send()
@@ -141,6 +153,9 @@ export class QueueApi {
                     boxToken: request.params.box,
                     userToken: decodedToken.user
                 } as BoxScope
+            }, {
+                attempts: 3,
+                removeOnComplete: true
             })
 
             return response.status(200).send()
@@ -160,6 +175,9 @@ export class QueueApi {
                     userToken: decodedToken.user,
                     item: request.params.video
                 } as QueueItemActionRequest
+            }, {
+                attempts: 5,
+                removeOnComplete: true
             })
 
             return response.status(200).send()
