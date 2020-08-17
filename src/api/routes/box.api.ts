@@ -28,6 +28,7 @@ export class BoxApi {
         this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
+        this.router.patch('/:box', this.patchSettings.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
         this.router.post("/:box/close", this.close.bind(this))
         this.router.post("/:box/open", this.open.bind(this))
@@ -187,13 +188,43 @@ export class BoxApi {
                 }
             )
 
-            if (!updatedBox) {
-                return response.status(404).send("BOX_NOT_FOUND")
-            }
-
             this.createJob(_id, 'update')
 
             return response.status(200).send(updatedBox)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async patchSettings(request: Request, response: Response): Promise<Response> {
+        if (_.isEmpty(request.body)) {
+            return response.status(412).send("MISSING_PARAMETERS")
+        }
+
+        if (!['random', 'loop', 'berries', 'videoMaxDurationLimit'].includes(Object.keys(request.body)[0])) {
+            return response.status(412).send('UNKNOWN_PARAMETER')
+        }
+
+        const settingToUpdate = Object.keys(request.body)[0]
+
+        const updateQuery = {}
+        updateQuery[`options.${settingToUpdate}`] = request.body[settingToUpdate]
+
+        try {
+
+            const updatedBox = await Box.findByIdAndUpdate(
+                request.params.box,
+                {
+                    $set: updateQuery
+                },
+                {
+                    new: true
+                }
+            )
+
+            this.createJob(request.params.box, 'update')
+
+            return response.status(200).send(updatedBox.options)
         } catch (error) {
             return response.status(500).send(error)
         }

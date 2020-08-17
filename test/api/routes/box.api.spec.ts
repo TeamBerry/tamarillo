@@ -8,17 +8,17 @@ import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
-import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
+import { UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
-import { Schema, Types } from 'mongoose'
 
-describe("Box API", () => {
+describe.only("Box API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
-    let foreignJWT: Session = null
+    let shironaJWT: Session = null
+    let brockJWT: Session = null
 
     before(async () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
@@ -43,6 +43,13 @@ describe("Box API", () => {
             password: 'Piano',
         })
 
+        const brockUser = await User.create({
+            _id: '9ca0df5f86abeb66da97ba5f',
+            name: 'Brock',
+            mail: 'brock@pokemon.com',
+            password: 'Joel'
+        })
+
         await Box.create({
             _id: '9cb763b6e72611381ef043e4',
             description: null,
@@ -52,6 +59,17 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             private: true,
             open: true,
+            options: {
+                random: true,
+                loop: true,
+                berries: true,
+                videoMaxDurationLimit: 0
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
+            }
         })
 
         await Box.create({
@@ -63,6 +81,17 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             private: false,
             open: false,
+            options: {
+                random: true,
+                loop: true,
+                berries: true,
+                videoMaxDurationLimit: 0
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
+            }
         })
 
         await Box.create({
@@ -74,6 +103,17 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             private: true,
             open: true,
+            options: {
+                random: true,
+                loop: true,
+                berries: true,
+                videoMaxDurationLimit: 0
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
+            }
         })
 
         await Box.create({
@@ -85,6 +125,17 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5d',
             private: true,
             open: false,
+            options: {
+                random: true,
+                loop: true,
+                berries: true,
+                videoMaxDurationLimit: 0
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
+            }
         })
 
         await Box.create({
@@ -96,6 +147,17 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5e',
             private: true,
             open: true,
+            options: {
+                random: true,
+                loop: true,
+                berries: true,
+                videoMaxDurationLimit: 0
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
+            }
         })
 
         await Box.create({
@@ -107,6 +169,17 @@ describe("Box API", () => {
             creator: '9ca0df5f86abeb66da97ba5e',
             private: false,
             open: true,
+            options: {
+                random: true,
+                loop: true,
+                berries: true,
+                videoMaxDurationLimit: 0
+            },
+            acl: {
+                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: ['addVideo']
+            }
         })
 
         await Subscriber.create([
@@ -120,18 +193,20 @@ describe("Box API", () => {
                     }
                 ],
                 berries: 0,
-                role: 'simple'
+                role: 'admin'
             },
             {
                 boxToken: '9cb763b6e72611381ef043e4',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                connexions: [
-                    {
-                        origin: 'Blueberry',
-                        socket: ''
-                    }
-                ],
-                berries: 0,
+                userToken: '9ca0df5f86abeb66da97ba5e',
+                connexions: [],
+                berries: 13,
+                role: 'vip'
+            },
+            {
+                boxToken: '9cb763b6e72611381ef043e4',
+                userToken: '9ca0df5f86abeb66da97ba5f',
+                connexions: [],
+                berries: 1369,
                 role: 'simple'
             },
             {
@@ -145,11 +220,26 @@ describe("Box API", () => {
                 ],
                 berries: 0,
                 role: 'simple'
-            }
+            },
+            {
+                boxToken: '9cb763b6e72611381ef053e9',
+                userToken: '9ca0df5f86abeb66da97ba5e',
+                connexions: [],
+                berries: 0,
+                role: 'admin'
+            },
+            {
+                boxToken: '9cb763b6e72611381ef053e9',
+                userToken: '9ca0df5f86abeb66da97ba5f',
+                connexions: [],
+                berries: 73,
+                role: 'simple'
+            },
         ])
 
         ashJWT = authService.createSession(ashUser)
-        foreignJWT = authService.createSession(shironaUser)
+        shironaJWT = authService.createSession(shironaUser)
+        brockJWT = authService.createSession(brockUser)
     })
 
     after(async () => {
@@ -294,6 +384,56 @@ describe("Box API", () => {
                     const updatedBox = response.body
 
                     expect(updatedBox.description).to.equal('Test box edited')
+                })
+        })
+    })
+
+    describe("Patch settings quickly", () => {
+        it("Sends a 412 if no setting is given", async () => {
+            return supertest(expressApp)
+                .patch('/9cb763b6e72611381ef053e9')
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(412, 'MISSING_PARAMETERS')
+         })
+
+        it("Sends a 412 if something other than a box setting is given", async () => {
+            return supertest(expressApp)
+                .patch('/9cb763b6e72611381ef053e9')
+                .send({ name: 'Updated Box'})
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(412, 'UNKNOWN_PARAMETER')
+        })
+
+        it("Sends a 404 if the box does not exist", () => {
+            return supertest(expressApp)
+                .patch('/9cb763b6e726113810de6321')
+                .send({ random: false })
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(404, 'BOX_NOT_FOUND')
+        })
+
+        // it("Sends a 403 if the user does not have enough ACL powers", async () => {
+        //     return supertest(expressApp)
+        //         .patch('/9cb763b6e72611381ef053e9')
+        //         .send({ random: false })
+        //         .set('Authorization', `Bearer ${brockJWT.bearer}`)
+        //         .expect(403)
+        // })
+
+        it("Sends a 200 with the updated settings", () => {
+            return supertest(expressApp)
+                .patch('/9cb763b6e72611381ef053e9')
+                .send({ random: false })
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(200)
+                .then((response) => {
+                    const updatedSettings = response.body
+                    expect(updatedSettings).to.deep.equal({
+                        random: false,
+                        loop: true,
+                        berries: true,
+                        videoMaxDurationLimit: 0
+                    })
                 })
         })
     })
@@ -474,12 +614,12 @@ describe("Box API", () => {
 
             await UserPlaylist.create([
                 {
-                _id: '7dec3a584ec1317ade113a58',
-                name: 'Existing playlist with videos',
-                user: '9ca0df5f86abeb66da97ba5d',
-                isPrivate: true,
-                videos: ['9bc72f3d7edc6312d0ef2e48'],
-                isDeletable: false
+                    _id: '7dec3a584ec1317ade113a58',
+                    name: 'Existing playlist with videos',
+                    user: '9ca0df5f86abeb66da97ba5d',
+                    isPrivate: true,
+                    videos: ['9bc72f3d7edc6312d0ef2e48'],
+                    isDeletable: false
                 },
                 {
                     _id: '7dec3a584ec1317ade113a59',
@@ -502,6 +642,7 @@ describe("Box API", () => {
             })
 
             await UserPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')
+            await UserPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a59')
         })
 
         it("Sends a 401 if there's no authentication", () => {
@@ -513,7 +654,7 @@ describe("Box API", () => {
         it("Sends a 401 if there's a playlist specified as target but is not the user's", () => {
             return supertest(expressApp)
                 .post('/9cb763b6e72611381ef043e8/convert')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+                .set('Authorization', 'Bearer ' + shironaJWT.bearer)
                 .send({_id: '7dec3a584ec1317ade113a58'})
                 .expect(401, 'UNAUTHORIZED')
         })

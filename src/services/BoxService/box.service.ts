@@ -14,7 +14,7 @@ const queueActionsQueue = new Queue("actions-queue")
 
 // Models
 import { Subscriber, ConnectionRequest, BerryCount, PopulatedSubscriberDocument, Connection } from "../../models/subscriber.model"
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage, QueueItem } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage, QueueItem, Permission } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -110,7 +110,9 @@ class BoxService {
                     socket.join(connexionRequest.boxToken)
 
                     // Emit permissions for the simple role.
-                    socket.emit('permissions', userSubscription.role === 'admin' ? ['isAdmin'] : box.acl[userSubscription.role])
+                    socket.emit('permissions', userSubscription.role === 'admin' ?
+                        ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit']
+                        : box.acl[userSubscription.role])
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
