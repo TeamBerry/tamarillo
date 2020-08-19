@@ -14,7 +14,7 @@ const queueActionsQueue = new Queue("actions-queue")
 
 // Models
 import { Subscriber, ConnectionRequest, BerryCount, PopulatedSubscriberDocument, Connection } from "../../models/subscriber.model"
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage, QueueItem, Permission } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage, QueueItem } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
