@@ -13,7 +13,7 @@ import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
 
-describe.only("Box API", () => {
+describe("Box API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
