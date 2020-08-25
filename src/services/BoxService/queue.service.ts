@@ -21,8 +21,8 @@ import { YoutubeVideoListResponse } from '../../models/youtube.model'
 import aclService, { ACLResult } from './acl.service'
 
 const PLAY_NEXT_BERRY_COST = 10
-const SKIP_BERRY_COST = 30
-const PLAY_NOW_BERRY_COST = 50
+const SKIP_BERRY_COST = 20
+const PLAY_NOW_BERRY_COST = 30
 
 export class QueueService {
     /**

@@ -1784,7 +1784,7 @@ describe("Queue Service", () => {
                 await queueService.onVideoForcePlayed(preselectRequest)
                 expect.fail()
             } catch (error) {
-                expect(error.message).to.equal("You do not have enough berries to use this action. You need 43 more.")
+                expect(error.message).to.equal("You do not have enough berries to use this action. You need 23 more.")
             }
         })
 
@@ -1817,9 +1817,9 @@ describe("Queue Service", () => {
             const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
-            expect(targetSubscription.berries).to.equal(1)
+            expect(targetSubscription.berries).to.equal(21)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef143f4')
-            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 50 berries to play "Connected".`)
+            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 30 berries to play "Connected".`)
         })
 
         it('Accepts the played video in loop mode', async () => {
@@ -2100,7 +2100,7 @@ describe("Queue Service", () => {
                 await queueService.onVideoSkipped(skipRequest)
                 expect.fail()
             } catch (error) {
-                expect(error.message).to.equal("You do not have enough berries to use this action. You need 23 more.")
+                expect(error.message).to.equal("You do not have enough berries to use this action. You need 13 more.")
             }
         })
 
@@ -2133,8 +2133,8 @@ describe("Queue Service", () => {
             const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
-            expect(targetSubscription.berries).to.equal(21)
-            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 30 berries to skip the current video. Currently playing: "${playingVideo.video.name}".`)
+            expect(targetSubscription.berries).to.equal(31)
+            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 20 berries to skip the current video. Currently playing: "${playingVideo.video.name}".`)
         })
 
         it('Skip the track', async () => {
