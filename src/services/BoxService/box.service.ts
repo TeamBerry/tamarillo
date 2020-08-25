@@ -25,6 +25,10 @@ import { RoleChangeRequest } from "../../models/role-change.model"
 import aclService from "./acl.service"
 const BoxSchema = require("./../../models/box.model")
 
+const PLAY_NEXT_BERRY_COST = 10
+const SKIP_BERRY_COST = 20
+const PLAY_NOW_BERRY_COST = 30
+
 /**
  * Manager service. The role of this is to manage the other services, like chat and playlist, to ensure
  * communication is possible between them. It will create mainly start them, and send data from one to the other
@@ -508,7 +512,7 @@ class BoxService {
             this.emitToSockets(targetSubscriber.connexions, 'berries', {
                 userToken: playNextRequest.userToken,
                 boxToken: playNextRequest.boxToken,
-                berries: targetSubscriber.berries
+                berries: targetSubscriber.berries - PLAY_NEXT_BERRY_COST
             })
 
             io.in(playNextRequest.boxToken).emit("chat", response.feedbackMessage)
@@ -531,7 +535,7 @@ class BoxService {
             this.emitToSockets(targetSubscriber.connexions, 'berries', {
                 userToken: playNowRequest.userToken,
                 boxToken: playNowRequest.boxToken,
-                berries: targetSubscriber.berries
+                berries: targetSubscriber.berries - PLAY_NOW_BERRY_COST
             })
 
             io.in(playNowRequest.boxToken).emit("sync", syncPacket)
@@ -575,7 +579,7 @@ class BoxService {
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
                 userToken: boxScope.userToken,
                 boxToken: boxScope.boxToken,
-                berries: sourceSubscriber.berries - 30
+                berries: sourceSubscriber.berries - SKIP_BERRY_COST
             })
 
             io.in(boxScope.boxToken).emit("sync", syncPacket)
