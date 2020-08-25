@@ -270,7 +270,7 @@ export class QueueService {
 
             let areBerriesSpent = false
 
-            const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forceNext')
+            const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forcePlay')
             if (ACLEvaluation === ACLResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
             } else if (ACLEvaluation === ACLResult.BERRIES) {
@@ -288,7 +288,7 @@ export class QueueService {
                 throw new Error("An user has used berries to play the currently playing video. You cannot overwrite it.")
             }
 
-            const targetVideoIndex = box.playlist.findIndex(video => video._id.toString() === request.item)
+            const targetVideoIndex = box.playlist.findIndex((queueItem: QueueItem) => queueItem._id.toString() === request.item)
 
             if (targetVideoIndex === -1) {
                 throw new Error('The video you selected could not be found.')
@@ -310,7 +310,7 @@ export class QueueService {
             if (areBerriesSpent) {
                 await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
 
-                const playingVideo = updatedBox.playlist.find(video => video._id.toString() === request.item)
+                const playingVideo = updatedBox.playlist.find(queueItem => queueItem._id.toString() === request.item)
                 feedbackMessage.context = 'berries'
                 feedbackMessage.contents = `${user.name} has spent ${PLAY_NOW_BERRY_COST} berries to play "${playingVideo.video.name}".`
             }
@@ -532,13 +532,12 @@ export class QueueService {
             .findById(boxToken)
             .populate("playlist.video")
             .populate("playlist.submitted_by", "_id name")
-            .lean()
 
         if (!box) {
             return null
         }
 
-        const currentVideoIndex = _.findIndex(box.playlist, (video: QueueItem) => video.startTime !== null && video.endTime === null)
+        const currentVideoIndex = box.playlist.findIndex((video: QueueItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
@@ -559,9 +558,9 @@ export class QueueService {
 
         let preselectedVideoIndex = -1
         if (targetVideo) {
-            preselectedVideoIndex = box.playlist.findIndex(video => video._id.toString() === targetVideo)
+            preselectedVideoIndex = box.playlist.findIndex(queueItem => queueItem._id.toString() === targetVideo)
         } else {
-            preselectedVideoIndex = box.playlist.findIndex(video => video.isPreselected)
+            preselectedVideoIndex = box.playlist.findIndex(queueItem => queueItem.isPreselected)
         }
 
         // Look for a preselected video
@@ -661,7 +660,7 @@ export class QueueService {
         }
 
         // FIXME: use this.getNextVideo?
-        const response = await queueService.getNextVideo(boxToken, targetVideo, withBerries)
+        const response = await this.getNextVideo(boxToken, targetVideo, withBerries)
 
         const message: SystemMessage = new SystemMessage({
             scope: boxToken,
