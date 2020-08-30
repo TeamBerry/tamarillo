@@ -18,11 +18,11 @@ import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 import { User } from '../../models/user.model'
 import { YoutubeVideoListResponse } from '../../models/youtube.model'
-import aclService from './acl.service'
+import aclService, { ACLResult } from './acl.service'
 
 const PLAY_NEXT_BERRY_COST = 10
-const SKIP_BERRY_COST = 30
-const PLAY_NOW_BERRY_COST = 50
+const SKIP_BERRY_COST = 20
+const PLAY_NOW_BERRY_COST = 30
 
 export class QueueService {
     /**
@@ -33,12 +33,18 @@ export class QueueService {
      *
      * Once it's done, it emits a confirmation message to the user.
      *
+     * TODO: Fuse with @function addVideoToQueue
+     *
      * @param {VideoSubmissionRequest} request The essentials to find the video, the user and the box. The payload is a JSON of this structure:
      * @returns {Promise<{ feedbackMessage: SystemMessage, updatedBox: any }>} A promise with a feedback message and the populated updated Box
      * @memberof PlaylistService
      */
     public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            }
+
             // Obtaining video from database. Creating it if needed
             const video = await this.getVideoDetails(request.link)
 
@@ -47,16 +53,9 @@ export class QueueService {
 
             // Adding it to the queue of the box
             const updatedBox = await this.addVideoToQueue(video, request.boxToken, request.userToken)
-            let message: string
-
-            if (user) {
-                message = `${user.name} has added the video "${video.name}" to the queue.`
-            } else {
-                message = `The video "${video.name}" has been added to the queue.`
-            }
 
             const feedbackMessage = new SystemMessage({
-                contents: message,
+                contents: `${user.name} has added the video "${video.name}" to the queue.`,
                 scope: request.boxToken,
                 context: 'info'
             })
@@ -68,8 +67,15 @@ export class QueueService {
         }
     }
 
+    /**
+     * TODO: Fuse with @function addPlaylistToQueue
+     */
     public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            }
+
             // Get the playlist
             const playlist = await UserPlaylist.findById(request.playlistId)
 
@@ -77,11 +83,8 @@ export class QueueService {
                 throw new Error('The playlist could not be found. The submission has been rejected.')
             }
 
+            // Finding the user who submitted the video
             const user = await User.findById(request.userToken)
-
-            if (!user) {
-                throw new Error('No user was found. The submission has been rejected.')
-            }
 
             const updatedBox = await this.addPlaylistToQueue(playlist, request.boxToken, request.userToken)
 
@@ -110,8 +113,8 @@ export class QueueService {
 
             const box: Box = await BoxSchema.findById(request.boxToken)
 
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'removeVideo') === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
             }
 
             // Get the video details
@@ -162,17 +165,17 @@ export class QueueService {
 
             const box = await BoxSchema.findById(request.boxToken)
 
-            const areBerriesSpent = user._id.toString() !== box.creator.toString()
+            let areBerriesSpent = false
 
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
-
-            if (areBerriesSpent) {
+            const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forceNext')
+            if (ACLEvaluation === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            } else if (ACLEvaluation === ACLResult.BERRIES) {
                 const subscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
                 if (subscriber.berries < PLAY_NEXT_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${PLAY_NEXT_BERRY_COST - subscriber.berries} more.`)
                 }
+                areBerriesSpent = true
             }
 
             const alreadySelectedVideoIndex: number = box.playlist.findIndex((video: QueueItem) => video.isPreselected)
@@ -265,17 +268,17 @@ export class QueueService {
 
             const box = await BoxSchema.findById(request.boxToken)
 
-            const areBerriesSpent = user._id.toString() !== box.creator.toString()
+            let areBerriesSpent = false
 
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
-
-            if (areBerriesSpent) {
+            const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forcePlay')
+            if (ACLEvaluation === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            } else if (ACLEvaluation === ACLResult.BERRIES) {
                 const subscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
                 if (subscriber.berries < PLAY_NOW_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${PLAY_NOW_BERRY_COST - subscriber.berries} more.`)
                 }
+                areBerriesSpent = true
             }
 
             const alreadyPlayingVideoIndex = box.playlist.findIndex(video => video.startTime !== null && video.endTime === null && video.stateForcedWithBerries === true)
@@ -285,7 +288,7 @@ export class QueueService {
                 throw new Error("An user has used berries to play the currently playing video. You cannot overwrite it.")
             }
 
-            const targetVideoIndex = box.playlist.findIndex(video => video._id.toString() === request.item)
+            const targetVideoIndex = box.playlist.findIndex((queueItem: QueueItem) => queueItem._id.toString() === request.item)
 
             if (targetVideoIndex === -1) {
                 throw new Error('The video you selected could not be found.')
@@ -307,7 +310,7 @@ export class QueueService {
             if (areBerriesSpent) {
                 await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
 
-                const playingVideo = updatedBox.playlist.find(video => video._id.toString() === request.item)
+                const playingVideo = updatedBox.playlist.find(queueItem => queueItem._id.toString() === request.item)
                 feedbackMessage.context = 'berries'
                 feedbackMessage.contents = `${user.name} has spent ${PLAY_NOW_BERRY_COST} berries to play "${playingVideo.video.name}".`
             }
@@ -328,17 +331,17 @@ export class QueueService {
 
             const box = await BoxSchema.findById(scope.boxToken)
 
-            if (!box.open) {
-                throw new Error("The box is closed. The queue cannot be modified.")
-            }
+            let areBerriesSpent = false
 
-            const areBerriesSpent = user._id.toString() !== box.creator.toString()
-
-            if (areBerriesSpent) {
+            const ACLEvaluation = await aclService.isAuthorized({ userToken: scope.userToken, boxToken: scope.boxToken }, 'skipVideo')
+            if (ACLEvaluation === ACLResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            } else if (ACLEvaluation === ACLResult.BERRIES) {
                 const subscriber = await Subscriber.findOne({ userToken: scope.userToken, boxToken: scope.boxToken })
-                if (subscriber.berries < SKIP_BERRY_COST) {
+                if (subscriber.berries < PLAY_NOW_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${SKIP_BERRY_COST - subscriber.berries} more.`)
                 }
+                areBerriesSpent = true
             }
 
             const alreadyPlayingVideoIndex = box.playlist.findIndex(video => video.startTime !== null && video.endTime === null && video.stateForcedWithBerries === true)
@@ -383,14 +386,10 @@ export class QueueService {
     public async addVideoToQueue(video: Partial<VideoDocument>, boxToken: string, userToken: string): Promise<any> {
         const box = await BoxSchema.findById(boxToken)
 
-        if (!box.open) {
-            throw new Error("This box is closed. Submission is disallowed.")
-        }
-
         let updatedBox
 
         if (box.options.videoMaxDurationLimit !== 0
-            && !await aclService.isAuthorized({ userToken, boxToken }, 'bypassVideoDurationLimit')
+            && await aclService.isAuthorized({ userToken, boxToken }, 'bypassVideoDurationLimit') === ACLResult.NO
             && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60
         ) {
             throw new Error(`This video exceeds the limit of ${box.options.videoMaxDurationLimit} minutes. Please submit a shorter video.`)
@@ -415,6 +414,9 @@ export class QueueService {
             }
 
             box.playlist.unshift(submission)
+
+            // Increase berry count
+            await berriesService.increaseBerryCount({ userToken, boxToken })
 
             updatedBox = await BoxSchema
                 .findOneAndUpdate(
@@ -442,10 +444,6 @@ export class QueueService {
     public async addPlaylistToQueue(playlist: UserPlaylistDocument, boxToken: string, userToken: string): Promise<any> {
 
         const box = await BoxSchema.findById(boxToken)
-
-        if (!box.open) {
-            throw new Error("This box is closed. Submission is disallowed.")
-        }
 
         const playlistVideos = playlist.videos as unknown as Array<string>
 
@@ -534,13 +532,12 @@ export class QueueService {
             .findById(boxToken)
             .populate("playlist.video")
             .populate("playlist.submitted_by", "_id name")
-            .lean()
 
         if (!box) {
             return null
         }
 
-        const currentVideoIndex = _.findIndex(box.playlist, (video: QueueItem) => video.startTime !== null && video.endTime === null)
+        const currentVideoIndex = box.playlist.findIndex((video: QueueItem) => video.startTime !== null && video.endTime === null)
 
         // Ends the current video, the one that just ended
         if (currentVideoIndex !== -1) {
@@ -561,9 +558,9 @@ export class QueueService {
 
         let preselectedVideoIndex = -1
         if (targetVideo) {
-            preselectedVideoIndex = box.playlist.findIndex(video => video._id.toString() === targetVideo)
+            preselectedVideoIndex = box.playlist.findIndex(queueItem => queueItem._id.toString() === targetVideo)
         } else {
-            preselectedVideoIndex = box.playlist.findIndex(video => video.isPreselected)
+            preselectedVideoIndex = box.playlist.findIndex(queueItem => queueItem.isPreselected)
         }
 
         // Look for a preselected video
@@ -662,7 +659,8 @@ export class QueueService {
             console.log('SILENT JOB CLEANUP ERROR')
         }
 
-        const response = await queueService.getNextVideo(boxToken, targetVideo, withBerries)
+        // FIXME: use this.getNextVideo?
+        const response = await this.getNextVideo(boxToken, targetVideo, withBerries)
 
         const message: SystemMessage = new SystemMessage({
             scope: boxToken,

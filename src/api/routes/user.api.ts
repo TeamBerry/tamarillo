@@ -9,7 +9,7 @@ import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../mod
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
 import { User, UserClass } from "../../models/user.model"
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 export class UserApi {
     public router: Router

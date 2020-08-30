@@ -5,7 +5,7 @@ const axios = require("axios")
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Video } from "../../models/video.model"
 import { User } from "../../models/user.model"
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 export class PlaylistApi {
     public router: Router

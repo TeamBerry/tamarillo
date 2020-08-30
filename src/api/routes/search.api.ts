@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express"
 import axios from 'axios'
 import { YoutubeSearchListResponse, SearchListResponseItem, YoutubeVideoListResponse, VideoListResponseItem } from "../../models/youtube.model"
 import { VideoClass } from "../../models/video.model"
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 export class SearchApi {
     public router: Router
@@ -27,7 +27,7 @@ export class SearchApi {
      */
     public async search(request: Request, response: Response): Promise<Response> {
         try {
-            const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&q=${request.query.value}&type=video&key=${process.env.YOUTUBE_API_KEY}`)
+            const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&q=${request.query.value}&type=video&key=${process.env.YOUTUBE_API_KEY}`)
 
             const videoIds: Array<string> = []
             const videos: Array<VideoClass> = []

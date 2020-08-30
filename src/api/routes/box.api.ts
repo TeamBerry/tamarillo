@@ -4,9 +4,10 @@ import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
+import QueueApi from "./queue.api"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
-const auth = require("./../auth.middleware")
+const auth = require("./../middlewares/auth.middleware")
 
 const Box = require("./../../models/box.model")
 
@@ -20,15 +21,19 @@ export class BoxApi {
 
     public init(): void {
         this.router.get("/", auth.canBeAuthorized, this.index)
-        this.router.get("/:box", this.show)
+        this.router.get("/:box", auth.canBeAuthorized, this.show)
+        this.router.use("/:box/queue", QueueApi)
+
+        // All subsequent routes require authentication
+        this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
+        this.router.patch('/:box', this.patchSettings.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
         this.router.post("/:box/close", this.close.bind(this))
         this.router.post("/:box/open", this.open.bind(this))
         this.router.get("/:box/users", this.users)
 
-        this.router.use(auth.isAuthorized)
         this.router.post('/:box/convert', this.convertPlaylist)
 
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
@@ -183,13 +188,43 @@ export class BoxApi {
                 }
             )
 
-            if (!updatedBox) {
-                return response.status(404).send("BOX_NOT_FOUND")
-            }
-
             this.createJob(_id, 'update')
 
             return response.status(200).send(updatedBox)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async patchSettings(request: Request, response: Response): Promise<Response> {
+        if (_.isEmpty(request.body)) {
+            return response.status(412).send("MISSING_PARAMETERS")
+        }
+
+        if (!['random', 'loop', 'berries', 'videoMaxDurationLimit'].includes(Object.keys(request.body)[0])) {
+            return response.status(412).send('UNKNOWN_PARAMETER')
+        }
+
+        const settingToUpdate = Object.keys(request.body)[0]
+
+        const updateQuery = {}
+        updateQuery[`options.${settingToUpdate}`] = request.body[settingToUpdate]
+
+        try {
+
+            const updatedBox = await Box.findByIdAndUpdate(
+                request.params.box,
+                {
+                    $set: updateQuery
+                },
+                {
+                    new: true
+                }
+            )
+
+            this.createJob(request.params.box, 'update')
+
+            return response.status(200).send(updatedBox.options)
         } catch (error) {
             return response.status(500).send(error)
         }
@@ -303,6 +338,7 @@ export class BoxApi {
                 return response.status(412).send("BOX_IS_OPEN")
             }
 
+            // TODO: Restrict deletion to box creator
             const deletedBox = await Box.findOneAndRemove({ _id: targetId })
 
             // Create job to alert people in the box and have them removed
