@@ -3,20 +3,20 @@ import { Document, model, Schema } from "mongoose"
 export class InviteClass {
     public link: string
     public boxToken: string
-    public validity: '15m' | '30m' | '1h' | '2h'
-    public creator: string
+    public userToken: string
+    public expiry: '15m' | '30m' | '1h' | '2h'
 
-    constructor(invite: Partial<InviteClass> & Pick<InviteClass, 'boxToken' | 'creator'>) {
+    constructor(invite: Partial<InviteClass> & Pick<InviteClass, 'boxToken' | 'userToken'>) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
         let link = ''
-        for (let i = 0; i < 9; i++){
+        for (let i = 0; i < 8; i++){
             link += characters.charAt(Math.floor(Math.random() * characters.length))
         }
 
         this.link = link
         this.boxToken = invite.boxToken
-        this.validity = invite.validity ?? '15m'
-        this.creator = invite.creator
+        this.userToken = invite.userToken
+        this.expiry = invite.expiry ?? '15m'
     }
 }
 
@@ -24,8 +24,8 @@ const inviteSchema = new Schema(
     {
         link: String,
         boxToken: { type: Schema.Types.ObjectId, ref: "Box" },
-        duration: String,
-        creator: { type: Schema.Types.ObjectId, ref: "User" }
+        userToken: { type: Schema.Types.ObjectId, ref: "User" },
+        expiry: String
     },
     {
         timestamps: true
