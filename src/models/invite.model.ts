@@ -1,10 +1,16 @@
-import { Document, model, Schema } from "mongoose"
+import { Document, model, Schema, SchemaTimestampsConfig } from "mongoose"
 
 export class InviteClass {
     public link: string
     public boxToken: string
     public userToken: string
-    public expiry: '15m' | '30m' | '1h' | '2h'
+    /**
+     * Expiry of the invite. Values are 15 minutes, 30 minutes, 1 hour, 2 hours (in milliseconds)
+     *
+     * @type {(900000 | 1800000 | 3600000 | 7200000)}
+     * @memberof InviteClass
+     */
+    public expiry: 900000 | 1800000 | 3600000 | 7200000
 
     constructor(invite: Partial<InviteClass> & Pick<InviteClass, 'boxToken' | 'userToken'>) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -16,7 +22,7 @@ export class InviteClass {
         this.link = link
         this.boxToken = invite.boxToken
         this.userToken = invite.userToken
-        this.expiry = invite.expiry ?? '15m'
+        this.expiry = invite.expiry ?? 900000
     }
 }
 
@@ -25,13 +31,13 @@ const inviteSchema = new Schema(
         link: String,
         boxToken: { type: Schema.Types.ObjectId, ref: "Box" },
         userToken: { type: Schema.Types.ObjectId, ref: "User" },
-        expiry: String
+        expiry: Number
     },
     {
         timestamps: true
     }
 )
 
-export interface InviteDocument extends InviteClass, Document { }
+export interface InviteDocument extends InviteClass, Document, SchemaTimestampsConfig { }
 
 export const Invite = model<InviteDocument>("Invite", inviteSchema)
