@@ -510,9 +510,9 @@
       "integrity": "sha512-/aPsuoj/1Dw/kzhkgz+ES6TxG0zfTMGLwuK2ZG00k/iJzYHTLCE8mVU8EPqEOp/lmxPoq1C1C9RYToRKb2KEfg=="
     },
     "@teamberry/muscadine": {
-      "version": "0.8.4",
-      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.8.4/7046868aea21779f9ec464a3af1376b4c790bc679c3cedb815f7f6dc96626047",
-      "integrity": "sha512-l1FEbBXCfGmO3jk176PTO2JvkgIRZ9YSeTUX+W/QQWgVeFrzJ02vmjZuw5NkUFZ7XlL7TGowAR+3TGX36EwYQQ=="
+      "version": "0.8.5",
+      "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.8.5/58098621eefd656a022d75c83b4af922eb21184eb40bacd81d5a1739d097512c",
+      "integrity": "sha512-wqor+VORDiqSkfFNQFZ78p7z8UN0JyofTui0tm2ddsJrDsWuDSiPiCXRVfe9YVOMW7exmytie76d4nst21TtTg=="
     },
     "@types/babel-types": {
       "version": "7.0.7",

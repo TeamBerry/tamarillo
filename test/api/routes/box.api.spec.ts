@@ -12,6 +12,7 @@ import { UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-pla
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
+import { InviteDocument } from '../../../src/models/invite.model'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -394,12 +395,12 @@ describe("Box API", () => {
                 .patch('/9cb763b6e72611381ef053e9')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(412, 'MISSING_PARAMETERS')
-         })
+        })
 
         it("Sends a 412 if something other than a box setting is given", async () => {
             return supertest(expressApp)
                 .patch('/9cb763b6e72611381ef053e9')
-                .send({ name: 'Updated Box'})
+                .send({ name: 'Updated Box' })
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .expect(412, 'UNKNOWN_PARAMETER')
         })
@@ -434,6 +435,31 @@ describe("Box API", () => {
                         berries: true,
                         videoMaxDurationLimit: 0
                     })
+                })
+        })
+    })
+
+    describe("Generates an invite to a box", () => {
+        // it("Rejects if the user does not have the power", () => { })
+
+        it("Rejects if the box is closed", () => {
+            return supertest(expressApp)
+                .post("/9cb763b6e72611381ef043e5/invite")
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(403, 'BOX_CLOSED')
+        })
+
+        it("Generates a default 15 minutes invite link", () => {
+            return supertest(expressApp)
+                .post("/9cb763b6e72611381ef043e4/invite")
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .expect(200)
+                .then((response) => {
+                    const invite: InviteDocument = response.body
+
+                    expect(invite.link).to.have.lengthOf(8)
+                    expect(invite.boxToken).to.equal('9cb763b6e72611381ef043e4')
+                    expect(invite.userToken).to.equal('9ca0df5f86abeb66da97ba5d')
                 })
         })
     })

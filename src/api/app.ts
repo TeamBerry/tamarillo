@@ -7,6 +7,7 @@ import AuthApi from "./routes/auth.api"
 import PlaylistApi from "./routes/playlist.api"
 import UserApi from "./routes/user.api"
 import SearchApi from "./routes/search.api"
+import InviteApi from "./routes/invite.api"
 
 class App {
     public app: express.Application
@@ -31,6 +32,7 @@ class App {
         // Boxes
         this.app.use("/box", BoxApi)
         this.app.use("/boxes", BoxApi)
+        this.app.use("/invites", InviteApi)
 
         // Users
         this.app.use("/user", UserApi)
