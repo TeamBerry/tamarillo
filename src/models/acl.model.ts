@@ -1,6 +1,4 @@
-export type Permission = 'addVideo' | 'removeVideo' | 'forceNext' | 'forcePlay' | 'skipVideo' | 'editBox' | 'promoteVIP' | 'demoteVIP'
-
-export type Role = 'moderator' | 'vip' | 'simple'
+import { Permission } from "@teamberry/muscadine"
 
 export interface ACLConfig {
     moderator: Array<Permission>

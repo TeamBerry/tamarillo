@@ -5,9 +5,11 @@ import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
 import QueueApi from "./queue.api"
+import { InviteClass, Invite } from "../../models/invite.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../middlewares/auth.middleware")
+const boxMiddleware = require("./../middlewares/box.middleware")
 
 const Box = require("./../../models/box.model")
 
@@ -33,6 +35,7 @@ export class BoxApi {
         this.router.post("/:box/close", this.close.bind(this))
         this.router.post("/:box/open", this.open.bind(this))
         this.router.get("/:box/users", this.users)
+        this.router.post("/:box/invite", boxMiddleware.boxMustBeOpen, this.generateInvite.bind(this))
 
         this.router.post('/:box/convert', this.convertPlaylist)
 
@@ -225,6 +228,21 @@ export class BoxApi {
             this.createJob(request.params.box, 'update')
 
             return response.status(200).send(updatedBox.options)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async generateInvite(request: Request, response: Response): Promise<Response> {
+        // TODO: Estimate ACL power
+
+        try {
+            const invite = await Invite.create(new InviteClass({
+                boxToken: request.params.box,
+                userToken: response.locals.auth.user
+            }))
+
+            return response.status(200).send(invite)
         } catch (error) {
             return response.status(500).send(error)
         }

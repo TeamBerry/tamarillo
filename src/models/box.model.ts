@@ -51,9 +51,9 @@ const boxSchema = new Schema(
             videoMaxDurationLimit: { type: Number, default: 0 }
         },
         acl: {
-            moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },
-            vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext'] },
-            simple: { type: Array, default: ['addVideo'] }
+            moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay', 'inviteUser'] },
+            vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext', 'inviteUser'] },
+            simple: { type: Array, default: ['addVideo', 'inviteUser'] }
         }
     },
     {

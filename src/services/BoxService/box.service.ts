@@ -115,7 +115,7 @@ class BoxService {
 
                     // Emit permissions for the simple role.
                     socket.emit('permissions', userSubscription.role === 'admin' ?
-                        ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit']
+                        ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
                         : box.acl[userSubscription.role])
 
                     // Emit confirmation message

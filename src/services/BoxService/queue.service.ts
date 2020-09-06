@@ -10,7 +10,7 @@ import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 
 const BoxSchema = require("./../../models/box.model")
-import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope, PlayingItem } from "@teamberry/muscadine"
+import { QueueItem, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, SystemMessage, BoxScope, PlayingItem, ACLEvaluationResult } from "@teamberry/muscadine"
 import { Box } from "../../models/box.model"
 import { Video, VideoDocument } from "../../models/video.model"
 import { UserPlaylist, UserPlaylistDocument } from '../../models/user-playlist.model'
@@ -18,7 +18,7 @@ import { Subscriber } from '../../models/subscriber.model'
 import berriesService from './berries.service'
 import { User } from '../../models/user.model'
 import { YoutubeVideoListResponse } from '../../models/youtube.model'
-import aclService, { ACLResult } from './acl.service'
+import aclService from './acl.service'
 
 const PLAY_NEXT_BERRY_COST = 10
 const SKIP_BERRY_COST = 20
@@ -41,7 +41,7 @@ export class QueueService {
      */
     public async onVideoSubmitted(request: VideoSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
-            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
             }
 
@@ -72,7 +72,7 @@ export class QueueService {
      */
     public async onPlaylistSubmitted(request: PlaylistSubmissionRequest): Promise<{ feedbackMessage: SystemMessage, updatedBox: any }> {
         try {
-            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLResult.NO) {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
             }
 
@@ -113,7 +113,7 @@ export class QueueService {
 
             const box: Box = await BoxSchema.findById(request.boxToken)
 
-            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'removeVideo') === ACLResult.NO) {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'removeVideo') === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
             }
 
@@ -168,9 +168,9 @@ export class QueueService {
             let areBerriesSpent = false
 
             const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forceNext')
-            if (ACLEvaluation === ACLResult.NO) {
+            if (ACLEvaluation === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
-            } else if (ACLEvaluation === ACLResult.BERRIES) {
+            } else if (ACLEvaluation === ACLEvaluationResult.BERRIES) {
                 const subscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
                 if (subscriber.berries < PLAY_NEXT_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${PLAY_NEXT_BERRY_COST - subscriber.berries} more.`)
@@ -271,9 +271,9 @@ export class QueueService {
             let areBerriesSpent = false
 
             const ACLEvaluation = await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'forcePlay')
-            if (ACLEvaluation === ACLResult.NO) {
+            if (ACLEvaluation === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
-            } else if (ACLEvaluation === ACLResult.BERRIES) {
+            } else if (ACLEvaluation === ACLEvaluationResult.BERRIES) {
                 const subscriber = await Subscriber.findOne({ userToken: request.userToken, boxToken: request.boxToken })
                 if (subscriber.berries < PLAY_NOW_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${PLAY_NOW_BERRY_COST - subscriber.berries} more.`)
@@ -334,9 +334,9 @@ export class QueueService {
             let areBerriesSpent = false
 
             const ACLEvaluation = await aclService.isAuthorized({ userToken: scope.userToken, boxToken: scope.boxToken }, 'skipVideo')
-            if (ACLEvaluation === ACLResult.NO) {
+            if (ACLEvaluation === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
-            } else if (ACLEvaluation === ACLResult.BERRIES) {
+            } else if (ACLEvaluation === ACLEvaluationResult.BERRIES) {
                 const subscriber = await Subscriber.findOne({ userToken: scope.userToken, boxToken: scope.boxToken })
                 if (subscriber.berries < PLAY_NOW_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${SKIP_BERRY_COST - subscriber.berries} more.`)
@@ -389,7 +389,7 @@ export class QueueService {
         let updatedBox
 
         if (box.options.videoMaxDurationLimit !== 0
-            && await aclService.isAuthorized({ userToken, boxToken }, 'bypassVideoDurationLimit') === ACLResult.NO
+            && await aclService.isAuthorized({ userToken, boxToken }, 'bypassVideoDurationLimit') === ACLEvaluationResult.NO
             && moment.duration(video.duration).asSeconds() > box.options.videoMaxDurationLimit * 60
         ) {
             throw new Error(`This video exceeds the limit of ${box.options.videoMaxDurationLimit} minutes. Please submit a shorter video.`)
