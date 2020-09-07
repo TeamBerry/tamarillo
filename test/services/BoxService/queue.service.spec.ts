@@ -2161,7 +2161,7 @@ describe("Queue Service", () => {
 
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
-            expect(systemMessage.contents).to.equal(`"Ash Ketchum" has skipped the previous video. Currently playing: "${playingVideo.video.name}".`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has skipped the previous video. Currently playing: "${playingVideo.video.name}".`)
             expect(feedbackMessage.contents).to.equal(`You skipped the previous video.`)
 
         })
