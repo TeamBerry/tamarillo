@@ -939,13 +939,13 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f0'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoCancelled(cancelPayload)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
             expect(box.playlist).to.have.lengthOf(4)
-            expect(feedbackMessage.contents).to.equal('Ash Ketchum has removed the video "Connected" from the queue.')
-            expect(systemMessage.contents).to.equal('You have removed the video "Connected" from the queue.')
+            expect(systemMessage.contents).to.equal('Ash Ketchum has removed the video "Connected" from the queue.')
+            expect(feedbackMessage.contents).to.equal('You have removed the video "Connected" from the queue.')
         })
     })
 
@@ -1415,13 +1415,14 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            const result = await queueService.onVideoPreselected({
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
+            expect(feedbackMessage.contents).to.equal(`You unselected "Connected".`)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
@@ -1825,7 +1826,7 @@ describe("Queue Service", () => {
             expect(targetSubscription.berries).to.equal(21)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef143f4')
             expect(systemMessage.contents).to.equal(`Brock has spent 30 berries to play "Connected" now.`)
-            expect(feedbackMessage.contents).to.equal(`You spent 30 berries to play "Connected" nox.`)
+            expect(feedbackMessage.contents).to.equal(`You spent 30 berries to play "Connected" now.`)
         })
 
         it('Accepts the played video in loop mode', async () => {
@@ -2160,7 +2161,7 @@ describe("Queue Service", () => {
 
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
-            expect(systemMessage.contents).to.equal(`The previous video has been skipped. Currently playing: "${playingVideo.video.name}".`)
+            expect(systemMessage.contents).to.equal(`"Ash Ketchum" has skipped the previous video. Currently playing: "${playingVideo.video.name}".`)
             expect(feedbackMessage.contents).to.equal(`You skipped the previous video.`)
 
         })

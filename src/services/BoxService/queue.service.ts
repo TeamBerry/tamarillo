@@ -355,7 +355,7 @@ export class QueueService {
             const feedbackMessage = new FeedbackMessage({
                 contents: areBerriesSpent
                     ? `You spent ${PLAY_NOW_BERRY_COST} berries to play "${playingVideo.video.name}" now.`
-                    : `You force played "${playingVideo.video.name}"`,
+                    : `You force played "${playingVideo.video.name}".`,
                 scope: request.boxToken,
                 context: 'success'
             })
