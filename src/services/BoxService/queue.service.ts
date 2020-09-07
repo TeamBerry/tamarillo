@@ -349,7 +349,7 @@ export class QueueService {
                 await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NOW_BERRY_COST)
 
                 systemMessage.context = 'berries'
-                systemMessage.contents = `${user.name} has spent ${PLAY_NOW_BERRY_COST} berries to play "${playingVideo.video.name}".`
+                systemMessage.contents = `${user.name} has spent ${PLAY_NOW_BERRY_COST} berries to play "${playingVideo.video.name}" now.`
             }
 
             const feedbackMessage = new FeedbackMessage({
