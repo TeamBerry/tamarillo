@@ -1,6 +1,6 @@
 {
     "name": "tamarillo",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "Node server for berrybox - Handles sync, chat",
     "main": "index.js",
     "engines": {
