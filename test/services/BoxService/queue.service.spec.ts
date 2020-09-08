@@ -398,9 +398,10 @@ describe("Queue Service", () => {
 
         // Feedback
         it("Sends message with user name if user exists", async () => {
-            const { feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
+            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
 
-            expect(feedbackMessage.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
+            expect(feedbackMessage.contents).to.equal(`Your video "Destroid - Annihilate" has been added to the queue.`)
         })
     })
 
@@ -938,12 +939,13 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f0'
             }
 
-            const { feedbackMessage, updatedBox } = await queueService.onVideoCancelled(cancelPayload)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoCancelled(cancelPayload)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
             expect(box.playlist).to.have.lengthOf(4)
-            expect(feedbackMessage.contents).to.equal('Ash Ketchum has removed the video "Connected" from the queue.')
+            expect(systemMessage.contents).to.equal('Ash Ketchum has removed the video "Connected" from the queue.')
+            expect(feedbackMessage.contents).to.equal('You have removed the video "Connected" from the queue.')
         })
     })
 
@@ -1332,7 +1334,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef143f4'
             }
 
-            const result = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef143e7')
 
@@ -1342,7 +1344,8 @@ describe("Queue Service", () => {
 
             expect(targetSubscription.berries).to.equal(1)
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
+            expect(systemMessage.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
+            expect(feedbackMessage.contents).to.equal(`You spent 10 berries to play "Connected" next.`)
         })
 
         it('Accepts the played video in loop mode', async () => {
@@ -1352,14 +1355,15 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef343f0'
             }
 
-            const result = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef343e7')
 
             const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef343f0')
 
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
+            expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play next.`)
         })
 
         it('Preselects a video if no other video is preselected', async () => {
@@ -1369,14 +1373,15 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             }
 
-            const result = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
             const preselectedVideo = box.playlist.find(video => video._id.toString() === '9cb763b6e72611381ef043f4')
 
             expect(preselectedVideo.isPreselected).to.equal(true)
-            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
+            expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play next.`)
         })
 
         it('Preselects a video and unselects the preselected one if it is different', async () => {
@@ -1410,13 +1415,14 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            const result = await queueService.onVideoPreselected({
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            expect(result.feedbackMessage.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
+            expect(feedbackMessage.contents).to.equal(`You unselected "Connected".`)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
@@ -1810,7 +1816,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef143f4'
             }
 
-            const result = await queueService.onVideoForcePlayed(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoForcePlayed(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef143e7')
 
@@ -1819,7 +1825,8 @@ describe("Queue Service", () => {
 
             expect(targetSubscription.berries).to.equal(21)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef143f4')
-            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 30 berries to play "Connected".`)
+            expect(systemMessage.contents).to.equal(`Brock has spent 30 berries to play "Connected" now.`)
+            expect(feedbackMessage.contents).to.equal(`You spent 30 berries to play "Connected" now.`)
         })
 
         it('Accepts the played video in loop mode', async () => {
@@ -1829,14 +1836,15 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef343f0'
             }
 
-            const result = await queueService.onVideoForcePlayed(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoForcePlayed(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef343e7')
 
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef343f0')
-            expect(result.feedbackMessage.contents).to.equal(`Currently playing: "Connected".`)
+            expect(systemMessage.contents).to.equal(`Currently playing: "Connected".`)
+            expect(feedbackMessage.contents).to.equal(`You force played "Connected".`)
         })
 
         it('Plays the designated track, even if there is a preselected track', async () => {
@@ -1846,7 +1854,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f3'
             }
 
-            const result = await queueService.onVideoForcePlayed(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoForcePlayed(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
@@ -1855,7 +1863,8 @@ describe("Queue Service", () => {
 
             expect(preselectedVideo.isPreselected).to.equal(true)
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef043f3')
-            expect(result.feedbackMessage.contents).to.equal(`Currently playing: "The Evil King".`)
+            expect(systemMessage.contents).to.equal(`Currently playing: "The Evil King".`)
+            expect(feedbackMessage.contents).to.equal(`You force played "The Evil King".`)
         })
     })
 
@@ -2124,7 +2133,7 @@ describe("Queue Service", () => {
                 userToken: '9ca0df5f86abeb66da97ba5f',
             }
 
-            const result = await queueService.onVideoSkipped(skipRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
 
             const box = await Box
                 .findById('9cb763b6e72611381ef143e7')
@@ -2134,7 +2143,8 @@ describe("Queue Service", () => {
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
             expect(targetSubscription.berries).to.equal(31)
-            expect(result.feedbackMessage.contents).to.equal(`Brock has spent 20 berries to skip the current video. Currently playing: "${playingVideo.video.name}".`)
+            expect(systemMessage.contents).to.equal(`Brock has spent 20 berries to skip the previous video. Currently playing: "${playingVideo.video.name}".`)
+            expect(feedbackMessage.contents).to.equal(`You spent 20 berries to skip the previous video.`)
         })
 
         it('Skip the track', async () => {
@@ -2143,7 +2153,7 @@ describe("Queue Service", () => {
                 userToken: '9ca0df5f86abeb66da97ba5d',
             }
 
-            const result = await queueService.onVideoSkipped(skipRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
 
             const box = await Box
                 .findById('9cb763b6e72611381ef043e7')
@@ -2151,7 +2161,9 @@ describe("Queue Service", () => {
 
             const playingVideo = box.playlist.find(video => video.startTime !== null && video.endTime === null)
 
-            expect(result.feedbackMessage.contents).to.equal(`The previous video has been skipped. Currently playing: "${playingVideo.video.name}".`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has skipped the previous video. Currently playing: "${playingVideo.video.name}".`)
+            expect(feedbackMessage.contents).to.equal(`You skipped the previous video.`)
+
         })
     })
 
