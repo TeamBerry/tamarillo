@@ -68,7 +68,10 @@ export class BoxApi {
             let query: unknown = { open: true, private: { $ne: true } }
 
             const decodedToken = response.locals.auth ?? null
-            if (decodedToken) {
+
+            if (decodedToken && decodedToken.physalis && decodedToken.physalis === 1) {
+                query = { }
+            } else if (decodedToken) {
                 query = {
                     open: true,
                     $or: [

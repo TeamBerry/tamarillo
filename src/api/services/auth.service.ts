@@ -42,10 +42,13 @@ export class AuthService {
             settings: user.settings
         }
 
+        const signContents = { user: user._id }
+        if (user._id.toString() === process.env.ADMIN_TOKEN) {
+            Object.assign(signContents, { physalis: 1 })
+        }
+
         const jwtBearerToken = jwt.sign(
-            {
-                user: user._id
-            },
+            signContents,
             PRIVATE_KEY,
             {
                 issuer: 'Berrybox',
