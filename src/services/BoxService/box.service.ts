@@ -92,7 +92,7 @@ class BoxService {
                                 }
                             ],
                             berries: 0,
-                            role: box.creator.toString() === authRequest.userToken ? 'admin' : 'simple'
+                            role: (box.creator.toString() === authRequest.userToken || connexionRequest.userToken === process.env.ADMIN_TOKEN) ? 'admin' : 'simple'
                         })
                     } else {
                         userSubscription = await Subscriber.findByIdAndUpdate(
