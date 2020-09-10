@@ -6,4 +6,4 @@ import App from "./app"
 
 http
     .createServer(App)
-    .listen(3000)
+    .listen(+process.argv[2])
