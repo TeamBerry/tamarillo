@@ -37,6 +37,29 @@ module.exports.canBeAuthorized = async (request: Request, response: Response, ne
     next()
 }
 
+module.exports.isStaffAdmin = async (request: Request, response: Response, next: NextFunction) => {
+    const auth = request.headers.authorization
+    if (auth) {
+        try {
+            // Pass token to other methods in the chain
+            response.locals.auth = await verifyAuth(request.headers.authorization)
+
+            // Check token against ADMIN_TOKEN
+            if (response.locals.auth.user !== process.env.ADMIN_TOKEN) {
+                return response.status(401).send("UNAUTHORIZED")
+            }
+
+            response.locals.auth.physalis = true
+
+            return next()
+
+        } catch (error) {
+            return response.status(401).send("UNAUTHORIZED")
+        }
+    }
+    return response.status(401).send("UNAUTHORIZED")
+}
+
 /**
  * Verifies a token is present and valid
  *

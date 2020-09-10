@@ -1,4 +1,5 @@
-[{
+[
+    {
         "script": "dist/services/MailService/mail.watcher.js",
         "name": "cudrang",
         "watch": false,
