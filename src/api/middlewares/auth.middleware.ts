@@ -27,11 +27,15 @@ module.exports.canBeAuthorized = async (request: Request, response: Response, ne
     if (auth) {
         try {
             // Pass token to other methods in the chain
-            response.locals.auth = await verifyAuth(request.headers.authorization)
+            const verifiedAuth = await verifyAuth(request.headers.authorization)
+
+            if (verifiedAuth) {
+                response.locals.auth = verifiedAuth
+            }
 
             return next()
         } catch (error) {
-            return response.status(401).send("UNAUTHORIZED")
+            return next()
         }
     }
     next()
