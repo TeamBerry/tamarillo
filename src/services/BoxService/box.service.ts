@@ -113,10 +113,16 @@ class BoxService {
                     // Join Box room
                     socket.join(connexionRequest.boxToken)
 
-                    // Emit permissions for the simple role.
-                    socket.emit('permissions', userSubscription.role === 'admin' ?
-                        ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
-                        : box.acl[userSubscription.role])
+                    // Emit permissions for the correct role.
+                    if (/^user-[a-zA-Z0-9]{20}/.test(userSubscription.userToken)) {
+                        // Anonymous sessions have zero permissions
+                        socket.emit('permissions', [])
+                    } else {
+                        socket.emit('permissions', userSubscription.role === 'admin' ?
+                            ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
+                            : box.acl[userSubscription.role])
+                    }
+
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
@@ -187,7 +193,10 @@ class BoxService {
                         { 'connexions.socket': socket.id },
                         { $pull: { connexions: { socket: socket.id } } }
                     )
+
                     void berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
+
+                    // TODO: Delete if it's an anonymous session
                 } catch (error) {
                     // Graceful catch (silent)
                 }
