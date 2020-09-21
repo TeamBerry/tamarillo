@@ -121,6 +121,9 @@ class BoxService {
                         socket.emit('permissions', userSubscription.role === 'admin' ?
                             ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
                             : box.acl[userSubscription.role])
+
+                        // Berries are only collected for real sessions
+                        berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
                     }
 
 
@@ -142,8 +145,6 @@ class BoxService {
                     }
 
                     socket.emit('berries', berryCount)
-
-                    berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
                 }
             })
 
