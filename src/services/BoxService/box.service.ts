@@ -195,9 +195,13 @@ class BoxService {
                         { $pull: { connexions: { socket: socket.id } } }
                     )
 
+                    // Stop for all, even if never started. Fallback.
                     void berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
 
-                    // TODO: Delete if it's an anonymous session
+                    // Delete if it's an anonymous session
+                    if (/^user-[a-zA-Z0-9]{20}/.test(targetSubscriber.userToken)) {
+                        await Subscriber.findByIdAndRemove(targetSubscriber._id)
+                    }
                 } catch (error) {
                     // Graceful catch (silent)
                 }
