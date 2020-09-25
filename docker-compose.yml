@@ -1,0 +1,22 @@
+version: '2'
+
+# Define the services/containers to be run
+services:
+    database:
+        image: mongo
+        ports:
+            - "27017:27017"
+        container_name: berrybox_mongo
+
+    redis:
+        image: redis
+        ports:
+            - "6379:6379"
+        container_name: berrybox_redis
+
+    mail:
+        image: djfarrelly/maildev
+        ports:
+            - "1080:80"
+            - "1025:25"
+        container_name: berrybox_maildev
