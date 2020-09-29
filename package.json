@@ -12,7 +12,7 @@
         "tsc": "./node_modules/.bin/tsc",
         "emails": "cp -r ./src/services/MailService/emails ./dist/services/MailService",
         "compose": "docker-compose --file docker-compose.yml",
-        "start": "npm run compose up && tsc && pm2 start processes.json",
+        "start": "npm run compose up -- -d && tsc && pm2 start processes.json",
         "restart": "tsc && pm2 restart processes.json",
         "stop": "pm2 stop all && npm run compose stop",
         "restart:prod": "pm2 restart processes.json",
