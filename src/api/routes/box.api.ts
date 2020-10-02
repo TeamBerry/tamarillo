@@ -448,6 +448,14 @@ export class BoxApi {
         }
     }
 
+    public async feature(request: Request, response: Response): Promise<Response> {
+        try {
+            return response.status(503).send()
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
     /**
      * Adds a job to the box queue, that will be handled by the BoxService Microservice
      *

@@ -70,7 +70,8 @@ describe("Box API", () => {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
                 vip: ['addVideo', 'removeVideo', 'forceNext'],
                 simple: ['addVideo']
-            }
+            },
+            featured: null
         })
 
         await Box.create({
@@ -92,7 +93,8 @@ describe("Box API", () => {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
                 vip: ['addVideo', 'removeVideo', 'forceNext'],
                 simple: ['addVideo']
-            }
+            },
+            featured: null
         })
 
         await Box.create({
@@ -114,7 +116,8 @@ describe("Box API", () => {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
                 vip: ['addVideo', 'removeVideo', 'forceNext'],
                 simple: ['addVideo']
-            }
+            },
+            featured: null
         })
 
         await Box.create({
@@ -136,7 +139,8 @@ describe("Box API", () => {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
                 vip: ['addVideo', 'removeVideo', 'forceNext'],
                 simple: ['addVideo']
-            }
+            },
+            featured: null
         })
 
         await Box.create({
@@ -158,7 +162,8 @@ describe("Box API", () => {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
                 vip: ['addVideo', 'removeVideo', 'forceNext'],
                 simple: ['addVideo']
-            }
+            },
+            featured: null
         })
 
         await Box.create({
@@ -180,7 +185,8 @@ describe("Box API", () => {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
                 vip: ['addVideo', 'removeVideo', 'forceNext'],
                 simple: ['addVideo']
-            }
+            },
+            featured: null
         })
 
         await Subscriber.create([
@@ -540,6 +546,28 @@ describe("Box API", () => {
                     expect(openedBox._id).to.equal('9cb763b6e72611381ef043e4')
                     expect(openedBox.open).to.be.true
                 })
+        })
+    })
+
+    describe("Features a box", () => {
+        it("Refuses if the box is closed", () => {
+
+        })
+
+        it("Refuses if the action does not come from an admin", () => {
+
+        })
+
+        it("Features a box to the set date", () => {
+
+        })
+
+        it("Overwrites the date of an already featured box", () => {
+
+        })
+
+        it("Removes the featuring if the duration specified is 0 or null", () => {
+            
         })
     })
 
