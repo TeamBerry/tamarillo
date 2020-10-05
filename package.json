@@ -52,7 +52,7 @@
     },
     "devDependencies": {
         "@types/bcrypt": "3.0.0",
-        "@types/chai": "4.2.12",
+        "@types/chai": "4.2.13",
         "@types/mocha": "8.0.3",
         "@types/mongoose": "5.7.36",
         "@types/node": "9.6.59",
