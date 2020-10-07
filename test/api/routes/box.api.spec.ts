@@ -427,6 +427,7 @@ describe("Box API", () => {
                     _id: '9ca0df5f86abeb66da97ba5d',
                     name: 'Ash Ketchum',
                 },
+                private: true
             }
 
             return supertest(expressApp)
