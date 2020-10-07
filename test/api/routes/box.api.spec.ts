@@ -307,7 +307,7 @@ describe("Box API", () => {
                     expect(ids).to.not.include('9cb763b6e72611381ef043e5')
                     expect(ids).to.not.include('9cb763b6e72611381ef043e4')
 
-                    expect(boxes.length).to.equal(1)
+                    expect(boxes.length).to.equal(2)
                 })
         })
 
@@ -328,7 +328,19 @@ describe("Box API", () => {
                     expect(ids).to.not.include('9cb763b6e72611381ef043e5')
                     expect(ids).to.include('9cb763b6e72611381ef043e4')
 
-                    expect(boxes.length).to.equal(3)
+                    expect(boxes.length).to.equal(4)
+                })
+        })
+
+        it("Returns all boxes if super admin", () => {
+            return supertest(expressApp)
+                .get('/')
+                .set('Authorization', 'Bearer ' + adminJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const boxes = response.body
+
+                    expect(boxes.length).to.equal(7)
                 })
         })
     })
