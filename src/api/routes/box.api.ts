@@ -253,7 +253,7 @@ export class BoxApi {
     }
 
     /**
-     * Closes a box
+     * Closes a box. Closed boxes will be automatically removed from the featured section
      *
      * @param {Request} request Body contains the box to close
      * @param {Response} response
@@ -272,7 +272,10 @@ export class BoxApi {
             const closedBox = await Box.findByIdAndUpdate(
                 targetId,
                 {
-                    $set: { open: false }
+                    $set: {
+                        open: false,
+                        featured: null
+                    }
                 },
                 {
                     new: true
