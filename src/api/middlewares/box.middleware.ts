@@ -52,3 +52,13 @@ module.exports.boxMustBeClosed = async (request: Request, response: Response, ne
 
     next()
 }
+
+module.exports.boxMustBePublic = async (request: Request, response: Response, next: NextFunction) => {
+    const matchingBox = response.locals.box
+
+    if (matchingBox.private) {
+        return response.status(403).send('BOX_IS_PRIVATE')
+    }
+
+    next()
+}

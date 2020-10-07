@@ -30,6 +30,7 @@ export class BoxApi {
         this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
+        this.router.put("/:box/feature", [boxMiddleware.boxMustBeOpen, boxMiddleware.boxMustBePublic], this.feature)
         this.router.patch('/:box', this.patchSettings.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
         this.router.post("/:box/close", this.close.bind(this))
@@ -449,8 +450,32 @@ export class BoxApi {
     }
 
     public async feature(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+
+        if (!decodedToken.physalis) {
+            return response.status(401).send('UNAUTHORIZED')
+        }
+
         try {
-            return response.status(503).send()
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send("MISSING_PARAMETERS")
+            }
+
+            const targetId = request.params.box
+
+            const { featured } = request.body
+
+            const updatedBox = await Box.findByIdAndUpdate(
+                targetId,
+                {
+                    $set: { featured }
+                },
+                {
+                    new: true
+                }
+            )
+
+            return response.status(200).send(updatedBox)
         } catch (error) {
             return response.status(500).send(error)
         }
