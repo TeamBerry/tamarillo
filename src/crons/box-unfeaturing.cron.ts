@@ -9,7 +9,7 @@ export class BoxUnfeaturingCron {
     public async run(): Promise<void> {
         console.log('Hey! Starting scan of boxes to unfeature...')
 
-        const boxesToUnfeature = await BoxSchema.find({ featured: { $lte: new Date('2022-01-01T00:00:00Z') } })
+        const boxesToUnfeature = await BoxSchema.find({ featured: { $lte: new Date() } })
 
         console.log(`${boxesToUnfeature.length} boxes to unfeature`)
 
