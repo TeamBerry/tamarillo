@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+require("./../config/connection")
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 
@@ -64,6 +65,8 @@ export class BoxDeletionCron {
             // Delete the box
             await this.deleteBox(box._id)
         }
+
+        process.exit()
     }
 
 }

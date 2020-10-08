@@ -7,7 +7,7 @@
         "node": ">=10.17.0"
     },
     "scripts": {
-        "test": "export NODE_ENV=test && mocha --exit -r ts-node/register test/**/**/*.spec.ts",
+        "test": "export NODE_ENV=test ADMIN_TOKEN=9ca0df5f86abeb66da97ba60 && mocha --exit -r ts-node/register test/**/**/*.spec.ts",
         "coverage": "nyc -e '.ts' --include-all-sources --r html -r lcov -r text npm run test",
         "tsc": "./node_modules/.bin/tsc",
         "emails": "cp -r ./src/services/MailService/emails ./dist/services/MailService",

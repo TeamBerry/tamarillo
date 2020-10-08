@@ -20,6 +20,7 @@ describe("Box API", () => {
     let ashJWT: Session = null
     let shironaJWT: Session = null
     let brockJWT: Session = null
+    let adminJWT: Session = null
 
     before(async () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
@@ -51,137 +52,176 @@ describe("Box API", () => {
             password: 'Joel'
         })
 
-        await Box.create({
-            _id: '9cb763b6e72611381ef043e4',
-            description: null,
-            lang: 'en',
-            name: 'Test box',
-            playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5d',
-            private: true,
-            open: true,
-            options: {
-                random: true,
-                loop: true,
-                berries: true,
-                videoMaxDurationLimit: 0
-            },
-            acl: {
-                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-                vip: ['addVideo', 'removeVideo', 'forceNext'],
-                simple: ['addVideo']
-            }
+        const adminUser = await User.create({
+            _id: '9ca0df5f86abeb66da97ba60',
+            name: 'Admin',
+            mail: 'admin@berrybox.com',
+            password: 'Berrybox'
         })
 
-        await Box.create({
-            _id: '9cb763b6e72611381ef043e5',
-            description: 'Closed box',
-            lang: 'en',
-            name: 'Closed box',
-            playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5d',
-            private: false,
-            open: false,
-            options: {
-                random: true,
-                loop: true,
-                berries: true,
-                videoMaxDurationLimit: 0
+        // Private, open
+        await Box.create([
+            {
+                _id: '9cb763b6e72611381ef043e4',
+                description: null,
+                lang: 'en',
+                name: 'Test box',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                private: true,
+                open: true,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: null
             },
-            acl: {
-                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-                vip: ['addVideo', 'removeVideo', 'forceNext'],
-                simple: ['addVideo']
-            }
-        })
-
-        await Box.create({
-            _id: '9cb763b6e72611381ef043e6',
-            description: 'Open box to delete',
-            lang: 'en',
-            name: 'Open box to delete',
-            playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5d',
-            private: true,
-            open: true,
-            options: {
-                random: true,
-                loop: true,
-                berries: true,
-                videoMaxDurationLimit: 0
+            // Public, closed
+            {
+                _id: '9cb763b6e72611381ef043e5',
+                description: 'Closed box',
+                lang: 'en',
+                name: 'Closed box',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                private: false,
+                open: false,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: null
             },
-            acl: {
-                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-                vip: ['addVideo', 'removeVideo', 'forceNext'],
-                simple: ['addVideo']
-            }
-        })
-
-        await Box.create({
-            _id: '9cb763b6e72611381ef043e7',
-            description: 'Closed box to delete',
-            lang: 'en',
-            name: 'Closed box to delete',
-            playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5d',
-            private: true,
-            open: false,
-            options: {
-                random: true,
-                loop: true,
-                berries: true,
-                videoMaxDurationLimit: 0
+            // Private, open
+            {
+                _id: '9cb763b6e72611381ef043e6',
+                description: 'Open box to delete',
+                lang: 'en',
+                name: 'Open box to delete',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                private: true,
+                open: true,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: null
             },
-            acl: {
-                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-                vip: ['addVideo', 'removeVideo', 'forceNext'],
-                simple: ['addVideo']
-            }
-        })
-
-        await Box.create({
-            _id: '9cb763b6e72611381ef053e8',
-            description: 'Persona inside',
-            lang: 'en',
-            name: 'VGM Box',
-            playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5e',
-            private: true,
-            open: true,
-            options: {
-                random: true,
-                loop: true,
-                berries: true,
-                videoMaxDurationLimit: 0
+            // Private, closed
+            {
+                _id: '9cb763b6e72611381ef043e7',
+                description: 'Closed box to delete',
+                lang: 'en',
+                name: 'Closed box to delete',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5d',
+                private: true,
+                open: false,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: null
             },
-            acl: {
-                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-                vip: ['addVideo', 'removeVideo', 'forceNext'],
-                simple: ['addVideo']
-            }
-        })
-
-        await Box.create({
-            _id: '9cb763b6e72611381ef053e9',
-            description: 'The most active box ever',
-            lang: 'en',
-            name: 'Anime Box',
-            playlist: [],
-            creator: '9ca0df5f86abeb66da97ba5e',
-            private: false,
-            open: true,
-            options: {
-                random: true,
-                loop: true,
-                berries: true,
-                videoMaxDurationLimit: 0
+            // Private, open
+            {
+                _id: '9cb763b6e72611381ef053e8',
+                description: 'Persona inside',
+                lang: 'en',
+                name: 'VGM Box',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5e',
+                private: true,
+                open: true,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: null
             },
-            acl: {
-                moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-                vip: ['addVideo', 'removeVideo', 'forceNext'],
-                simple: ['addVideo']
+            // Public, open
+            {
+                _id: '9cb763b6e72611381ef053e9',
+                description: 'The most active box ever',
+                lang: 'en',
+                name: 'Anime Box',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5e',
+                private: false,
+                open: true,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: null
+            },
+            // Public, open, already featured
+            {
+                _id: '9cb763b6e72611381ef053f0',
+                description: 'Box featured',
+                lang: 'en',
+                name: 'Anime + JPop',
+                playlist: [],
+                creator: '9ca0df5f86abeb66da97ba5e',
+                private: false,
+                open: true,
+                options: {
+                    random: true,
+                    loop: true,
+                    berries: true,
+                    videoMaxDurationLimit: 0
+                },
+                acl: {
+                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    vip: ['addVideo', 'removeVideo', 'forceNext'],
+                    simple: ['addVideo']
+                },
+                featured: '2036-01-15T14:00:00',
             }
-        })
+        ])
 
         await Subscriber.create([
             {
@@ -241,6 +281,7 @@ describe("Box API", () => {
         ashJWT = authService.createSession(ashUser)
         shironaJWT = authService.createSession(shironaUser)
         brockJWT = authService.createSession(brockUser)
+        adminJWT = authService.createSession(adminUser)
     })
 
     after(async () => {
@@ -266,7 +307,7 @@ describe("Box API", () => {
                     expect(ids).to.not.include('9cb763b6e72611381ef043e5')
                     expect(ids).to.not.include('9cb763b6e72611381ef043e4')
 
-                    expect(boxes.length).to.equal(1)
+                    expect(boxes.length).to.equal(2)
                 })
         })
 
@@ -287,7 +328,19 @@ describe("Box API", () => {
                     expect(ids).to.not.include('9cb763b6e72611381ef043e5')
                     expect(ids).to.include('9cb763b6e72611381ef043e4')
 
-                    expect(boxes.length).to.equal(3)
+                    expect(boxes.length).to.equal(4)
+                })
+        })
+
+        it("Returns all boxes if super admin", () => {
+            return supertest(expressApp)
+                .get('/')
+                .set('Authorization', 'Bearer ' + adminJWT.bearer)
+                .expect(200)
+                .then((response) => {
+                    const boxes = response.body
+
+                    expect(boxes.length).to.equal(7)
                 })
         })
     })
@@ -374,6 +427,7 @@ describe("Box API", () => {
                     _id: '9ca0df5f86abeb66da97ba5d',
                     name: 'Ash Ketchum',
                 },
+                private: true
             }
 
             return supertest(expressApp)
@@ -540,6 +594,89 @@ describe("Box API", () => {
                     expect(openedBox._id).to.equal('9cb763b6e72611381ef043e4')
                     expect(openedBox.open).to.be.true
                 })
+        })
+    })
+
+    describe("Features a box", () => {
+        it("Refuses if the action does not come from an admin", () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef053e9/feature')
+                .set('Authorization', 'Bearer ' + ashJWT.bearer)
+                .send({
+                    // Featured for an hour
+                    featured: new Date(Date.now() + 3600000),
+                })
+                .expect(401, 'UNAUTHORIZED')
+        })
+
+        it("Refuses if the box is closed", () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e5/feature')
+                .set('Authorization', 'Bearer ' + adminJWT.bearer)
+                .send({
+                    // Featured for an hour
+                    featured: new Date(Date.now() + 3600000),
+                })
+                .expect(403, 'BOX_CLOSED')
+        })
+
+        it("Refuses if the box is private", () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef043e4/feature')
+                .set('Authorization', 'Bearer ' + adminJWT.bearer)
+                .send({
+                    // Featured for an hour
+                    featured: new Date(Date.now() + 3600000),
+                })
+                .expect(403, 'BOX_IS_PRIVATE')
+        })
+
+        it("Features a box to the set date", () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef053e9/feature')
+                .set('Authorization', 'Bearer ' + adminJWT.bearer)
+                .send({
+                    // Featured for an hour
+                    featured: new Date(Date.now() + 3600000),
+                })
+                .expect(200)
+                .then((response) => {
+                    const featuredBox = response.body
+
+                    expect(featuredBox.featured).to.not.be.null
+                })
+        })
+
+        it("Overwrites the date of an already featured box", () => {
+            return supertest(expressApp)
+                .put('/9cb763b6e72611381ef053f0/feature')
+                .set('Authorization', 'Bearer ' + adminJWT.bearer)
+                .send({
+                    // Featured for an hour
+                    featured: new Date(Date.now() + 3600000),
+                })
+                .expect(200)
+                .then((response) => {
+                    const featuredBox = response.body
+
+                    expect(featuredBox.featured).to.not.equal('2036-01-15T14:00:00')
+                })
+        })
+
+        it("Removes the featuring if null is given", () => {
+            return supertest(expressApp)
+            .put('/9cb763b6e72611381ef053f0/feature')
+            .set('Authorization', 'Bearer ' + adminJWT.bearer)
+            .send({
+                // Featured for an hour
+                featured: null,
+            })
+            .expect(200)
+            .then((response) => {
+                const featuredBox = response.body
+
+                expect(featuredBox.featured).to.be.null
+            })
         })
     })
 
