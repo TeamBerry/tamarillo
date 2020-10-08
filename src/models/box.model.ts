@@ -23,6 +23,8 @@ export class Box {
     }
     // Obtained from the user. Can be edited independently for each box
     public acl: ACLConfig
+    // Date until when the box appears in the featured space
+    public featured: Date
     // The number of users in the box
     public users?: number
 }
@@ -54,7 +56,8 @@ const boxSchema = new Schema(
             moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay', 'inviteUser'] },
             vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext', 'inviteUser'] },
             simple: { type: Array, default: ['addVideo', 'inviteUser'] }
-        }
+        },
+        featured: { type: Date, default: null }
     },
     {
         timestamps: true

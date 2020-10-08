@@ -3,7 +3,7 @@ name: Test
 on:
   push:
     branches-ignore:
-      - 'main'
+      - "main"
 
 jobs:
   build:
@@ -27,22 +27,22 @@ jobs:
           - 1080:80
           - 1025:25
     steps:
-    - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Authenticate to Team Berry's GitHub Registry
-      run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.REGISTRY_KEY }}" >> ~/.npmrc
-    - name: Install Dependencies
-      run: npm install
-    - name: Setup Auth Keys
-      run: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -outform PEM -out auth.pub;
-    - name: Lint check
-      run: npm run lint:check
-    - name: Run Tests
-      run: export YOUTUBE_API_KEY=${{ secrets.TEST_YOUTUBE_API_KEY }} && npm run coverage
-    - name: Upload Coverage Report
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Authenticate to Team Berry's GitHub Registry
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.REGISTRY_KEY }}" >> ~/.npmrc
+      - name: Install Dependencies
+        run: npm install
+      - name: Setup Auth Keys
+        run: mkdir -p certs; cd certs; openssl genrsa -out auth 2048; openssl rsa -in auth -pubout -outform PEM -out auth.pub;
+      - name: Lint check
+        run: npm run lint:check
+      - name: Run Tests
+        run: export YOUTUBE_API_KEY=${{ secrets.TEST_YOUTUBE_API_KEY }} ADMIN_TOKEN=${{ secrets.ADMIN_TOKEN }} && npm run coverage
+      - name: Upload Coverage Report
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

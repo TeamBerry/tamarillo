@@ -113,10 +113,19 @@ class BoxService {
                     // Join Box room
                     socket.join(connexionRequest.boxToken)
 
-                    // Emit permissions for the simple role.
-                    socket.emit('permissions', userSubscription.role === 'admin' ?
-                        ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
-                        : box.acl[userSubscription.role])
+                    // Emit permissions for the correct role.
+                    if (/^user-[a-zA-Z0-9]{20}/.test(userSubscription.userToken)) {
+                        // Anonymous sessions have zero permissions
+                        socket.emit('permissions', [])
+                    } else {
+                        socket.emit('permissions', userSubscription.role === 'admin' ?
+                            ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
+                            : box.acl[userSubscription.role])
+
+                        // Berries are only collected for real sessions
+                        berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
+                    }
+
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
@@ -136,8 +145,6 @@ class BoxService {
                     }
 
                     socket.emit('berries', berryCount)
-
-                    berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
                 }
             })
 
@@ -187,7 +194,14 @@ class BoxService {
                         { 'connexions.socket': socket.id },
                         { $pull: { connexions: { socket: socket.id } } }
                     )
+
+                    // Stop for all, even if never started. Fallback.
                     void berriesService.stopNaturalIncrease({ userToken: targetSubscriber.userToken, boxToken: targetSubscriber.boxToken })
+
+                    // Delete if it's an anonymous session
+                    if (/^user-[a-zA-Z0-9]{20}/.test(targetSubscriber.userToken)) {
+                        await Subscriber.findByIdAndRemove(targetSubscriber._id)
+                    }
                 } catch (error) {
                     // Graceful catch (silent)
                 }

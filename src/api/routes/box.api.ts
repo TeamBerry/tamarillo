@@ -30,6 +30,7 @@ export class BoxApi {
         this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
+        this.router.put("/:box/feature", [boxMiddleware.boxMustBeOpen, boxMiddleware.boxMustBePublic], this.feature)
         this.router.patch('/:box', this.patchSettings.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
         this.router.post("/:box/close", this.close.bind(this))
@@ -252,7 +253,7 @@ export class BoxApi {
     }
 
     /**
-     * Closes a box
+     * Closes a box. Closed boxes will be automatically removed from the featured section
      *
      * @param {Request} request Body contains the box to close
      * @param {Response} response
@@ -271,7 +272,10 @@ export class BoxApi {
             const closedBox = await Box.findByIdAndUpdate(
                 targetId,
                 {
-                    $set: { open: false }
+                    $set: {
+                        open: false,
+                        featured: null
+                    }
                 },
                 {
                     new: true
@@ -443,6 +447,38 @@ export class BoxApi {
             }))
 
             return response.status(200).send(subscribers)
+        } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async feature(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+
+        if (!decodedToken.physalis) {
+            return response.status(401).send('UNAUTHORIZED')
+        }
+
+        try {
+            if (_.isEmpty(request.body)) {
+                return response.status(412).send("MISSING_PARAMETERS")
+            }
+
+            const targetId = request.params.box
+
+            const { featured } = request.body
+
+            const updatedBox = await Box.findByIdAndUpdate(
+                targetId,
+                {
+                    $set: { featured }
+                },
+                {
+                    new: true
+                }
+            )
+
+            return response.status(200).send(updatedBox)
         } catch (error) {
             return response.status(500).send(error)
         }

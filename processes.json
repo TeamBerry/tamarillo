@@ -35,5 +35,12 @@
         "instances": 1,
         "cron_restart": "0 */1 * * *",
         "autorestart": false
+    },
+    {
+        "name": "box-unfeaturing.cron",
+        "script": "dist/crons/box-unfeaturing.cron.js",
+        "instances": 1,
+        "cron_restart": "*/15 * * * *",
+        "autorestart": false
     }
 ]
