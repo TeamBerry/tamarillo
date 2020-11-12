@@ -2228,6 +2228,7 @@ describe("Queue Service", () => {
                 _id: new ObjectId('9cb81150594b2e75f06ba90a'),
                 link: 'j6okxJ1CYJM',
                 name: 'The Piano Before Cynthia',
+                duration: 'PT2M4S'
             })
             expect(currentVideo.submitted_by).to.eql({
                 _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
