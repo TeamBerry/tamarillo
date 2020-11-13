@@ -544,7 +544,7 @@ export class QueueService {
     public async getCurrentVideo(boxToken: string): Promise<PlayingItem> {
         const box = await BoxSchema
             .findById(boxToken)
-            .populate("playlist.video", "_id link name")
+            .populate("playlist.video", "_id link name duration")
             .populate("playlist.submitted_by", "_id name")
             .lean()
 
