@@ -67,7 +67,7 @@ jobs:
       - name: Build Tamarillo
         run: npm run build
       - name: Clean dist folder
-        uses: garygrossgarten/github-action-ssh@v0.5.0
+        uses: garygrossgarten/github-action-ssh@v0.6.3
         with:
           command: rm -rf ${{ secrets.LOCATION }}/dist/*
           host: ${{ secrets.HOST }}
@@ -82,7 +82,7 @@ jobs:
           user: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Install Dependencies & Restart Server
-        uses: garygrossgarten/github-action-ssh@v0.5.0
+        uses: garygrossgarten/github-action-ssh@v0.6.3
         with:
           command: |
             cd ${{ secrets.LOCATION }}
