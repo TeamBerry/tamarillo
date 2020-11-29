@@ -186,6 +186,8 @@ export class BoxApi {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
+            const originalBox = response.locals.box
+
             const targetId = request.params.box
 
             const { _id, description, lang, name, options, acl, private: isPrivate } = request.body
@@ -198,12 +200,12 @@ export class BoxApi {
                 _id,
                 {
                     $set: {
-                        description,
-                        lang,
-                        name,
-                        options,
-                        acl,
-                        private: isPrivate
+                        description: description ?? originalBox.description,
+                        lang: lang ?? originalBox.lang,
+                        name: name ?? originalBox.name,
+                        options: options ?? originalBox.options,
+                        acl: acl ?? originalBox.acl,
+                        private: isPrivate ?? originalBox.private
                     }
                 },
                 {
