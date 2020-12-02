@@ -387,7 +387,7 @@ describe("Box API", () => {
             const updateBody = {
                 _id: '9cb763b6e72611381ef044e4',
                 description: 'Test box edited',
-                lang: 'English',
+                lang: 'en',
                 name: 'Test box',
                 playlist: [],
                 creator: {
@@ -407,7 +407,7 @@ describe("Box API", () => {
             const updateBody = {
                 _id: '9cb763b6e72611381ef044e4',
                 description: 'Test box edited',
-                lang: 'English',
+                lang: 'en',
                 name: 'Test box',
                 playlist: [],
                 creator: {
@@ -427,13 +427,10 @@ describe("Box API", () => {
             const updateBody = {
                 _id: '9cb763b6e72611381ef043e4',
                 description: 'Test box edited',
-                lang: 'English',
-                playlist: [],
                 creator: {
                     _id: '9ca0df5f86abeb66da97ba5d',
                     name: 'Ash Ketchum',
                 },
-                private: true
             }
 
             return supertest(expressApp)
@@ -446,6 +443,13 @@ describe("Box API", () => {
 
                     expect(updatedBox.name).to.equal('Test box')
                     expect(updatedBox.description).to.equal('Test box edited')
+                    expect(updatedBox.acl).to.deep.equal({
+                        moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                        vip: ['addVideo', 'removeVideo', 'forceNext'],
+                        simple: ['addVideo']
+                    })
+                    expect(updatedBox.private).to.equal(true)
+                    expect(updatedBox.lang).to.equal('en')
                 })
         })
     })
@@ -718,7 +722,7 @@ describe("Box API", () => {
                 {
                 _id: '9cb763b6e72611381ef043e8',
                 description: 'Box with empty playlist',
-                lang: 'English',
+                lang: 'en',
                 name: 'Empty playlist',
                 playlist: [
                 ],
@@ -728,7 +732,7 @@ describe("Box API", () => {
                 {
                 _id: '9cb763b6e72611381ef043e9',
                 description: 'Box with playlist of unique videos only',
-                lang: 'English',
+                lang: 'en',
                 name: 'Box with playlist of unique videos only',
                 playlist: [
                     {
@@ -752,7 +756,7 @@ describe("Box API", () => {
                 {
                 _id: '9cb763b6e72611381ef043ea',
                 description: 'Box with playlist with duplicate entry',
-                lang: 'English',
+                lang: 'en',
                 name: 'Box with playlist with duplicate entry',
                 playlist: [
                     {
