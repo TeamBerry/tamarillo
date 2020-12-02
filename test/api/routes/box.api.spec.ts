@@ -276,6 +276,13 @@ describe("Box API", () => {
                 berries: 73,
                 role: 'simple'
             },
+            {
+                boxToken: '9cb763b6e72611381ef053e8',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                connexions: [],
+                berries: 12,
+                role: 'simple'
+            }
         ])
 
         ashJWT = authService.createSession(ashUser)
@@ -311,7 +318,7 @@ describe("Box API", () => {
                 })
         })
 
-        it("Returns all public boxes and private boxes of the user requesting", () => {
+        it("Returns all public boxes, private boxes of the user requesting and private boxes of other people the requesting user had already entered before", () => {
             return supertest(expressApp)
                 .get('/')
                 .set('Authorization', 'Bearer ' + ashJWT.bearer)
@@ -322,13 +329,13 @@ describe("Box API", () => {
                     const ids = boxes.map((box) => box._id.toString())
 
                     expect(ids).to.include('9cb763b6e72611381ef053e9')
-                    expect(ids).to.not.include('9cb763b6e72611381ef053e8')
+                    expect(ids).to.include('9cb763b6e72611381ef053e8')
                     expect(ids).to.not.include('9cb763b6e72611381ef043e7')
                     expect(ids).to.include('9cb763b6e72611381ef043e6')
                     expect(ids).to.not.include('9cb763b6e72611381ef043e5')
                     expect(ids).to.include('9cb763b6e72611381ef043e4')
 
-                    expect(boxes.length).to.equal(4)
+                    expect(boxes.length).to.equal(5)
                 })
         })
 
