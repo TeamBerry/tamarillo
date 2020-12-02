@@ -428,7 +428,6 @@ describe("Box API", () => {
                 _id: '9cb763b6e72611381ef043e4',
                 description: 'Test box edited',
                 lang: 'English',
-                name: 'Test box',
                 playlist: [],
                 creator: {
                     _id: '9ca0df5f86abeb66da97ba5d',
@@ -445,6 +444,7 @@ describe("Box API", () => {
                 .then((response) => {
                     const updatedBox = response.body
 
+                    expect(updatedBox.name).to.equal('Test box')
                     expect(updatedBox.description).to.equal('Test box edited')
                 })
         })
