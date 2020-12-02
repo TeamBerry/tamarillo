@@ -73,15 +73,31 @@ export class BoxApi {
             if (decodedToken && decodedToken.physalis && decodedToken.physalis === 1) {
                 query = { }
             } else if (decodedToken) {
+                const foreignBoxTokens: Array<string> = (
+                    await Subscriber
+                        .find({
+                            userToken: decodedToken.user,
+                            role: { $ne: 'admin' }
+                        })
+                        .select('boxToken')
+                        .lean()
+                ).map(result => result.boxToken)
+
                 query = {
                     open: true,
                     $or: [
+                        // Public boxes
                         { private: { $ne: true } },
+                        // Private boxes belonging to the user
                         {
                             $and: [
                                 { private: { $ne: false } },
                                 { creator: decodedToken.user }
                             ]
+                        },
+                        // Foreign private boxes where the user has a subscription (meaning they already have access to)
+                        {
+                            _id: { $in: foreignBoxTokens }
                         }
                     ]
                 }
