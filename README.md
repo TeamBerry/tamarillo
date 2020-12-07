@@ -22,7 +22,7 @@ To run, the project requires a set of RSA keys.
 - Go to http://travistidwell.com/jsencrypt/demo/ and create a 1024-bit pair of keys
 - Paste each one into the correct file. Private => `auth`, Public => `auth.pub`
 
-# Get Started
+# Get Started
 
 ## Start
 Once you've created the auth keys, you can start the server by using the `npm run start` command. It will
