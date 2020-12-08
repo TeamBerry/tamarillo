@@ -257,7 +257,10 @@ export class UserApi {
                 return response.status(400).send("CORRUPTED_FILE")
             }
 
-            console.log(uploadedFile)
+            // Deletes previous picture if it's not the default one
+            if (user.settings.picture !== 'default-picture') {
+                await uploadService.deleteProfilePicture(user.settings.picture)
+            }
 
             // Updates entity
             await User.findByIdAndUpdate(
