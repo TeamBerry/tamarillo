@@ -5,6 +5,8 @@ export interface IAuthSubject {
     settings: {
         theme: 'light' | 'dark'
         picture: string
+        color: string
+        isColorblind: boolean
     }
 }
 

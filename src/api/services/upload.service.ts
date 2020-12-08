@@ -37,7 +37,9 @@ export class UploadService {
             return null
         }
 
-        const fileName = `${user}-picture`
+        const now = new Date().getTime()
+
+        const fileName = `${user}-picture-${now}`
 
         await this.s3.putObject({
             Bucket: DEFAULT_BUCKET,
@@ -48,6 +50,19 @@ export class UploadService {
         fs.unlinkSync(uploadedFile.path)
 
         return fileName
+    }
+
+    public async deleteProfilePicture(pictureName: string): Promise<boolean> {
+        try {
+            await this.s3.deleteObject({
+                Bucket: DEFAULT_BUCKET,
+                Key: `${DEFAULT_FOLDER}/${pictureName}`
+            }).promise()
+
+            return true
+        } catch (error) {
+            throw new Error(error)
+        }
     }
 
     /**

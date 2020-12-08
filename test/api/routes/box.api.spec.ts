@@ -370,6 +370,9 @@ describe("Box API", () => {
                     expect(box.creator).to.eql({
                         _id: '9ca0df5f86abeb66da97ba5d',
                         name: 'Ash Ketchum',
+                        settings: {
+                            picture: 'default-picture'
+                        }
                     })
                 })
         })
@@ -939,6 +942,9 @@ describe("Box API", () => {
                         _id: '9ca0df5f86abeb66da97ba5e',
                         role: 'simple',
                         origin: 'Blueberry',
+                        settings: {
+                            picture: 'default-picture'
+                        }
                     })
                 })
         })
