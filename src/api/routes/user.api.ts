@@ -9,7 +9,6 @@ import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../mod
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
 import { User, UserClass } from "../../models/user.model"
-import { IAuthSubject } from "../../models/session.model"
 const auth = require("./../middlewares/auth.middleware")
 
 export class UserApi {
@@ -301,7 +300,6 @@ export class UserApi {
 
             return response.status(200).send({ file: 'default-picture' })
         } catch (error) {
-            console.log(error)
             return response.status(500).send(error)
         }
     }
