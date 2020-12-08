@@ -42,9 +42,9 @@ export class BoxApi {
 
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
             const matchingBox = await Box.findById(request.params.box)
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
 
             if (!matchingBox) {
                 return response.status(404).send("BOX_NOT_FOUND")
@@ -104,7 +104,7 @@ export class BoxApi {
             }
 
             const boxes: Array<any> = await Box.find(query)
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
                 .lean()
 
@@ -455,7 +455,7 @@ export class BoxApi {
                     "userToken": { $not: /^user-[a-zA-Z0-9]{20}/ },
                     "connexions.0": { $exists: true }
                 })
-                .populate('userToken', 'name', 'User')
+                .populate('userToken', 'name settings.picture', 'User')
                 .lean()
 
             const subscribers: Array<ActiveSubscriber> = activeSubscribers.map(activeSubscriber => ({

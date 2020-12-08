@@ -503,9 +503,9 @@
             }
         },
         "@teamberry/muscadine": {
-            "version": "0.9.2",
-            "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.9.2/8827d5c017dfe1b580233f4079cb74de7e4cec0a527f5766dd4e5e3d2f0cd4b8",
-            "integrity": "sha512-STItlV2YIU7HnsDdJI2Fhsh52qdY2ppKkEGFCdNfqDmUspgPCj6OIjqBVSUIuACwL/7ZH0AIfI9lEaNBBmCJSg=="
+            "version": "0.10.1",
+            "resolved": "https://npm.pkg.github.com/download/@teamberry/muscadine/0.10.1/aae147a2b05a241473b3aa2e701a10529cb8e000739dd446a155d42712a307ae",
+            "integrity": "sha512-wanbaYIAv8Lv8BI3KNJlB+iYGx1gnhYjMv2lroe3nxvx7nBdDO74P6WfCJdOohZTVIdsR4Qs4WMZxfJ0vcMsOw=="
         },
         "@types/bcrypt": {
             "version": "3.0.0",
