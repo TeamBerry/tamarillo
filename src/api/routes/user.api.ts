@@ -188,9 +188,9 @@ export class UserApi {
 
         try {
             const boxes = await Box.find({ creator: userId })
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
 
             return response.status(200).send(boxes)
         } catch (error) {
