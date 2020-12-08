@@ -37,7 +37,7 @@ export class UploadService {
             return null
         }
 
-        const now = new Date().toISOString()
+        const now = new Date().getTime()
 
         const fileName = `${user}-picture-${now}`
 
