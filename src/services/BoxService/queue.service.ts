@@ -145,9 +145,9 @@ export class QueueService {
                         new: true
                     }
                 )
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
 
             const message = `${user.name} has removed the video "${targetVideo.name}" from the queue.`
 
@@ -267,9 +267,9 @@ export class QueueService {
                     { $set: { playlist: box.playlist } },
                     { new: true }
                 )
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
 
             if (areBerriesSpent) {
                 await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
@@ -452,9 +452,9 @@ export class QueueService {
         if (isVideoAlreadyInQueue) {
             updatedBox = await BoxSchema
                 .findById(boxToken)
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
         } else {
             const submission: QueueItem = {
                 video: video._id,
@@ -477,9 +477,9 @@ export class QueueService {
                     { $set: { playlist: box.playlist } },
                     { new: true }
                 )
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
         }
 
         return updatedBox
@@ -527,9 +527,9 @@ export class QueueService {
                 { $set: { playlist: box.playlist } },
                 { new: true }
             )
-            .populate("creator", "_id name")
+            .populate("creator", "_id name settings.picture")
             .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name")
+            .populate("playlist.submitted_by", "_id name settings.picture")
 
         return updatedBox
     }
@@ -545,7 +545,7 @@ export class QueueService {
         const box = await BoxSchema
             .findById(boxToken)
             .populate("playlist.video", "_id link name duration")
-            .populate("playlist.submitted_by", "_id name")
+            .populate("playlist.submitted_by", "_id name settings.picture")
             .lean()
 
         if (box.open === false) {
@@ -584,7 +584,7 @@ export class QueueService {
         const box: Box = await BoxSchema
             .findById(boxToken)
             .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name")
+            .populate("playlist.submitted_by", "_id name settings.picture")
 
         if (!box) {
             return null
@@ -656,9 +656,9 @@ export class QueueService {
                 { $set: { playlist: box.playlist } },
                 { new: true }
             )
-            .populate("creator", "_id name")
+            .populate("creator", "_id name settings.picture")
             .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name")
+            .populate("playlist.submitted_by", "_id name settings.picture")
 
         return response
     }

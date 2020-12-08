@@ -9,6 +9,7 @@ import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../mod
 import { Video } from "../../models/video.model"
 import uploadService, { MulterFile } from "../services/upload.service"
 import { User, UserClass } from "../../models/user.model"
+import { IAuthSubject } from "../../models/session.model"
 const auth = require("./../middlewares/auth.middleware")
 
 export class UserApi {
@@ -24,11 +25,12 @@ export class UserApi {
         this.router.get("/favorites", this.favorites)
         this.router.post("/favorites", this.updateFavorites)
         this.router.patch("/settings", this.patchSettings)
+        this.router.post('/picture', [upload.single('picture')], this.uploadProfilePicture)
+        this.router.delete('/picture', this.deleteProfilePicture)
         this.router.patch('/acl', this.patchACL)
         this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
-        this.router.post('/:user/picture', [auth.isAuthorized, upload.single('picture')], this.uploadProfilePicture)
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("user", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
@@ -186,9 +188,9 @@ export class UserApi {
 
         try {
             const boxes = await Box.find({ creator: userId })
-                .populate("creator", "_id name")
+                .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name")
+                .populate("playlist.submitted_by", "_id name settings.picture")
 
             return response.status(200).send(boxes)
         } catch (error) {
@@ -241,12 +243,14 @@ export class UserApi {
      * @memberof UserApi
      */
     public async uploadProfilePicture(request: Request, response: Response): Promise<Response> {
-        const user = response.locals.user
+        const userToken: string = response.locals.auth.user
 
         try {
             if (!request.file) {
                 return response.status(404).send('FILE_NOT_FOUND')
             }
+
+            const user = await User.findById(userToken)
 
             const fileToUpload: MulterFile = request.file as MulterFile
 
@@ -257,7 +261,10 @@ export class UserApi {
                 return response.status(400).send("CORRUPTED_FILE")
             }
 
-            console.log(uploadedFile)
+            // Deletes previous picture if it's not the default one
+            if (user.settings.picture !== 'default-picture') {
+                await uploadService.deleteProfilePicture(user.settings.picture)
+            }
 
             // Updates entity
             await User.findByIdAndUpdate(
@@ -269,6 +276,32 @@ export class UserApi {
 
             return response.status(200).send({ file: uploadedFile })
         } catch (error) {
+            return response.status(500).send(error)
+        }
+    }
+
+    public async deleteProfilePicture(request: Request, response: Response): Promise<Response> {
+        const userToken: string = response.locals.auth.user
+
+        try {
+            const user = await User.findById(userToken)
+
+            if (user.settings.picture === 'default-picture') {
+                return response.status(412).send("CANNOT_DELETE_DEFAULT")
+            }
+
+            await uploadService.deleteProfilePicture(user.settings.picture)
+
+            await User.findByIdAndUpdate(
+                user._id,
+                {
+                    $set: { 'settings.picture': 'default-picture' }
+                }
+            )
+
+            return response.status(200).send({ file: 'default-picture' })
+        } catch (error) {
+            console.log(error)
             return response.status(500).send(error)
         }
     }

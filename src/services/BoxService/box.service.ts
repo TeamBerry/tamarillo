@@ -634,9 +634,9 @@ class BoxService {
 
     public async sendBoxToSubscribers(boxToken: string) {
         const box = await BoxSchema.findById(boxToken)
-            .populate("creator", "_id name")
+            .populate("creator", "_id name settings.picture")
             .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name")
+            .populate("playlist.submitted_by", "_id name settings.picture")
 
         io.in(boxToken).emit("box", box)
     }
