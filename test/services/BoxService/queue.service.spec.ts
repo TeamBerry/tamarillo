@@ -2232,7 +2232,10 @@ describe("Queue Service", () => {
             })
             expect(currentVideo.submitted_by).to.eql({
                 _id: new ObjectId('9ca0df5f86abeb66da97ba5d'),
-                name: 'Ash Ketchum'
+                name: 'Ash Ketchum',
+                settings: {
+                    picture: 'default-picture'
+                }
             })
             expect(currentVideo.position).to.approximately(20, 1)
         })
