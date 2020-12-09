@@ -104,9 +104,24 @@ export class BoxApi {
             }
 
             const boxes: Array<any> = await Box.find(query)
+                .select('_id name creator description lang open private options featured')
+                .select({
+                    playlist: {
+                        $elemMatch: {
+                            $and: [
+                                {
+                                    startTime: { $ne: null },
+                                    endTime: null
+                                }
+                            ]
+                        }
+                    }
+                })
                 .populate("creator", "_id name settings.picture")
                 .populate("playlist.video")
                 .lean()
+
+            boxes.forEach(box => box.playlist = box.playlist ?? [])
 
             const boxTokens: Array<string> = boxes.map(box => box._id)
 
