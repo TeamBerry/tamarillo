@@ -48,7 +48,7 @@ const userSchema = new Schema(
             picture: { type: String, default: 'default-picture' },
             color: { type: String, default: '#DF62A9' },
             isColorblind: { type: Boolean, default: false },
-            badge: { type: Schema.Types.ObjectId, ref: "Badge" }
+            badge: { type: String, default: null }
         },
         acl: {
             moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },

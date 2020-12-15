@@ -48,7 +48,8 @@ describe("User API", () => {
                 theme: 'light',
                 picture: '9ca0df5f86abeb66da97ba5d-picture',
                 color: '#CD3E1D',
-                isColorblind: false
+                isColorblind: false,
+                badge: null
             },
             acl: {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
@@ -75,7 +76,8 @@ describe("User API", () => {
                 theme: 'dark',
                 picture: 'default-picture',
                 color: '#07D302',
-                isColorblind: false
+                isColorblind: false,
+                badge: null
             },
             acl: {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],

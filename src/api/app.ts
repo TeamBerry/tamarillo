@@ -8,6 +8,7 @@ import PlaylistApi from "./routes/playlist.api"
 import UserApi from "./routes/user.api"
 import SearchApi from "./routes/search.api"
 import InviteApi from "./routes/invite.api"
+import BadgeApi from "./routes/badge.api"
 
 class App {
     public app: express.Application
@@ -41,6 +42,9 @@ class App {
         this.app.use("/auth", AuthApi)
         this.app.use("/playlists", PlaylistApi)
         this.app.use("/search", SearchApi)
+
+        // Other
+        this.app.use("/badges", BadgeApi)
     }
 }
 
