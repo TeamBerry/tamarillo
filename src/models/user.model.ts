@@ -11,8 +11,10 @@ export class UserClass {
         picture: string
         color: string
         isColorblind: boolean
+        badge: string
     }
     public acl?: ACLConfig
+    public badges?: Array<{ badge: string, unlockedAt: Date }>
 
     constructor(user?: Partial<UserClass>) {
         this.name = user && user.name || null
@@ -23,13 +25,15 @@ export class UserClass {
             theme: 'dark',
             picture: null,
             color: '#DF62A9',
-            isColorblind: false
+            isColorblind: false,
+            badge: null
         }
         this.acl = user && user.acl || {
             moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
             vip: ['addVideo', 'removeVideo', 'forceNext'],
             simple: ['addVideo']
         }
+        this.badges = user && user.badges || []
     }
 }
 
@@ -43,13 +47,18 @@ const userSchema = new Schema(
             theme: { type: String, default: 'dark' },
             picture: { type: String, default: 'default-picture' },
             color: { type: String, default: '#DF62A9' },
-            isColorblind: { type: Boolean, default: false }
+            isColorblind: { type: Boolean, default: false },
+            badge: { type: Schema.Types.ObjectId, ref: "Badge" }
         },
         acl: {
             moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },
             vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext'] },
             simple: { type: Array, default: ['addVideo'] }
-        }
+        },
+        badges: [{
+            badge: { type: Schema.Types.ObjectId, ref: "Badge" },
+            unlockedAt: { type: Date, default: Date.now }
+        }]
     },
     {
         timestamps: true // Will automatically insert createdAt & updatedAt fields
