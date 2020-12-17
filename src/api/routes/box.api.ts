@@ -276,7 +276,8 @@ export class BoxApi {
         try {
             const invite = await Invite.create(new InviteClass({
                 boxToken: request.params.box,
-                userToken: response.locals.auth.user
+                userToken: response.locals.auth.user,
+                expiresAt: request.body
             }))
 
             return response.status(200).send(invite)

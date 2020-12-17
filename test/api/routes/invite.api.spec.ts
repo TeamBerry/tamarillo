@@ -78,14 +78,14 @@ describe("Invite API", () => {
                 link: 'D63ca9d3',
                 boxToken: '9cb763b6e72611381ef043e4',
                 userToken: '9ca0df5f86abeb66da97ba5d',
-                expiry: 900000,
+                expiresAt: new Date(Date.now() + 900).getTime()
             },
             // Expired invite
             {
                 link: '5D3e9d1a',
                 boxToken: '9cb763b6e72611381ef043e4',
                 userToken: '9ca0df5f86abeb66da97ba5d',
-                expiry: 900000,
+                expiresAt: new Date(Date.now() - 1100000 + 900).getTime(),
                 createdAt: new Date(Date.now() - 1100000).getTime()
             },
             // Invite for closed box
@@ -93,14 +93,14 @@ describe("Invite API", () => {
                 link: '9d3gE6Mo',
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
-                expiry: 900000,
+                expiresAt: new Date(Date.now() + 900).getTime()
             },
             // Invite for no box
             {
                 link: '0FE3ju97',
                 boxToken: '9cb763b6e72611381ef043e3',
                 userToken: '9ca0df5f86abeb66da97ba5d',
-                expiry: 1800000,
+                expiresAt: new Date(Date.now() + 900).getTime()
             }
         ])
      })

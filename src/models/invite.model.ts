@@ -4,13 +4,7 @@ export class InviteClass {
     public link: string
     public boxToken: string
     public userToken: string
-    /**
-     * Expiry of the invite. Values are 15 minutes, 30 minutes, 1 hour, 2 hours (in milliseconds)
-     *
-     * @type {(900000 | 1800000 | 3600000 | 7200000)}
-     * @memberof InviteClass
-     */
-    public expiry: 900000 | 1800000 | 3600000 | 7200000
+    public expiresAt: Date
 
     constructor(invite: Partial<InviteClass> & Pick<InviteClass, 'boxToken' | 'userToken'>) {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -22,7 +16,7 @@ export class InviteClass {
         this.link = link
         this.boxToken = invite.boxToken
         this.userToken = invite.userToken
-        this.expiry = invite.expiry ?? 900000
+        this.expiresAt = invite.expiresAt
     }
 }
 
@@ -31,7 +25,7 @@ const inviteSchema = new Schema(
         link: String,
         boxToken: { type: Schema.Types.ObjectId, ref: "Box" },
         userToken: { type: Schema.Types.ObjectId, ref: "User" },
-        expiry: Number
+        expiresAt: Date
     },
     {
         timestamps: true
