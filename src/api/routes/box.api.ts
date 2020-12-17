@@ -64,7 +64,7 @@ export class BoxApi {
      * @returns {Promise<Response>} The list of boxes
      * @memberof BoxApi
      */
-    public async index(response: Response): Promise<Response> {
+    public async index(request: Request, response: Response): Promise<Response> {
         try {
             let query: unknown = { open: true, private: { $ne: true } }
 
@@ -161,7 +161,7 @@ export class BoxApi {
      * - 500 Server Error: Something wrong occurred
      * @memberof BoxApi
      */
-    public async show(response: Response): Promise<Response> {
+    public async show(request: Request, response: Response): Promise<Response> {
         return response.status(200).send(response.locals.box)
     }
 
