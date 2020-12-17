@@ -5,7 +5,7 @@ import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
 import QueueApi from "./queue.api"
-import { InviteClass, Invite } from "../../models/invite.model"
+import { Invite } from "../../models/invite.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../middlewares/auth.middleware")
@@ -274,10 +274,12 @@ export class BoxApi {
         // TODO: Estimate ACL power
 
         try {
-            const invite = await Invite.create(new InviteClass({
+            const expiration = request.body.expiration ?? 900
+            const invite = await Invite.create({
                 boxToken: request.params.box,
-                userToken: response.locals.auth.user
-            }))
+                userToken: response.locals.auth.user,
+                expiresAt: new Date(Date.now() + expiration * 1000)
+            })
 
             return response.status(200).send(invite)
         } catch (error) {
