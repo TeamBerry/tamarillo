@@ -23,10 +23,7 @@ export class InviteApi {
                 return response.status(404).send('INVITE_NOT_FOUND')
             }
 
-            const creationDate = new Date(invite.createdAt as string)
-            const expiryDate = new Date(creationDate.getTime() + invite.expiry)
-
-            if (expiryDate < new Date()) {
+            if (invite.expiresAt < new Date()) {
                 return response.status(404).send('INVITE_EXPIRED')
             }
 
