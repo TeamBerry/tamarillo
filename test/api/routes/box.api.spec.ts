@@ -517,7 +517,7 @@ describe("Box API", () => {
                 .expect(403, 'BOX_CLOSED')
         })
 
-        it("Generates a default 15 minutes invite link", () => {
+        it("Generates a default invite link", () => {
             return supertest(expressApp)
                 .post("/9cb763b6e72611381ef043e4/invite")
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
@@ -525,9 +525,28 @@ describe("Box API", () => {
                 .then((response) => {
                     const invite: InviteDocument = response.body
 
-                    expect(invite.link).to.have.lengthOf(8)
+                    expect(invite.link).to.have.lengthOf(20)
                     expect(invite.boxToken).to.equal('9cb763b6e72611381ef043e4')
                     expect(invite.userToken).to.equal('9ca0df5f86abeb66da97ba5d')
+                    expect(invite.expiresAt).to.not.be.null
+                })
+        })
+
+        it("Generates an invite link", () => {
+            return supertest(expressApp)
+                .post("/9cb763b6e72611381ef043e4/invite")
+                .set('Authorization', `Bearer ${ashJWT.bearer}`)
+                .send({
+                    expiration: 900
+                })
+                .expect(200)
+                .then((response) => {
+                    const invite: InviteDocument = response.body
+
+                    expect(invite.link).to.have.lengthOf(20)
+                    expect(invite.boxToken).to.equal('9cb763b6e72611381ef043e4')
+                    expect(invite.userToken).to.equal('9ca0df5f86abeb66da97ba5d')
+                    expect(invite.expiresAt).to.not.be.null
                 })
         })
     })

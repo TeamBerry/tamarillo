@@ -5,7 +5,7 @@ import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
 import QueueApi from "./queue.api"
-import { InviteClass, Invite } from "../../models/invite.model"
+import { Invite } from "../../models/invite.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../middlewares/auth.middleware")
@@ -64,7 +64,7 @@ export class BoxApi {
      * @returns {Promise<Response>} The list of boxes
      * @memberof BoxApi
      */
-    public async index(request: Request, response: Response): Promise<Response> {
+    public async index(response: Response): Promise<Response> {
         try {
             let query: unknown = { open: true, private: { $ne: true } }
 
@@ -161,7 +161,7 @@ export class BoxApi {
      * - 500 Server Error: Something wrong occurred
      * @memberof BoxApi
      */
-    public async show(request: Request, response: Response): Promise<Response> {
+    public async show(response: Response): Promise<Response> {
         return response.status(200).send(response.locals.box)
     }
 
@@ -274,14 +274,16 @@ export class BoxApi {
         // TODO: Estimate ACL power
 
         try {
-            const invite = await Invite.create(new InviteClass({
+            const expiration = request.body.expiration ?? 900
+            const invite = await Invite.create({
                 boxToken: request.params.box,
                 userToken: response.locals.auth.user,
-                expiresAt: request.body
-            }))
+                expiresAt: new Date(Date.now() + expiration * 1000)
+            })
 
             return response.status(200).send(invite)
         } catch (error) {
+            console.error(error)
             return response.status(500).send(error)
         }
     }
