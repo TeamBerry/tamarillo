@@ -283,7 +283,6 @@ export class BoxApi {
 
             return response.status(200).send(invite)
         } catch (error) {
-            console.error(error)
             return response.status(500).send(error)
         }
     }
