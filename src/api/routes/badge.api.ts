@@ -20,7 +20,7 @@ export class BadgeApi {
     }
 
     public async index(request: Request, response: Response): Promise<Response> {
-        const badges = await Badge.find({})
+        const badges = await Badge.find({}).select('-unlockConditions')
         return response.status(200).send(badges)
     }
 
