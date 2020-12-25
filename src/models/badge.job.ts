@@ -1,3 +1,5 @@
+import { BadgeEventSubject } from "./badge.model"
+
 export interface BadgeEvent {
     /**
      * The target user that gains the badge
@@ -24,17 +26,3 @@ export interface BadgeEvent {
      */
     subject: BadgeEventSubject
 }
-
-export type BadgeEventSubject = StringType | NumberType
-
-interface StringType {
-    key: 'box.join' | 'queue.now'
-    value: string
-    valueType?: 'string'
-}
-interface NumberType {
-    key: 'box.life' | 'queue.add' | 'subscription.berries'
-    value: number
-    valueType?: 'number'
-}
-

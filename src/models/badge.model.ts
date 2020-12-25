@@ -1,13 +1,25 @@
 import { Document, model, Schema } from "mongoose"
-import { BadgeEventSubject } from "./badge.job"
+
+export type BadgeEventSubject = StringType | NumberType
+
+interface StringType {
+    key: 'box.join' | 'queue.now'
+    value: string
+    valueType?: 'string'
+}
+interface NumberType {
+    key: 'box.life' | 'queue.add' | 'subscription.berries'
+    value: number
+    valueType?: 'number'
+}
 
 export class BadgeClass {
     public picture: string
     public name: string
     public description: string
     public isSecret: boolean
-    public availableFrom: string
-    public availableTo: string
+    public availableFrom: Date
+    public availableTo: Date
     public unlockConditions: BadgeEventSubject
 
     constructor(badge: BadgeClass) {

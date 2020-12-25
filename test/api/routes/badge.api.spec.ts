@@ -20,16 +20,6 @@ describe("Badge API", () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
         expressApp.use('/', BadgeApi)
 
-        await Badge.create([
-            {
-                name: 'Beta Tester',
-                picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/beta-badge.png',
-                description: 'Awarded to those who have participated in the Mobile Beta Phase',
-                availableFrom: null,
-                availableTo: '2020-12-31T23:59:59Z'
-            }
-        ])
-
         const ashUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
