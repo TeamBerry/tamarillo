@@ -40,11 +40,9 @@ describe("Auth API", () => {
             await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
         })
 
-        it("Rejects the login if no credentials are given", () => {
-            return supertest(expressApp)
-                .post("/login")
-                .expect(412, 'MISSING_CREDENTIALS')
-        })
+        it("Rejects the login if no credentials are given", () => supertest(expressApp)
+            .post("/login")
+            .expect(412, 'MISSING_CREDENTIALS'))
 
         it("Rejects the login if part of the credentials are missing", () => {
             const credentials = {
@@ -109,49 +107,41 @@ describe("Auth API", () => {
             await User.deleteMany({})
         })
 
-        it("Sends a 409 if the mail already exists", async () => {
-            return supertest(expressApp)
-                .post('/signup')
-                .send({ mail: 'ash@pokemon.com', name: 'Misty', password: 'Mewtwo' })
-                .expect(409, 'MAIL_ALREADY_EXISTS')
-        })
+        it("Sends a 409 if the mail already exists", async () => supertest(expressApp)
+            .post('/signup')
+            .send({ mail: 'ash@pokemon.com', name: 'Misty', password: 'Mewtwo' })
+            .expect(409, 'MAIL_ALREADY_EXISTS'))
 
-        it("Sends a 409 if the username already exists", async () => {
-            return supertest(expressApp)
-                .post('/signup')
-                .send({ mail: 'misty@pokemon.com', name: 'Ash Ketchum', password: 'Mewtwo' })
-                .expect(409, 'USERNAME_ALREADY_EXISTS')
-        })
+        it("Sends a 409 if the username already exists", async () => supertest(expressApp)
+            .post('/signup')
+            .send({ mail: 'misty@pokemon.com', name: 'Ash Ketchum', password: 'Mewtwo' })
+            .expect(409, 'USERNAME_ALREADY_EXISTS'))
 
-        it("Returns a 200 with an active session", async () => {
-            return supertest(expressApp)
-                .post('/signup')
-                .send({ mail: 'blue@pokemon.com', name: 'Blue', password: 'Ratticate' })
-                .expect(200)
-                .then(async () => {
-                    const user = await User.findOne({ mail: 'blue@pokemon.com' })
+        it("Returns a 200 with an active session", async () => supertest(expressApp)
+            .post('/signup')
+            .send({ mail: 'blue@pokemon.com', name: 'Blue', password: 'Ratticate' })
+            .expect(200)
+            .then(async () => {
+                const user = await User.findOne({ mail: 'blue@pokemon.com' })
 
-                    expect(user.password).to.not.equal('Ratticate')
-                })
-        })
+                expect(user.password).to.not.equal('Ratticate')
+            }))
 
-        it("Creates a 'favorites' playlist, undeletable, for the user", async () => {
-            return supertest(expressApp)
-                .post('/signup')
-                .send({ mail: 'green@pokemon.com', name: 'Green', password: 'Venusaur' })
-                .expect(200)
-                .then(async () => {
-                    const user = await User.findOne({ mail: 'green@pokemon.com' })
+        it("Creates a 'favorites' playlist, undeletable, for the user", async () => supertest(expressApp)
+            .post('/signup')
+            .send({ mail: 'green@pokemon.com', name: 'Green', password: 'Venusaur' })
+            .expect(200)
+            .then(async () => {
+                const user = await User.findOne({ mail: 'green@pokemon.com' })
 
-                    const favoritesPlaylist: UserPlaylistDocument = await UserPlaylist.findOne({ user: user._id })
+                const favoritesPlaylist: UserPlaylistDocument = await UserPlaylist.findOne({ user: user._id })
 
-                    expect(favoritesPlaylist.name).to.equal('Favorites')
-                    expect(favoritesPlaylist.isPrivate).to.equal(false)
-                    expect(favoritesPlaylist.user.toString()).to.equal(user._id.toString())
-                    expect(favoritesPlaylist.videos).to.have.lengthOf(0)
-                    expect(favoritesPlaylist.isDeletable).to.be.false
-                })
-        })
+                expect(favoritesPlaylist.name).to.equal('Favorites')
+                expect(favoritesPlaylist.isPrivate).to.equal(false)
+                expect(favoritesPlaylist.user.toString()).to.equal(user._id.toString())
+                expect(favoritesPlaylist.videos).to.have.lengthOf(0)
+                expect(favoritesPlaylist.isDeletable).to.be.false
+            }))
     })
 
     describe("Reset password", () => {
@@ -179,47 +169,37 @@ describe("Auth API", () => {
         })
 
         describe("Step 1 - The User requests a reset. A reset token is issued.", () => {
-            it("Sends a 200 even if no user matches the given mail", () => {
-                return supertest(expressApp)
-                    .post("/reset")
-                    .send({ email: 'unknown@mail.com' })
-                    .expect(200)
-            })
+            it("Sends a 200 even if no user matches the given mail", () => supertest(expressApp)
+                .post("/reset")
+                .send({ email: 'unknown@mail.com' })
+                .expect(200))
 
-            it("Resets the password if the user exists", () => {
-                return supertest(expressApp)
-                    .post("/reset")
-                    .send({ mail: 'ash@pokemon.com' })
-                    .expect(200)
-                    .then(async () => {
-                        const user = await User.findById('9ca0df5f86abeb66da97ba5d')
+            it("Resets the password if the user exists", () => supertest(expressApp)
+                .post("/reset")
+                .send({ mail: 'ash@pokemon.com' })
+                .expect(200)
+                .then(async () => {
+                    const user = await User.findById('9ca0df5f86abeb66da97ba5d')
 
-                        expect(user.password).to.be.null
-                        expect(user.resetToken).to.not.be.null
-                    })
-            })
+                    expect(user.password).to.be.null
+                    expect(user.resetToken).to.not.be.null
+                }))
         })
 
         describe("Step 2 - The User attempts to change their password. The reset token is checked against.", () => {
-            it("Sends a 404 if no user matches the reset token", () => {
-                return supertest(expressApp)
-                    .get('/reset/T0k3nNoTFO_unD')
-                    .expect(404, 'TOKEN_NOT_FOUND')
-            })
+            it("Sends a 404 if no user matches the reset token", () => supertest(expressApp)
+                .get('/reset/T0k3nNoTFO_unD')
+                .expect(404, 'TOKEN_NOT_FOUND'))
 
-            it("Sends a 200 WITHOUT the user if there's a match", () => {
-                return supertest(expressApp)
-                    .get('/reset/yuaxPLMxE1R1XiA7lvRd')
-                    .expect(200)
-            })
+            it("Sends a 200 WITHOUT the user if there's a match", () => supertest(expressApp)
+                .get('/reset/yuaxPLMxE1R1XiA7lvRd')
+                .expect(200))
         })
 
         describe("Step 3 - The User resets their password.", () => {
-            it("Sends a 404 if no user matches the signup token", () => {
-                return supertest(expressApp)
-                    .post('/reset/T0k3nNoTFO_unD')
-                    .expect(404, 'TOKEN_NOT_FOUND')
-            })
+            it("Sends a 404 if no user matches the signup token", () => supertest(expressApp)
+                .post('/reset/T0k3nNoTFO_unD')
+                .expect(404, 'TOKEN_NOT_FOUND'))
 
             it("Sends a 200 if the user exists", async () => {
                 const reset = {
@@ -405,7 +385,7 @@ describe("Auth API", () => {
                     playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     private: true,
-                    open: true,
+                    open: true
                 },
                 {
                     _id: '9cb763b6e72611381ef043e5',
@@ -415,7 +395,7 @@ describe("Auth API", () => {
                     playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     private: false,
-                    open: false,
+                    open: false
                 },
                 {
                     _id: '9cb763b6e72611381ef043e6',
@@ -425,7 +405,7 @@ describe("Auth API", () => {
                     playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     private: true,
-                    open: true,
+                    open: true
                 }
             ])
 
@@ -476,25 +456,21 @@ describe("Auth API", () => {
             await UserPlaylist.deleteMany({})
         })
 
-        it('Fails if the user still has boxes', () => {
-            return supertest(expressApp)
-                .post('/deactivate')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(412, 'USER_STILL_HAS_BOXES')
-        })
+        it('Fails if the user still has boxes', () => supertest(expressApp)
+            .post('/deactivate')
+            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .expect(412, 'USER_STILL_HAS_BOXES'))
 
-        it('Deletes the account', () => {
-            return supertest(expressApp)
-                .post('/deactivate')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .expect(200)
-                .then(async () => {
-                    expect(await User.count({ _id: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)
-                    expect(await Subscriber.count({ userToken: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)
-                    expect(await UserPlaylist.count({ user: '9ca0df5f86abeb66da97ba5e' })).to.equal(0)
-                    expect(await Subscriber.count({ userToken: '9ca0df5f86abeb66da97ba5d'})).to.equal(2)
-                    expect(await UserPlaylist.count({ user: '9ca0df5f86abeb66da97ba5d'})).to.equal(1)
-                })
-        })
+        it('Deletes the account', () => supertest(expressApp)
+            .post('/deactivate')
+            .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+            .expect(200)
+            .then(async () => {
+                expect(await User.count({ _id: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)
+                expect(await Subscriber.count({ userToken: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)
+                expect(await UserPlaylist.count({ user: '9ca0df5f86abeb66da97ba5e' })).to.equal(0)
+                expect(await Subscriber.count({ userToken: '9ca0df5f86abeb66da97ba5d'})).to.equal(2)
+                expect(await UserPlaylist.count({ user: '9ca0df5f86abeb66da97ba5d'})).to.equal(1)
+            }))
     })
 })

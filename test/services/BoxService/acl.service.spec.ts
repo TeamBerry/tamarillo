@@ -124,7 +124,7 @@ describe("ACL Service", () => {
                 connexions: [],
                 berries: 13,
                 role: 'simple'
-            },
+            }
         ])
     })
 

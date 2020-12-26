@@ -2,7 +2,6 @@ import * as chai from 'chai'
 const expect = chai.expect
 
 import { Message } from "@teamberry/muscadine"
-import moment = require('moment')
 import chatService from './../../../src/services/BoxService/chat.service'
 
 describe("Chat Service", () => {

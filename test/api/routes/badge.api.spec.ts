@@ -24,7 +24,7 @@ describe("Badge API", () => {
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
-            password: 'Pikachu',
+            password: 'Pikachu'
         })
 
         const adminUser = await User.create({
@@ -42,52 +42,44 @@ describe("Badge API", () => {
         await Badge.deleteMany({})
     })
 
-    it("Gets all badges", async () => {
-        return supertest(expressApp)
-            .get('/')
-            .expect(200)
-            .then((response) => {
-                const badges: Array<BadgeDocument> = response.body
+    it("Gets all badges", async () => supertest(expressApp)
+        .get('/')
+        .expect(200)
+        .then(response => {
+            const badges: Array<BadgeDocument> = response.body
 
-                expect(badges).to.have.lengthOf(1)
-        })
-    })
+            expect(badges).to.have.lengthOf(1)
+        }))
 
     describe("Create a badge", () => {
-        it("Fails if the user does not have the credentials", () => {
-            return supertest(expressApp)
-                .post('/')
-                .set('Authorization', `Bearer ${ashJWT.bearer}`)
-                .send({
-                    name: '1 Year Anniversary',
-                    picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/1-yr.png',
-                    description: 'For your 1 year of Berrybox',
-                    availableFrom: null,
-                    availableTo: null
-                })
-                .expect(401, 'UNAUTHORIZED')
-        })
+        it("Fails if the user does not have the credentials", () => supertest(expressApp)
+            .post('/')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .send({
+                name: '1 Year Anniversary',
+                picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/1-yr.png',
+                description: 'For your 1 year of Berrybox',
+                availableFrom: null,
+                availableTo: null
+            })
+            .expect(401, 'UNAUTHORIZED'))
 
-        it("Fails if the body is empty", () => {
-            return supertest(expressApp)
-                .post('/')
-                .set('Authorization', `Bearer ${adminJWT.bearer}`)
-                .send()
-                .expect(412)
-        })
+        it("Fails if the body is empty", () => supertest(expressApp)
+            .post('/')
+            .set('Authorization', `Bearer ${adminJWT.bearer}`)
+            .send()
+            .expect(412))
 
-        it("Creates the badge", () => {
-            return supertest(expressApp)
-                .post('/')
-                .set('Authorization', `Bearer ${adminJWT.bearer}`)
-                .send({
-                    name: '1 Year Anniversary',
-                    picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/1-yr.png',
-                    description: 'For your 1 year of Berrybox',
-                    availableFrom: null,
-                    availableTo: null
-                })
-                .expect(201)
-        })
+        it("Creates the badge", () => supertest(expressApp)
+            .post('/')
+            .set('Authorization', `Bearer ${adminJWT.bearer}`)
+            .send({
+                name: '1 Year Anniversary',
+                picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/1-yr.png',
+                description: 'For your 1 year of Berrybox',
+                availableFrom: null,
+                availableTo: null
+            })
+            .expect(201))
     })
 })

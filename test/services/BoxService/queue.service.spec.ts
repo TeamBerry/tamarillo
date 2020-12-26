@@ -208,12 +208,12 @@ describe("Queue Service", () => {
                     },
                     acl: {
                         moderator: [
-                          'addVideo',
-                          'removeVideo',
-                          'promoteVIP',
-                          'demoteVIP',
-                          'forceNext',
-                          'forcePlay'
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
                         ],
                         vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
                         simple: []
@@ -236,16 +236,16 @@ describe("Queue Service", () => {
                     },
                     acl: {
                         moderator: [
-                          'addVideo',
-                          'removeVideo',
-                          'promoteVIP',
-                          'demoteVIP',
-                          'forceNext',
-                          'forcePlay'
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
                         ],
                         vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
                         simple: [ 'addVideo' ]
-                      }
+                    }
                 }
             ])
 
@@ -291,7 +291,7 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 0,
                     role: 'simple'
-                },
+                }
             ])
         })
 
@@ -2102,7 +2102,7 @@ describe("Queue Service", () => {
         it('Refuses if the non-admin user does not have enough berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef043e7',
-                userToken: '9ca0df5f86abeb66da97ba5e',
+                userToken: '9ca0df5f86abeb66da97ba5e'
             }
 
             try {
@@ -2116,7 +2116,7 @@ describe("Queue Service", () => {
         it('Refuses if there is another video already playing with berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef243e7',
-                userToken: '9ca0df5f86abeb66da97ba5f',
+                userToken: '9ca0df5f86abeb66da97ba5f'
             }
 
             try {
@@ -2130,7 +2130,7 @@ describe("Queue Service", () => {
         it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef143e7',
-                userToken: '9ca0df5f86abeb66da97ba5f',
+                userToken: '9ca0df5f86abeb66da97ba5f'
             }
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
@@ -2150,7 +2150,7 @@ describe("Queue Service", () => {
         it('Skip the track', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef043e7',
-                userToken: '9ca0df5f86abeb66da97ba5d',
+                userToken: '9ca0df5f86abeb66da97ba5d'
             }
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
@@ -2556,7 +2556,7 @@ describe("Queue Service", () => {
 
             expect(possibleVideos.indexOf(response.nextVideo._id.toString())).to.not.equal(-1)
 
-            const playingIndex = _.findIndex(box.playlist, (video) => video.startTime !== null && video.endTime === null)
+            const playingIndex = _.findIndex(box.playlist, video => video.startTime !== null && video.endTime === null)
 
             expect(playingIndex).to.equal(2)
         })
