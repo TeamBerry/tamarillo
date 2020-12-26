@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
@@ -5,7 +6,6 @@ import * as supertest from "supertest"
 const expect = chai.expect
 
 import PlaylistApi from './../../../src/api/routes/playlist.api'
-import { AuthApi } from './../../../src/api/routes/auth.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Video, VideoDocument } from './../../../src/models/video.model'
@@ -40,12 +40,6 @@ describe("Playlists API", () => {
             password: 'Piano'
         })
 
-        const peterUser = await User.create({
-            _id: '9ca0df5f86abeb66da97ba5f',
-            name: 'Peter',
-            mail: 'peter@hoenn-league.com',
-            password: 'Metagr0ss'
-        })
 
         await Video.create([
             {
@@ -138,7 +132,7 @@ describe("Playlists API", () => {
 
         it("Returns the list of all public playlists if there's a JWT with the user playlists excluded", () => supertest(expressApp)
             .get('/')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(200)
             .then(response => {
                 const playlists: Array<UserPlaylistClass> = response.body
@@ -154,17 +148,17 @@ describe("Playlists API", () => {
 
         it("Sends a 401 if trying to get a private playlist with unauthorized access", () => supertest(expressApp)
             .get('/8da1e01fda34eb8c1b9db46e')
-            .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
             .expect(401, 'UNAUTHORIZED'))
 
         it("Sends a 404 back if no playlist matches the given id", () => supertest(expressApp)
             .get('/8da1e01fda34eb8c1b9db47e')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(404, 'PLAYLIST_NOT_FOUND'))
 
         it("Sends a 200 with the private playlist if JWT is valid and matching", () => supertest(expressApp)
             .get('/8da1e01fda34eb8c1b9db46e')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(200)
             .then(response => {
                 const playlist = response.body
@@ -178,7 +172,7 @@ describe("Playlists API", () => {
 
         it("Sends a 200 with the public playlist", () => supertest(expressApp)
             .get('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(200))
     })
 
@@ -189,12 +183,12 @@ describe("Playlists API", () => {
 
         it("Sends a 412 if no request body is given", () => supertest(expressApp)
             .post('/')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(412, 'MISSING_PARAMETERS'))
 
         it("Sends a 201 with the created playlist", () => supertest(expressApp)
             .post('/')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 _id: "8da1e01fda34eb8c1b9db46a",
                 name: "My New Playlist",
@@ -208,12 +202,12 @@ describe("Playlists API", () => {
     describe("Updates a playlist", () => {
         it("Sends a 412 if no request body is given", () => supertest(expressApp)
             .put('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(412, 'MISSING_PARAMETERS'))
 
         it("Sends a 412 if the request parameter and the _id given in the request body don't match", () => supertest(expressApp)
             .put('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 _id: "8da1e01fda34eb8c1b9db48f",
                 name: "WiP Playlist 4",
@@ -225,7 +219,7 @@ describe("Playlists API", () => {
 
         it("Sends a 404 back if no playlist matches the id given", () => supertest(expressApp)
             .put('/8da1e01fda34eb8c1b9db47f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 _id: "8da1e01fda34eb8c1b9db47f",
                 name: "This playlist does not exist",
@@ -237,7 +231,7 @@ describe("Playlists API", () => {
 
         it("Sends a 401 if trying to update a playlist without being the owner", () => supertest(expressApp)
             .put('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
             .send({
                 _id: "8da1e01fda34eb8c1b9db46f",
                 name: "WiP Playlist 2 Modified",
@@ -249,7 +243,7 @@ describe("Playlists API", () => {
 
         it("Sends a 200 with the updated playlist with partial object", () => supertest(expressApp)
             .put('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 _id: "8da1e01fda34eb8c1b9db46f",
                 videos: ['9bc72f3d7edc6312d0ef2e48']
@@ -268,7 +262,7 @@ describe("Playlists API", () => {
 
         it("Sends a 200 with the updated playlist", () => supertest(expressApp)
             .put('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 _id: "8da1e01fda34eb8c1b9db46f",
                 name: "WiP Playlist 2 Modified",
@@ -299,7 +293,7 @@ describe("Playlists API", () => {
 
         it("Sends a 401 if the JWT is invalid (not the owner)", () => supertest(expressApp)
             .post("/8da1e01fda34eb8c1b9db46f/videos")
-            .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
             .send({
                 videoId: '9bc72f3d7edc6312d0ef2e48'
             })
@@ -307,7 +301,7 @@ describe("Playlists API", () => {
 
         it("Sends a 404 if the playlist does not exist", () => supertest(expressApp)
             .post("/9da1e01fda34eb8c1b9db46f/videos")
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 video: '9bc72f3d7edc6312d0ef2e48'
             })
@@ -315,7 +309,7 @@ describe("Playlists API", () => {
 
         it("Sends a 200 and adds the video to the playlist", () => supertest(expressApp)
             .post("/8da1e01fda34eb8c1b9db471/videos")
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 videoId: '9bc72f3d7edc6312d0ef2e48'
             })
@@ -333,7 +327,7 @@ describe("Playlists API", () => {
 
         it("Sends a 200, creates the video and adds it to the playlist", () => supertest(expressApp)
             .post("/8da1e01fda34eb8c1b9db472/videos")
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .send({
                 videoLink: 'UC_qla6FQwM'
             })
@@ -357,17 +351,17 @@ describe("Playlists API", () => {
 
         it("Sends a 401 if the JWT is invalid (not the owner)", () => supertest(expressApp)
             .delete("/8da1e01fda34eb8c1b9db46e/videos/9bc72f3d7edc6312d0ef2e48")
-            .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
             .expect(401))
 
         it("Sends a 404 if the playlist does not exist", () => supertest(expressApp)
             .delete("/9da1e01fda34eb8c1b9db46e/videos/9bc72f3d7edc6312d0ef2e48")
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(404))
 
         it("Sends a 200 and removes the video from the playlist", () => supertest(expressApp)
             .delete("/8da1e01fda34eb8c1b9db473/videos/9bc72f3d7edc6312d0ef2e48")
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(200)
             .then(response => {
                 const updatedPlaylist: UserPlaylistDocument = response.body
@@ -383,17 +377,17 @@ describe("Playlists API", () => {
 
         it("Sends a 404 back if no playlist matches the id given", () => supertest(expressApp)
             .delete('/8da1e01fda34eb8c1b9db47f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(404, 'PLAYLIST_NOT_FOUND'))
 
         it("Sends a 403 if trying to a delete an undeletable playlist", () => supertest(expressApp)
             .delete('/8da1e01fda34eb8c1b9db473')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(403, 'NOT_PERMITTED'))
 
         it("Sends a 200 with the deleted playlist", () => supertest(expressApp)
             .delete('/8da1e01fda34eb8c1b9db46f')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(200)
             .then(async () => {
                 const deletedPlaylist = await UserPlaylist.findById('8da1e01fda34eb8c1b9db46f')

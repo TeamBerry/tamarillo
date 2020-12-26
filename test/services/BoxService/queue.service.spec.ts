@@ -301,13 +301,6 @@ describe("Queue Service", () => {
             await Subscriber.deleteMany({})
         })
 
-        const video = {
-            _id: '9cb81150594b2e75f06ba8fe',
-            link: 'Ivi1e-yCPcI',
-            name: 'Destroid - Annihilate',
-            duration: 'PT5M11S'
-        }
-
         it("Refuses the submission if the video does not exist", async () => {
             try {
                 await queueService.onVideoSubmitted({ link: 'notFound', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
@@ -398,7 +391,7 @@ describe("Queue Service", () => {
 
         // Feedback
         it("Sends message with user name if user exists", async () => {
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
+            const { systemMessage, feedbackMessage } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
 
             expect(systemMessage.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
             expect(feedbackMessage.contents).to.equal(`Your video "Destroid - Annihilate" has been added to the queue.`)
@@ -1334,7 +1327,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef143f4'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef143e7')
 
@@ -1355,7 +1348,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef343f0'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef343e7')
 
@@ -1373,7 +1366,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 

@@ -1,6 +1,5 @@
 import * as chai from "chai"
 const expect = chai.expect
-const mongoose = require('mongoose')
 
 import aclService from '../../../src/services/BoxService/acl.service'
 

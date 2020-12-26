@@ -20,13 +20,6 @@ describe("Invite API", () => {
         await Invite.deleteMany({})
         await User.deleteMany({})
 
-        const ashUser = await User.create({
-            _id: '9ca0df5f86abeb66da97ba5d',
-            name: 'Ash Ketchum',
-            mail: 'ash@pokemon.com',
-            password: 'Pikachu'
-        })
-
         await Box.create([
             {
                 _id: '9cb763b6e72611381ef043e4',

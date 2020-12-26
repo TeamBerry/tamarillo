@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import * as bcrypt from "bcrypt"
 import * as bodyParser from "body-parser"
 import * as chai from "chai"
@@ -458,12 +459,12 @@ describe("Auth API", () => {
 
         it('Fails if the user still has boxes', () => supertest(expressApp)
             .post('/deactivate')
-            .set('Authorization', 'Bearer ' + ashJWT.bearer)
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(412, 'USER_STILL_HAS_BOXES'))
 
         it('Deletes the account', () => supertest(expressApp)
             .post('/deactivate')
-            .set('Authorization', 'Bearer ' + foreignJWT.bearer)
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
             .expect(200)
             .then(async () => {
                 expect(await User.count({ _id: '9ca0df5f86abeb66da97ba5e'})).to.equal(0)

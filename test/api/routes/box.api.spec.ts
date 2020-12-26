@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import * as bodyParser from 'body-parser'
 import * as chai from "chai"
 import * as express from "express"
@@ -19,7 +20,6 @@ describe("Box API", () => {
 
     let ashJWT: Session = null
     let shironaJWT: Session = null
-    let brockJWT: Session = null
     let adminJWT: Session = null
 
     before(async () => {
@@ -43,13 +43,6 @@ describe("Box API", () => {
             name: 'Shirona',
             mail: 'shirona@sinnoh-league.com',
             password: 'Piano'
-        })
-
-        const brockUser = await User.create({
-            _id: '9ca0df5f86abeb66da97ba5f',
-            name: 'Brock',
-            mail: 'brock@pokemon.com',
-            password: 'Joel'
         })
 
         const adminUser = await User.create({
@@ -287,7 +280,6 @@ describe("Box API", () => {
 
         ashJWT = authService.createSession(ashUser)
         shironaJWT = authService.createSession(shironaUser)
-        brockJWT = authService.createSession(brockUser)
         adminJWT = authService.createSession(adminUser)
     })
 
