@@ -43,24 +43,25 @@ class BadgeService {
             }
         ).lean()
 
-        if (possibleBadges.length > 0) {
-            // If a badge matches, award it to the user
-            possibleBadges.forEach(badge => {
-                if (
-                    (badge.unlockConditions.valueType === 'string' && subject.value === badge.unlockConditions.value)
-                    || (badge.unlockConditions.valueType === 'number' && subject.value >= badge.unlockConditions.value)
-                ) {
-                    targetUser.badges.push({
-                        badge: badge._id.toString(),
-                        unlockedAt: new Date()
-                    })
-                }
-            })
-
-            return targetUser.save()
+        // Guard against the number of badges that can be awarded
+        if (possibleBadges.length === 0) {
+            return targetUser
         }
 
-        return targetUser
+        // If a badge matches, award it to the user
+        possibleBadges.forEach(badge => {
+            if (
+                (badge.unlockConditions.valueType === 'string' && subject.value === badge.unlockConditions.value)
+                    || (badge.unlockConditions.valueType === 'number' && subject.value >= badge.unlockConditions.value)
+            ) {
+                targetUser.badges.push({
+                    badge: badge._id.toString(),
+                    unlockedAt: new Date()
+                })
+            }
+        })
+
+        return targetUser.save()
     }
 }
 
