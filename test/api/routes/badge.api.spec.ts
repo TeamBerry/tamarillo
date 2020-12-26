@@ -36,10 +36,84 @@ describe("Badge API", () => {
 
         ashJWT = authService.createSession(ashUser)
         adminJWT = authService.createSession(adminUser)
+
+        await Badge.create([
+            {
+                _id: '5fd8d15e9b531221851e7ca9',
+                name: 'V2 Beta',
+                picture: '',
+                description: 'V2 Beta',
+                isSecret: false,
+                availableFrom: null,
+                availableTo: '2021-05-30T23:59:59Z',
+                unlockConditions: {
+                    key: 'box.join',
+                    value: 'blueberry',
+                    valueType: 'string'
+                }
+            },
+            {
+                _id: '5fd8d15e9b531221851e7cb0',
+                name: 'Expired Beta Badger',
+                picture: '',
+                description: 'V1 Beta',
+                isSecret: false,
+                availableFrom: null,
+                availableTo: '2017-10-31T23:59:59Z',
+                unlockConditions: {
+                    key: 'box.join',
+                    value: 'oldberry',
+                    valueType: 'string'
+                }
+            },
+            {
+                _id: '5fd8d15e9b531221851e7cb1',
+                name: '2022 Badge',
+                picture: '',
+                description: '2022',
+                isSecret: false,
+                availableFrom: '2022-01-01T00:00:00Z',
+                availableTo: '2022-12-31T23:59:59Z',
+                unlockConditions: {
+                    key: 'box.join',
+                    value: '2022berry',
+                    valueType: 'string'
+                }
+            },
+            {
+                _id: '5fd8d15e9b531221851e7cb2',
+                name: 'Resident I',
+                picture: '',
+                description: '50 Berries',
+                isSecret: false,
+                availableFrom: null,
+                availableTo: null,
+                unlockConditions: {
+                    key: 'subscription.berries',
+                    value: 50,
+                    valueType: 'number'
+                }
+            },
+            {
+                _id: '5fd8d15e9b531221851e7cb3',
+                name: 'Resident II',
+                picture: '',
+                description: '200 Berries',
+                isSecret: false,
+                availableFrom: null,
+                availableTo: null,
+                unlockConditions: {
+                    key: 'subscription.berries',
+                    value: 200,
+                    valueType: 'number'
+                }
+            }
+        ])
     })
 
     after(async () => {
         await Badge.deleteMany({})
+        await User.deleteMany({})
     })
 
     it("Gets all badges", async () => supertest(expressApp)
@@ -48,7 +122,7 @@ describe("Badge API", () => {
         .then(response => {
             const badges: Array<BadgeDocument> = response.body
 
-            expect(badges).to.have.lengthOf(1)
+            expect(badges).to.have.lengthOf(5)
         }))
 
     describe("Create a badge", () => {
@@ -60,7 +134,12 @@ describe("Badge API", () => {
                 picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/1-yr.png',
                 description: 'For your 1 year of Berrybox',
                 availableFrom: null,
-                availableTo: null
+                availableTo: null,
+                unlockConditions: {
+                    key: 'user.life',
+                    value: 525600,
+                    valueType: 'number'
+                }
             })
             .expect(401, 'UNAUTHORIZED'))
 
@@ -78,7 +157,12 @@ describe("Badge API", () => {
                 picture: 'https://berrybox-badges.s3-eu-west-1.amazonaws.com/1-yr.png',
                 description: 'For your 1 year of Berrybox',
                 availableFrom: null,
-                availableTo: null
+                availableTo: null,
+                unlockConditions: {
+                    key: 'user.life',
+                    value: 525600,
+                    valueType: 'number'
+                }
             })
             .expect(201))
     })
