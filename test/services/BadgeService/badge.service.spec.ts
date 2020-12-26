@@ -22,6 +22,13 @@ describe("Badge Service", () => {
                         unlockedAt: new Date()
                     }
                 ]
+            },
+            {
+                _id: '9ca0df5f86abeb66da97ba5e',
+                name: 'Shirona',
+                mail: 'shirona@sinnoh-league.com',
+                password: 'Piano',
+                badges: []
             }
         ])
 
@@ -125,7 +132,7 @@ describe("Badge Service", () => {
         await badgeService.handleEvent(
             {
                 subject: { key: 'box.join', value: 'oldberry' },
-                userToken: '5fd8d15e9b531221851e7cb0'
+                userToken: '9ca0df5f86abeb66da97ba5d'
             }
         )
 
@@ -166,7 +173,25 @@ describe("Badge Service", () => {
             await User.findById('9ca0df5f86abeb66da97ba5d').select('badges').lean()
         ).badges.map(badge => badge.badge.toString())
 
-        expect(userBadges).to.includes('5fd8d15e9b531221851e7cb1')
+        expect(userBadges).to.includes('5fd8d15e9b531221851e7cb3')
+        expect(userBadges).to.length(2)
+    })
+
+    it("Awards multiple badges to an user (catch-up mechanic)", async () => {
+        // Award the 200 berries badge
+        await badgeService.handleEvent(
+            {
+                subject: { key: 'subscription.berries', value: 200 },
+                userToken: '9ca0df5f86abeb66da97ba5e'
+            }
+        )
+
+        const userBadges = (
+            await User.findById('9ca0df5f86abeb66da97ba5e').select('badges').lean()
+        ).badges.map(badge => badge.badge.toString())
+
+        expect(userBadges).to.includes('5fd8d15e9b531221851e7cb2')
+        expect(userBadges).to.includes('5fd8d15e9b531221851e7cb3')
         expect(userBadges).to.length(2)
     })
 })

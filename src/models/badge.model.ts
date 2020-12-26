@@ -42,7 +42,7 @@ const badgeSchema = new Schema(
         availableFrom: Date,
         availableTo: Date,
         unlockConditions: {
-            action: String,
+            key: String,
             value: { type: [String, Number] },
             valueType: String
         }

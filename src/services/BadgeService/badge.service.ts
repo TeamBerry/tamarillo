@@ -15,54 +15,52 @@ class BadgeService {
     }
 
     public async handleEvent(data: BadgeEvent) {
-        console.log('Handling event')
         const { subject, userToken } = data
 
-        const possibleBadges = await Badge.find({'unlockConditions.action': subject.key}).lean()
+        // Get user and their badges
+        const targetUser = await User.findById(userToken)
+        const targetUserBadges = targetUser.badges.map(badge => badge.badge.toString())
 
-        // If a badge matches, award it to the user
-        await Promise.all(
-            possibleBadges.map(async badge => {
-                const { value } = badge.unlockConditions
+        // Get badges matching the event that the user doesn't have in their collection
+        const possibleBadges = await Badge.find(
+            {
+                'unlockConditions.key': subject.key,
+                "_id": { $nin: [targetUserBadges] },
+                "$and": [
+                    {
+                        $or: [
+                            { availableFrom: null },
+                            { availableFrom: {$lte: new Date()}}
+                        ]
+                    },
+                    {
+                        $or: [
+                            { availableTo: null },
+                            { availableTo: {$gte: new Date()}}
+                        ]
+                    }
+                ]
+            }
+        ).lean()
 
-                console.log('Possible badge: ', badge._id)
-
-                if (typeof value === 'string') {
-                    if (subject.value === value) { await this.awardBadge(badge._id, userToken) }
-                } else {
-                    if (subject.value >= value) { await this.awardBadge(badge._id, userToken) }
+        if (possibleBadges.length > 0) {
+            // If a badge matches, award it to the user
+            possibleBadges.forEach(badge => {
+                if (
+                    (badge.unlockConditions.valueType === 'string' && subject.value === badge.unlockConditions.value)
+                    || (badge.unlockConditions.valueType === 'number' && subject.value >= badge.unlockConditions.value)
+                ) {
+                    targetUser.badges.push({
+                        badge: badge._id.toString(),
+                        unlockedAt: new Date()
+                    })
                 }
             })
-        )
 
-    }
-
-    /**
-     * Awards a badge to an user. Checks beforehand if the user already
-     * has the badge in their collection.
-     *
-     * @param {string} badgeToken The name of the badge
-     * @param {string} userToken The id of the user
-     * @memberof BadgeService
-     */
-    public async awardBadge(badgeToken: string, userToken: string) {
-        const targetUser = await User.findById(userToken)
-
-        console.log('Target user: ', targetUser)
-
-        const targetUserBadges = targetUser.badges.map(badge => badge.badge)
-
-        // Award badge only if user does not have it
-        if (!targetUserBadges.includes(badgeToken)) {
-            console.log('Awarding badge')
-            targetUser.badges.push({
-                badge: badgeToken,
-                unlockedAt: new Date()
-            })
-
-
-            await targetUser.save()
+            return targetUser.save()
         }
+
+        return targetUser
     }
 }
 

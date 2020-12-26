@@ -56,6 +56,7 @@ const userSchema = new Schema(
             simple: { type: Array, default: ['addVideo'] }
         },
         badges: [{
+            _id: false,
             badge: { type: Schema.Types.ObjectId, ref: "Badge" },
             unlockedAt: { type: Date, default: Date.now }
         }]
