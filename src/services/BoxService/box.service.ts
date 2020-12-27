@@ -25,6 +25,7 @@ import berriesService from "./berries.service"
 import { RoleChangeRequest } from "../../models/role-change.model"
 import aclService from "./acl.service"
 import { BadgeEvent } from "../../models/badge.job"
+import { Badge } from "../../models/badge.model"
 const BoxSchema = require("./../../models/box.model")
 
 const PLAY_NEXT_BERRY_COST = 10
@@ -249,12 +250,18 @@ class BoxService {
 
                         socket.emit("chat", errorMessage)
                     } else {
+                        let authorBadge = null
+                        if (author.userToken.settings.badge) {
+                            authorBadge = await Badge.findById(author.userToken.settings.badge)
+                        }
+
                         const dispatchedMessage: Message = new Message({
                             author: {
                                 _id: author.userToken._id,
                                 name: author.userToken.name,
                                 color: author.userToken.settings.color,
-                                role: author.role
+                                role: author.role,
+                                badge: authorBadge.picture ?? null
                             },
                             contents: message.contents,
                             source: message.source,
