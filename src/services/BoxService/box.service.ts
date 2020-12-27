@@ -11,6 +11,7 @@ const syncQueue = new Queue("sync")
 const boxQueue = new Queue("box")
 const berriesQueue = new Queue("berries")
 const queueActionsQueue = new Queue("actions-queue")
+const badgeQueue = new Queue("badges")
 
 // Models
 import { Subscriber, ConnectionRequest, BerryCount, PopulatedSubscriberDocument, Connection } from "../../models/subscriber.model"
@@ -23,6 +24,8 @@ import { BoxJob } from "../../models/box.job"
 import berriesService from "./berries.service"
 import { RoleChangeRequest } from "../../models/role-change.model"
 import aclService from "./acl.service"
+import { BadgeEvent } from "../../models/badge.job"
+import { Badge } from "../../models/badge.model"
 const BoxSchema = require("./../../models/box.model")
 
 const PLAY_NEXT_BERRY_COST = 10
@@ -130,6 +133,19 @@ class BoxService {
                     // Emit confirmation message
                     socket.emit("confirm", message)
 
+                    // Send event for badge listener
+                    badgeQueue.add({
+                        userToken: userSubscription.userToken,
+                        subject: {
+                            key: 'box.join',
+                            value: connexionRequest.origin
+                        }
+                    } as BadgeEvent,
+                    {
+                        attempts: 5,
+                        removeOnComplete: true
+                    })
+
                     if (connexionRequest.origin === 'Cranberry') {
                         // Emit Youtube Key for mobile
                         socket.emit('bootstrap', {
@@ -234,12 +250,18 @@ class BoxService {
 
                         socket.emit("chat", errorMessage)
                     } else {
+                        let authorBadge = null
+                        if (author.userToken.settings.badge) {
+                            authorBadge = await Badge.findById(author.userToken.settings.badge)
+                        }
+
                         const dispatchedMessage: Message = new Message({
                             author: {
                                 _id: author.userToken._id,
                                 name: author.userToken.name,
                                 color: author.userToken.settings.color,
-                                role: author.role
+                                role: author.role,
+                                badge: authorBadge.picture ?? null
                             },
                             contents: message.contents,
                             source: message.source,
@@ -477,6 +499,19 @@ class BoxService {
                     io.in(videoSubmissionRequest.boxToken).emit("sync", response.syncPacket)
                 }
             }
+
+            // Send event for badge listener
+            badgeQueue.add({
+                userToken: videoSubmissionRequest.userToken,
+                subject: {
+                    key: `queue.${videoSubmissionRequest.flag ?? 'add'}`,
+                    value: videoSubmissionRequest.link
+                }
+            } as BadgeEvent,
+            {
+                attempts: 5,
+                removeOnComplete: true
+            })
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', response.feedbackMessage)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {

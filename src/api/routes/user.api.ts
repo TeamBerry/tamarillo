@@ -21,13 +21,11 @@ export class UserApi {
     }
 
     public init(): void {
-        this.router.get("/favorites", this.favorites)
-        this.router.post("/favorites", this.updateFavorites)
+        this.router.get("/me", this.show)
         this.router.patch("/settings", this.patchSettings)
         this.router.post('/picture', [upload.single('picture')], this.uploadProfilePicture)
         this.router.delete('/picture', this.deleteProfilePicture)
         this.router.patch('/acl', this.patchACL)
-        this.router.get("/:user", this.show)
         this.router.get("/:user/boxes", this.boxes)
         this.router.get('/:user/playlists', this.playlists)
 
@@ -48,7 +46,7 @@ export class UserApi {
     }
 
     /**
-     * Gets a single user based on the given id
+     * Gets a single user based on the JWT
      *
      * @param {Request} request The request, containing the id as a parameter
      * @param {Response} response
@@ -57,7 +55,10 @@ export class UserApi {
      * @memberof UserApi
      */
     public async show(request: Request, response: Response): Promise<Response> {
-        return response.status(200).send(response.locals.user)
+        const user = await User.findById(response.locals.auth.user)
+            .select('-password -resetToken')
+
+        return response.status(200).send(user)
     }
 
     /**
