@@ -33,7 +33,7 @@ class BadgeService {
             const possibleBadges = await Badge.find(
                 {
                     'unlockConditions.key': subject.key,
-                    "_id": { $nin: [targetUserBadges] },
+                    "_id": { $nin: targetUserBadges },
                     "$and": [
                         {
                             $or: [
