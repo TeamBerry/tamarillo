@@ -138,7 +138,7 @@ class BoxService {
                         userToken: userSubscription.userToken,
                         subject: {
                             key: 'box.join',
-                            value: connexionRequest.origin
+                            value: connexionRequest.origin.toLocaleLowerCase()
                         }
                     } as BadgeEvent,
                     {
