@@ -45,7 +45,7 @@ describe("Badge API", () => {
                 description: 'V2 Beta',
                 isSecret: false,
                 availableFrom: null,
-                availableTo: '2021-05-30T23:59:59Z',
+                availableTo: '2076-05-30T23:59:59Z',
                 unlockConditions: {
                     key: 'box.join',
                     value: 'blueberry',
@@ -68,15 +68,15 @@ describe("Badge API", () => {
             },
             {
                 _id: '5fd8d15e9b531221851e7cb1',
-                name: '2022 Badge',
+                name: '2032 Badge',
                 picture: '',
-                description: '2022',
+                description: '2032',
                 isSecret: false,
-                availableFrom: '2022-01-01T00:00:00Z',
-                availableTo: '2022-12-31T23:59:59Z',
+                availableFrom: '2032-01-01T00:00:00Z',
+                availableTo: '2032-12-31T23:59:59Z',
                 unlockConditions: {
                     key: 'box.join',
-                    value: '2022berry',
+                    value: '2032berry',
                     valueType: 'string'
                 }
             },
@@ -116,13 +116,13 @@ describe("Badge API", () => {
         await User.deleteMany({})
     })
 
-    it("Gets all badges", async () => supertest(expressApp)
+    it("Gets non-secret, available badges", async () => supertest(expressApp)
         .get('/')
         .expect(200)
         .then(response => {
             const badges: Array<BadgeDocument> = response.body
 
-            expect(badges).to.have.lengthOf(5)
+            expect(badges).to.have.lengthOf(3)
         }))
 
     describe("Create a badge", () => {

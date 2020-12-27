@@ -39,8 +39,8 @@ const badgeSchema = new Schema(
         name: String,
         description: String,
         isSecret: { type: Boolean, default: false },
-        availableFrom: Date,
-        availableTo: Date,
+        availableFrom: { type: Date, default: null },
+        availableTo: { type: Date, default: null },
         unlockConditions: {
             key: String,
             value: { type: [String, Number] },

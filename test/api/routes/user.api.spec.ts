@@ -124,18 +124,13 @@ describe("User API", () => {
         await UserPlaylist.deleteMany({})
     })
 
-    describe("Gets an user", () => {
+    describe("Gets the active user details", () => {
         it("Sends a 401 back if the API is accessed from an unauthentified source", () => supertest(expressApp)
-            .get('/9ca0df5f86abeb66da97ba5d')
+            .get('/me')
             .expect(401))
 
-        it("Sends a 404 back if no user matches the given id", () => supertest(expressApp)
-            .get('/9ca0df5f86abeb66da97ba4e')
-            .set('Authorization', `Bearer ${ashJWT.bearer}`)
-            .expect(404, 'USER_NOT_FOUND'))
-
-        it("Sends a 200 with the user if the id matches", () => supertest(expressApp)
-            .get('/9ca0df5f86abeb66da97ba5d')
+        it("Sends a 200 with the user", () => supertest(expressApp)
+            .get('/me')
             .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(200)
             .then(response => {
@@ -143,6 +138,7 @@ describe("User API", () => {
 
                 expect(user.name).to.equal('Ash Ketchum')
                 expect(user.password).to.be.undefined
+                expect(user.resetToken).to.be.undefined
             }))
     })
 
@@ -197,72 +193,6 @@ describe("User API", () => {
                     simple: []
                 })
             }))
-    })
-
-    describe("Getting the favorites of an user", () => {
-        it("Sends a 401 back if the API is the token is invalid or not provided", () => supertest(expressApp)
-            .get('/favorites')
-            .expect(401))
-
-        it("Sends a 200 with the favorites", () => supertest(expressApp)
-            .get('/favorites')
-            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
-            .expect(200)
-            .then(response => {
-                const favorites = response.body
-
-                expect(favorites).to.have.lengthOf(1)
-                expect(favorites[0].name).to.equal('Second Video')
-            }))
-    })
-
-    describe("Updating their favorites", () => {
-        describe("Like a video", () => {
-            it("Sends a 401 back if the API is the token is invalid or not provided", () => supertest(expressApp)
-                .post('/favorites')
-                .expect(401))
-
-            it("Sends a 404 if the video does not exist", () => supertest(expressApp)
-                .post('/favorites')
-                .set('Authorization', `Bearer ${ashJWT.bearer}`)
-                .send({ action: 'like', target: '8bc72f3d7edc6312d0ef2e47' })
-                .expect(404))
-
-            it("Sends a 200 and adds the video to favorites", () => supertest(expressApp)
-                .post('/favorites')
-                .set('Authorization', `Bearer ${ashJWT.bearer}`)
-                .send({ action: 'like', target: '9bc72f3d7edc6312d0ef2e47' })
-                .expect(200)
-                .then(async () => {
-                    const favorites = await UserPlaylist.findOne({ user: '9ca0df5f86abeb66da97ba5d', name: 'Favorites' })
-
-                    expect(favorites.videos).to.have.lengthOf(1)
-                    expect(favorites.videos[0].toString()).to.equal('9bc72f3d7edc6312d0ef2e47')
-                }))
-        })
-
-        describe("Unlike a video", () => {
-            it("Sends a 401 back if the API is the token is invalid or not provided", () => supertest(expressApp)
-                .post('/favorites')
-                .expect(401))
-
-            it("Sends a 404 if the video does not exist", () => supertest(expressApp)
-                .post('/favorites')
-                .set('Authorization', `Bearer ${foreignJWT.bearer}`)
-                .send({ action: 'unlike', target: '8bc72f3d7edc6312d0ef2e48' })
-                .expect(404))
-
-            it("Sends a 200 and removes the video from favorites", () => supertest(expressApp)
-                .post('/favorites')
-                .set('Authorization', `Bearer ${foreignJWT.bearer}`)
-                .send({ action: 'unlike', target: '9bc72f3d7edc6312d0ef2e48' })
-                .expect(200)
-                .then(async () => {
-                    const favorites = await UserPlaylist.findOne({ user: '9ca0df5f86abeb66da97ba5e', name: 'Favorites' })
-
-                    expect(favorites.videos).to.have.lengthOf(0)
-                }))
-        })
     })
 
     describe("Gets the boxes of an user", () => {
