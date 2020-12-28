@@ -36,7 +36,9 @@ export class BadgeApi {
                     ]
                 }
             ]
-        }).select('-unlockConditions')
+        })
+            .select('-unlockConditions')
+            .sort({ name: 1 })
         return response.status(200).send(badges)
     }
 
