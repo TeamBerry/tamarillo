@@ -20,13 +20,6 @@ describe("Invite API", () => {
         await Invite.deleteMany({})
         await User.deleteMany({})
 
-        const ashUser = await User.create({
-            _id: '9ca0df5f86abeb66da97ba5d',
-            name: 'Ash Ketchum',
-            mail: 'ash@pokemon.com',
-            password: 'Pikachu',
-        })
-
         await Box.create([
             {
                 _id: '9cb763b6e72611381ef043e4',
@@ -103,48 +96,38 @@ describe("Invite API", () => {
                 expiresAt: new Date(Date.now() + 900).getTime()
             }
         ])
-     })
+    })
 
     after(async () => {
         await Box.deleteMany({})
         await Invite.deleteMany({})
         await User.deleteMany({})
-     })
+    })
 
     describe("Matches an invite to its box", () => {
-        it("Rejects the invite if it does not exist", () => {
-            return supertest(expressApp)
-                .get('/9Jk3e6P')
-                .expect(404, 'INVITE_NOT_FOUND')
-        })
+        it("Rejects the invite if it does not exist", () => supertest(expressApp)
+            .get('/9Jk3e6P')
+            .expect(404, 'INVITE_NOT_FOUND'))
 
-        it("Rejects the invite if it has expired", () => {
-            return supertest(expressApp)
-                .get('/5D3e9d1a')
-                .expect(404, 'INVITE_EXPIRED')
-        })
+        it("Rejects the invite if it has expired", () => supertest(expressApp)
+            .get('/5D3e9d1a')
+            .expect(404, 'INVITE_EXPIRED'))
 
-        it("Rejects the invite if the matching box does not exist", () => {
-            return supertest(expressApp)
-                .get('/0FE3ju97')
-                .expect(404, 'BOX_NOT_FOUND')
-        })
+        it("Rejects the invite if the matching box does not exist", () => supertest(expressApp)
+            .get('/0FE3ju97')
+            .expect(404, 'BOX_NOT_FOUND'))
 
-        it("Rejects the invite if the matching box is closed", () => { 
-            return supertest(expressApp)
-                .get('/9d3gE6Mo')
-                .expect(404, 'BOX_CLOSED')
-        })
+        it("Rejects the invite if the matching box is closed", () => supertest(expressApp)
+            .get('/9d3gE6Mo')
+            .expect(404, 'BOX_CLOSED'))
 
-        it("Sends back the invite", () => { 
-            return supertest(expressApp)
-                .get('/D63ca9d3')
-                .expect(200)
-                .then((response) => {
-                    const invite: InviteDocument = response.body
+        it("Sends back the invite", () => supertest(expressApp)
+            .get('/D63ca9d3')
+            .expect(200)
+            .then(response => {
+                const invite: InviteDocument = response.body
 
-                    expect(invite.boxToken).to.equal('9cb763b6e72611381ef043e4')
-                })
-        })
+                expect(invite.boxToken).to.equal('9cb763b6e72611381ef043e4')
+            }))
     })
 })

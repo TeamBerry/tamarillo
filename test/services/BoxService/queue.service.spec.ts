@@ -208,12 +208,12 @@ describe("Queue Service", () => {
                     },
                     acl: {
                         moderator: [
-                          'addVideo',
-                          'removeVideo',
-                          'promoteVIP',
-                          'demoteVIP',
-                          'forceNext',
-                          'forcePlay'
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
                         ],
                         vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
                         simple: []
@@ -236,16 +236,16 @@ describe("Queue Service", () => {
                     },
                     acl: {
                         moderator: [
-                          'addVideo',
-                          'removeVideo',
-                          'promoteVIP',
-                          'demoteVIP',
-                          'forceNext',
-                          'forcePlay'
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
                         ],
                         vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
                         simple: [ 'addVideo' ]
-                      }
+                    }
                 }
             ])
 
@@ -291,7 +291,7 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 0,
                     role: 'simple'
-                },
+                }
             ])
         })
 
@@ -300,13 +300,6 @@ describe("Queue Service", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef053f4')
             await Subscriber.deleteMany({})
         })
-
-        const video = {
-            _id: '9cb81150594b2e75f06ba8fe',
-            link: 'Ivi1e-yCPcI',
-            name: 'Destroid - Annihilate',
-            duration: 'PT5M11S'
-        }
 
         it("Refuses the submission if the video does not exist", async () => {
             try {
@@ -398,7 +391,7 @@ describe("Queue Service", () => {
 
         // Feedback
         it("Sends message with user name if user exists", async () => {
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
+            const { systemMessage, feedbackMessage } = await queueService.onVideoSubmitted({ link: 'Ivi1e-yCPcI', userToken: '9ca0df5f86abeb66da97ba5d', boxToken: '9cb763b6e72611381ef043e4' })
 
             expect(systemMessage.contents).to.equal(`Ash Ketchum has added the video "Destroid - Annihilate" to the queue.`)
             expect(feedbackMessage.contents).to.equal(`Your video "Destroid - Annihilate" has been added to the queue.`)
@@ -1334,7 +1327,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef143f4'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef143e7')
 
@@ -1355,7 +1348,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef343f0'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef343e7')
 
@@ -1373,7 +1366,7 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             }
 
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(preselectRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
             const box = await Box.findById('9cb763b6e72611381ef043e7')
 
@@ -2102,7 +2095,7 @@ describe("Queue Service", () => {
         it('Refuses if the non-admin user does not have enough berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef043e7',
-                userToken: '9ca0df5f86abeb66da97ba5e',
+                userToken: '9ca0df5f86abeb66da97ba5e'
             }
 
             try {
@@ -2116,7 +2109,7 @@ describe("Queue Service", () => {
         it('Refuses if there is another video already playing with berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef243e7',
-                userToken: '9ca0df5f86abeb66da97ba5f',
+                userToken: '9ca0df5f86abeb66da97ba5f'
             }
 
             try {
@@ -2130,7 +2123,7 @@ describe("Queue Service", () => {
         it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef143e7',
-                userToken: '9ca0df5f86abeb66da97ba5f',
+                userToken: '9ca0df5f86abeb66da97ba5f'
             }
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
@@ -2150,7 +2143,7 @@ describe("Queue Service", () => {
         it('Skip the track', async () => {
             const skipRequest: BoxScope = {
                 boxToken: '9cb763b6e72611381ef043e7',
-                userToken: '9ca0df5f86abeb66da97ba5d',
+                userToken: '9ca0df5f86abeb66da97ba5d'
             }
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
@@ -2556,7 +2549,7 @@ describe("Queue Service", () => {
 
             expect(possibleVideos.indexOf(response.nextVideo._id.toString())).to.not.equal(-1)
 
-            const playingIndex = _.findIndex(box.playlist, (video) => video.startTime !== null && video.endTime === null)
+            const playingIndex = _.findIndex(box.playlist, video => video.startTime !== null && video.endTime === null)
 
             expect(playingIndex).to.equal(2)
         })

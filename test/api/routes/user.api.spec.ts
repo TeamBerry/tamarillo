@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
@@ -35,8 +36,8 @@ describe("User API", () => {
         }, {
             _id: '9bc72f3d7edc6312d0ef2e48',
             name: 'Second Video',
-                link: 'aC9d3edD3e2',
-                duration:''
+            link: 'aC9d3edD3e2',
+            duration:''
         }])
 
         const ashUser = await User.create({
@@ -48,7 +49,8 @@ describe("User API", () => {
                 theme: 'light',
                 picture: '9ca0df5f86abeb66da97ba5d-picture',
                 color: '#CD3E1D',
-                isColorblind: false
+                isColorblind: false,
+                badge: null
             },
             acl: {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
@@ -75,7 +77,8 @@ describe("User API", () => {
                 theme: 'dark',
                 picture: 'default-picture',
                 color: '#07D302',
-                isColorblind: false
+                isColorblind: false,
+                badge: null
             },
             acl: {
                 moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
@@ -121,239 +124,121 @@ describe("User API", () => {
         await UserPlaylist.deleteMany({})
     })
 
-    describe("Gets an user", () => {
-        it("Sends a 401 back if the API is accessed from an unauthentified source", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d')
-                .expect(401)
-        })
+    describe("Gets the active user details", () => {
+        it("Sends a 401 back if the API is accessed from an unauthentified source", () => supertest(expressApp)
+            .get('/me')
+            .expect(401))
 
-        it("Sends a 404 back if no user matches the given id", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba4e')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(404, 'USER_NOT_FOUND')
-        })
+        it("Sends a 200 with the user", () => supertest(expressApp)
+            .get('/me')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(200)
+            .then(response => {
+                const user: UserDocument = response.body
 
-        it("Sends a 200 with the user if the id matches", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(200)
-                .then((response) => {
-                    const user: UserDocument = response.body
-
-                    expect(user.name).to.equal('Ash Ketchum')
-                    expect(user.password).to.be.undefined
-                })
-        })
+                expect(user.name).to.equal('Ash Ketchum')
+                expect(user.password).to.be.undefined
+                expect(user.resetToken).to.be.undefined
+            }))
     })
 
     describe("Update their settings", () => {
-        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
-            return supertest(expressApp)
-                .patch('/settings')
-                .expect(401)
-        })
+        it("Sends a 401 back if the API is the token is invalid or not provided", () => supertest(expressApp)
+            .patch('/settings')
+            .expect(401))
 
-        it("Sends a 412 if no settings are given", () => {
-            return supertest(expressApp)
-                .patch('/settings')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(412)
-        })
+        it("Sends a 412 if no settings are given", () => supertest(expressApp)
+            .patch('/settings')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(412))
 
-        it("Sends a 200 if all goes well", () => {
-            return supertest(expressApp)
-                .patch('/settings')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send({ theme: 'dark' })
-                .expect(200)
-                .then(async () => {
-                    const user = await User.findById('9ca0df5f86abeb66da97ba5d')
+        it("Sends a 200 if all goes well", () => supertest(expressApp)
+            .patch('/settings')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .send({ theme: 'dark' })
+            .expect(200)
+            .then(async () => {
+                const user = await User.findById('9ca0df5f86abeb66da97ba5d')
 
-                    expect(user.settings.theme).to.equal("dark")
-                    expect(user.settings.picture).to.equal("9ca0df5f86abeb66da97ba5d-picture")
-                })
-        })
+                expect(user.settings.theme).to.equal("dark")
+                expect(user.settings.picture).to.equal("9ca0df5f86abeb66da97ba5d-picture")
+            }))
     })
 
     describe("Update ACL Config", () => {
-        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
-            return supertest(expressApp)
-                .patch('/acl')
-                .expect(401)
-        })
+        it("Sends a 401 back if the API is the token is invalid or not provided", () => supertest(expressApp)
+            .patch('/acl')
+            .expect(401))
 
-        it("Sends a 412 if no config are given", () => {
-            return supertest(expressApp)
-                .patch('/acl')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(412)
-        })
+        it("Sends a 412 if no config are given", () => supertest(expressApp)
+            .patch('/acl')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(412))
 
-        it("Sends a 200 with the updated ACL", () => {
-            return supertest(expressApp)
-                .patch('/acl')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .send({
+        it("Sends a 200 with the updated ACL", () => supertest(expressApp)
+            .patch('/acl')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .send({
+                moderator: ['addVideo', 'removeVideo', 'forceNext'],
+                vip: ['addVideo', 'removeVideo', 'forceNext'],
+                simple: []
+            })
+            .expect(200)
+            .then(response => {
+                const aclConfig: UserDocument['acl'] = response.body
+
+                expect(aclConfig).to.deep.equal({
                     moderator: ['addVideo', 'removeVideo', 'forceNext'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: []
                 })
-                .expect(200)
-                .then((response) => {
-                    const aclConfig: UserDocument['acl'] = response.body
-
-                    expect(aclConfig).to.deep.equal({
-                        moderator: ['addVideo', 'removeVideo', 'forceNext'],
-                        vip: ['addVideo', 'removeVideo', 'forceNext'],
-                        simple: []
-                    })
-                })
-        })
-    })
-
-    describe("Getting the favorites of an user", () => {
-        it("Sends a 401 back if the API is the token is invalid or not provided", () => {
-            return supertest(expressApp)
-                .get('/favorites')
-                .expect(401)
-        })
-
-        it("Sends a 200 with the favorites", () => {
-            return supertest(expressApp)
-                .get('/favorites')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .expect(200)
-                .then((response) => {
-                    const favorites = response.body
-
-                    expect(favorites).to.have.lengthOf(1)
-                    expect(favorites[0].name).to.equal('Second Video')
-                })
-        })
-    })
-
-    describe("Updating their favorites", () => {
-        describe("Like a video", () => {
-            it("Sends a 401 back if the API is the token is invalid or not provided", () => {
-                return supertest(expressApp)
-                    .post('/favorites')
-                    .expect(401)
-            })
-
-            it("Sends a 404 if the video does not exist", () => {
-                return supertest(expressApp)
-                    .post('/favorites')
-                    .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                    .send({ action: 'like', target: '8bc72f3d7edc6312d0ef2e47' })
-                    .expect(404)
-            })
-
-            it("Sends a 200 and adds the video to favorites", () => {
-                return supertest(expressApp)
-                    .post('/favorites')
-                    .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                    .send({ action: 'like', target: '9bc72f3d7edc6312d0ef2e47' })
-                    .expect(200)
-                    .then(async () => {
-                        const favorites = await UserPlaylist.findOne({ user: '9ca0df5f86abeb66da97ba5d', name: 'Favorites' })
-
-                        expect(favorites.videos).to.have.lengthOf(1)
-                        expect(favorites.videos[0].toString()).to.equal('9bc72f3d7edc6312d0ef2e47')
-                    })
-            })
-        })
-
-        describe("Unlike a video", () => {
-            it("Sends a 401 back if the API is the token is invalid or not provided", () => {
-                return supertest(expressApp)
-                    .post('/favorites')
-                    .expect(401)
-            })
-
-            it("Sends a 404 if the video does not exist", () => {
-                return supertest(expressApp)
-                    .post('/favorites')
-                    .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                    .send({ action: 'unlike', target: '8bc72f3d7edc6312d0ef2e48' })
-                    .expect(404)
-            })
-
-            it("Sends a 200 and removes the video from favorites", () => {
-                return supertest(expressApp)
-                    .post('/favorites')
-                    .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                    .send({ action: 'unlike', target: '9bc72f3d7edc6312d0ef2e48' })
-                    .expect(200)
-                    .then(async () => {
-                        const favorites = await UserPlaylist.findOne({ user: '9ca0df5f86abeb66da97ba5e', name: 'Favorites' })
-
-                        expect(favorites.videos).to.have.lengthOf(0)
-                    })
-            })
-        })
+            }))
     })
 
     describe("Gets the boxes of an user", () => {
-        it("Sends a 401 back if the API is accessed from an unauthentified source", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d/boxes')
-                .expect(401)
-        })
+        it("Sends a 401 back if the API is accessed from an unauthentified source", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba5d/boxes')
+            .expect(401))
 
-        it("Sends a 404 back if no user matches the given id", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba4e/boxes')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(404, 'USER_NOT_FOUND')
-        })
+        it("Sends a 404 back if no user matches the given id", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba4e/boxes')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(404, 'USER_NOT_FOUND'))
 
-        it("Sends a 200 with the boxes if the id matches", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d/boxes')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(200)
-        })
+        it("Sends a 200 with the boxes if the id matches", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba5d/boxes')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(200))
     })
 
     describe("Gets the playlists of an user", () => {
-        it("Sends a 401 back if the API is accessed from an unauthentified source", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba4e/playlists')
-                .expect(401, 'UNAUTHORIZED')
-        })
+        it("Sends a 401 back if the API is accessed from an unauthentified source", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba4e/playlists')
+            .expect(401, 'UNAUTHORIZED'))
 
-        it("Sends a 404 back if no user matches the given id", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba4e/playlists')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .expect(404, 'USER_NOT_FOUND')
-        })
+        it("Sends a 404 back if no user matches the given id", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba4e/playlists')
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
+            .expect(404, 'USER_NOT_FOUND'))
 
-        it("Sends a 200 with only public playlists if the user requesting is not the author of the playlists", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d/playlists')
-                .set('Authorization', 'Bearer ' + foreignJWT.bearer)
-                .expect(200)
-                .then((response) => {
-                    const playlists: UserPlaylistClass[] = response.body
+        it("Sends a 200 with only public playlists if the user requesting is not the author of the playlists", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba5d/playlists')
+            .set('Authorization', `Bearer ${foreignJWT.bearer}`)
+            .expect(200)
+            .then(response => {
+                const playlists: UserPlaylistClass[] = response.body
 
-                    expect(playlists).to.have.lengthOf(2)
-                })
-        })
+                expect(playlists).to.have.lengthOf(2)
+            }))
 
-        it("Sends a 200 with all playlists if the user requesting is the author of the playlists", () => {
-            return supertest(expressApp)
-                .get('/9ca0df5f86abeb66da97ba5d/playlists')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(200)
-                .then((response) => {
-                    const playlists: UserPlaylistClass[] = response.body
+        it("Sends a 200 with all playlists if the user requesting is the author of the playlists", () => supertest(expressApp)
+            .get('/9ca0df5f86abeb66da97ba5d/playlists')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(200)
+            .then(response => {
+                const playlists: UserPlaylistClass[] = response.body
 
-                    expect(playlists).to.have.lengthOf(3)
-                })
-        })
+                expect(playlists).to.have.lengthOf(3)
+            }))
     })
 })

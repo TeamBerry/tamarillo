@@ -1,8 +1,10 @@
 import * as Queue from 'bull'
 const berriesQueue = new Queue("berries")
+const badgeQueue = new Queue("badges")
 
 import { BoxScope } from "@teamberry/muscadine"
 import { Subscriber } from "../../models/subscriber.model"
+import { BadgeEvent } from '../../models/badge.job'
 
 class BerriesService {
     public startNaturalIncrease(scope: BoxScope) {
@@ -45,6 +47,19 @@ class BerriesService {
             { $inc: { berries: amountToAdd } },
             { new: true }
         )
+
+        // Send event for badge listener
+        badgeQueue.add({
+            userToken: scope.userToken,
+            subject: {
+                key: 'subscription.berries',
+                value: updatedSubscription.berries
+            }
+        } as BadgeEvent,
+        {
+            attempts: 5,
+            removeOnComplete: true
+        })
 
         return updatedSubscription.berries
     }

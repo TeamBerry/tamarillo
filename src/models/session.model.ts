@@ -7,6 +7,7 @@ export interface IAuthSubject {
         picture: string
         color: string
         isColorblind: boolean
+        badge: string
     }
 }
 

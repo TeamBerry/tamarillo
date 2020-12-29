@@ -8,18 +8,15 @@ import BoxApi from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
-import { UserPlaylistClass, UserPlaylist, UserPlaylistDocument } from '../../../src/models/user-playlist.model';
+import { UserPlaylist } from '../../../src/models/user-playlist.model'
 import authService from '../../../src/api/services/auth.service'
-import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
+import { Subscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
-import { QueueItem } from '@teamberry/muscadine'
 
 describe("Queue API", () => {
     const expressApp = express()
 
     let ashJWT: Session = null
-    let shironaJWT: Session = null
-    let brockJWT: Session = null
 
     before(async () => {
         expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
@@ -35,21 +32,7 @@ describe("Queue API", () => {
             _id: '9ca0df5f86abeb66da97ba5d',
             name: 'Ash Ketchum',
             mail: 'ash@pokemon.com',
-            password: 'Pikachu',
-        })
-
-        const shironaUser = await User.create({
-            _id: '9ca0df5f86abeb66da97ba5e',
-            name: 'Shirona',
-            mail: 'shirona@sinnoh-league.com',
-            password: 'Piano',
-        })
-
-        const brockUser = await User.create({
-            _id: '9ca0df5f86abeb66da97ba5f',
-            name: 'Brock',
-            mail: 'brock@pokemon.com',
-            password: 'Joel'
+            password: 'Pikachu'
         })
 
         await Box.create({
@@ -164,8 +147,6 @@ describe("Queue API", () => {
         ])
 
         ashJWT = authService.createSession(ashUser)
-        shironaJWT = authService.createSession(shironaUser)
-        brockJWT = authService.createSession(brockUser)
     })
 
     after(async () => {
@@ -292,23 +273,19 @@ describe("Queue API", () => {
             await Subscriber.deleteMany({})
         })
 
-        it("Sends the private box queue", () => {
-            return supertest(expressApp)
-                .get('/9cb763b6e72611381ef053f4/queue')
-                .set('Authorization', 'Bearer ' + ashJWT.bearer)
-                .expect(200)
-        })
+        it("Sends the private box queue", () => supertest(expressApp)
+            .get('/9cb763b6e72611381ef053f4/queue')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(200))
 
-        it("Sends the public box queue", () => {
-            return supertest(expressApp)
-                .get('/9cb763b6e72611381ef063f4/queue')
-                .expect(200)
-                .then((response) => {
-                    const queue = response.body
+        it("Sends the public box queue", () => supertest(expressApp)
+            .get('/9cb763b6e72611381ef063f4/queue')
+            .expect(200)
+            .then(response => {
+                const queue = response.body
 
-                    expect(queue).to.length(1)
-                })
-        })
+                expect(queue).to.length(1)
+            }))
     })
 
     describe("Submit video to box", () => {
@@ -447,18 +424,10 @@ describe("Queue API", () => {
             await Subscriber.deleteMany({})
         })
 
-        const video = {
-            _id: '9cb81150594b2e75f06ba8fe',
-            link: 'Ivi1e-yCPcI',
-            name: 'Destroid - Annihilate',
-            duration: 'PT5M11S'
-        }
 
-        it("Refuses the submission if there's no link sent", async () => {
-            return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e4/queue/video')
-                .set('Authorization', `Bearer ${ashJWT.bearer}`)
-                .expect(412, 'MISSING_PARAMETERS')
-        })
+        it("Refuses the submission if there's no link sent", async () => supertest(expressApp)
+            .post('/9cb763b6e72611381ef043e4/queue/video')
+            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .expect(412, 'MISSING_PARAMETERS'))
     })
-});
+})
