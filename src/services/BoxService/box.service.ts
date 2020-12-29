@@ -127,24 +127,23 @@ class BoxService {
 
                         // Berries are only collected for real sessions
                         berriesService.startNaturalIncrease({ userToken: userSubscription.userToken, boxToken: userSubscription.boxToken })
-                    }
 
+                        // Send event for badge listener only for real sessions
+                        badgeQueue.add({
+                            userToken: userSubscription.userToken,
+                            subject: {
+                                key: 'box.join',
+                                value: connexionRequest.origin.toLocaleLowerCase()
+                            }
+                        } as BadgeEvent,
+                        {
+                            attempts: 5,
+                            removeOnComplete: true
+                        })
+                    }
 
                     // Emit confirmation message
                     socket.emit("confirm", message)
-
-                    // Send event for badge listener
-                    badgeQueue.add({
-                        userToken: userSubscription.userToken,
-                        subject: {
-                            key: 'box.join',
-                            value: connexionRequest.origin.toLocaleLowerCase()
-                        }
-                    } as BadgeEvent,
-                    {
-                        attempts: 5,
-                        removeOnComplete: true
-                    })
 
                     if (connexionRequest.origin === 'Cranberry') {
                         // Emit Youtube Key for mobile
@@ -261,7 +260,7 @@ class BoxService {
                                 name: author.userToken.name,
                                 color: author.userToken.settings.color,
                                 role: author.role,
-                                badge: authorBadge.picture ?? null
+                                badge: authorBadge?.picture ?? null
                             },
                             contents: message.contents,
                             source: message.source,
