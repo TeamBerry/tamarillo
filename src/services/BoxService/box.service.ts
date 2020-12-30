@@ -489,7 +489,7 @@ class BoxService {
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
-            if (await QueueItemModel.exists({ box: videoSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
+            if (!await QueueItemModel.exists({ box: videoSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
                 void this.transitionToNextVideo(videoSubmissionRequest.boxToken)
             } else {
                 // If the queue was not empty, apply eventual next / now flags so the video is preselected or plays now
@@ -561,7 +561,7 @@ class BoxService {
             void this.sendQueueToSubscribers(playlistSubmissionRequest.boxToken)
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
-            if (await QueueItemModel.exists({ box: playlistSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
+            if (!await QueueItemModel.exists({ box: playlistSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
                 void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
             }
         } catch (error) {
