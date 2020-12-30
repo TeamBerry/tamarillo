@@ -7,7 +7,6 @@ import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../..
 import QueueApi from "./queue.api"
 import { Invite } from "../../models/invite.model"
 import { QueueItemModel } from "../../models/queue-item.model"
-import { cpuUsage } from "process"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../middlewares/auth.middleware")

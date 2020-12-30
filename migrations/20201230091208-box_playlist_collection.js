@@ -7,7 +7,7 @@ module.exports = {
     // Find every box
     await db.collection('boxes').find().forEach((box) => {
         box.playlist.forEach((queueItem) => {
-            db.collection('queueItems').insertOne({
+            db.collection('queueitems').insertOne({
                 box: box._id,
                 ...queueItem
             })
@@ -20,6 +20,6 @@ module.exports = {
     // TODO write the statements to rollback your migration (if possible)
     // Example:
     // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
-      await db.collection('queueItems').deleteMany({})
+      await db.collection('queueitems').deleteMany({})
   }
 };
