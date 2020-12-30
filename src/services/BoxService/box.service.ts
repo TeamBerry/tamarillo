@@ -2,6 +2,8 @@
 import * as _ from "lodash"
 
 // MongoDB & Sockets
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const mongoose = require("./../../config/connection")
 const express = require("express")()
 const http = require("http").Server(express)
 const io = require("socket.io")(http)
@@ -181,6 +183,16 @@ class BoxService {
 
                 try {
                     const response = await this.onUserJoined(startSyncRequest.boxToken)
+
+                    const queue = await QueueItemModel
+                        .find({
+                            box: startSyncRequest.boxToken
+                        })
+                        .sort({ submittedAt: 1 })
+                        .populate("video")
+                        .populate("submitted_by", "_id name settings.picture")
+
+                    socket.emit("queue", queue)
 
                     if (response.item !== null) {
                         message.contents = `Currently playing: ${response.item.video.name}`
