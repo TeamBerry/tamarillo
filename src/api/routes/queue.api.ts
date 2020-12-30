@@ -5,6 +5,7 @@ const auth = require("./../middlewares/auth.middleware")
 const boxMiddleware = require("./../middlewares/box.middleware")
 
 import * as Queue from 'bull'
+import { QueueItemModel } from "../../models/queue-item.model"
 const queueActionsQueue = new Queue("actions-queue")
 
 export class QueueApi {
@@ -43,7 +44,14 @@ export class QueueApi {
     }
 
     public async getQueue(request: Request, response: Response): Promise<Response> {
-        return response.status(200).send(response.locals.box.playlist)
+        const queue = await QueueItemModel
+            .find({
+                box: request.params.box
+            })
+            .sort({ submittedAt: -1 })
+            .lean()
+
+        return response.status(200).send(queue)
     }
 
     public async addVideo(request: Request, response: Response): Promise<Response> {

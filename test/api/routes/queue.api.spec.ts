@@ -12,6 +12,7 @@ import { UserPlaylist } from '../../../src/models/user-playlist.model'
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
+import { QueueItemModel } from '../../../src/models/queue-item.model'
 
 describe("Queue API", () => {
     const expressApp = express()
@@ -27,6 +28,7 @@ describe("Queue API", () => {
         await Video.deleteMany({})
         await UserPlaylist.deleteMany({})
         await Subscriber.deleteMany({})
+        await QueueItemModel.deleteMany({})
 
         const ashUser = await User.create({
             _id: '9ca0df5f86abeb66da97ba5d',
@@ -40,23 +42,24 @@ describe("Queue API", () => {
             description: 'Closed box',
             lang: 'English',
             name: 'Closed box',
-            playlist: [
-                {
-                    _id: '9cb763b6e72611381ef043e9',
-                    video: '9cb81150594b2e75f06ba90a',
-                    startTime: null,
-                    endTime: null,
-                    submittedAt: "2019-05-31T09:19:41+0000",
-                    submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false
-                }
-            ],
             creator: '9ca0df5f86abeb66da97ba5d',
             open: false,
             options: {
                 random: true,
                 loop: false
             }
+        })
+
+        await QueueItemModel.create({
+            _id: '9cb763b6e72611381ef043e9',
+            box: '9cb763b6e72611381ef043e5',
+            video: '9cb81150594b2e75f06ba90a',
+            startTime: null,
+            endTime: null,
+            submittedAt: "2019-05-31T09:19:41+0000",
+            submitted_by: '9ca0df5f86abeb66da97ba5d',
+            isPreselected: false,
+            stateForcedWithBerries: false
         })
 
         await Video.create([
@@ -155,6 +158,7 @@ describe("Queue API", () => {
         await Video.deleteMany({})
         await UserPlaylist.deleteMany({})
         await Subscriber.deleteMany({})
+        await QueueItemModel.deleteMany({})
     })
 
     describe("Get box queue", () => {
@@ -165,18 +169,6 @@ describe("Queue API", () => {
                     description: null,
                     lang: 'English',
                     name: 'Box with a video already added to it',
-                    playlist: [
-                        {
-                            isPreselected: false,
-                            stateForcedWithBerries: false,
-                            _id: '9cb763b6e72611381ef04401',
-                            video: '9cb81150594b2e75f06ba8fe',
-                            startTime: '2020-04-23T15:50:31.921Z',
-                            endTime: null,
-                            submittedAt: '2020-04-23T15:50:30.896Z',
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        }
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: true,
                     private: true,
@@ -191,18 +183,6 @@ describe("Queue API", () => {
                     description: null,
                     lang: 'English',
                     name: 'Box with a 3 Minute duration restriction',
-                    playlist: [
-                        {
-                            isPreselected: false,
-                            stateForcedWithBerries: false,
-                            _id: '9cb763b6e72611381ef04401',
-                            video: '9cb81150594b2e75f06ba8fe',
-                            startTime: '2020-04-23T15:50:31.921Z',
-                            endTime: null,
-                            submittedAt: '2020-04-23T15:50:30.896Z',
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        }
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: true,
                     private: false,
@@ -224,6 +204,31 @@ describe("Queue API", () => {
                         vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
                         simple: ['addVideo']
                     }
+                }
+            ])
+
+            await QueueItemModel.create([
+                {
+                    box: '9cb763b6e72611381ef053f4',
+                    isPreselected: false,
+                    stateForcedWithBerries: false,
+                    _id: '9cb763b6e72611381ef04401',
+                    video: '9cb81150594b2e75f06ba8fe',
+                    startTime: '2020-04-23T15:50:31.921Z',
+                    endTime: null,
+                    submittedAt: '2020-04-23T15:50:30.896Z',
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
+                },
+                {
+                    box: '9cb763b6e72611381ef063f4',
+                    isPreselected: false,
+                    stateForcedWithBerries: false,
+                    _id: '9cb763b6e72611381ef04402',
+                    video: '9cb81150594b2e75f06ba8fe',
+                    startTime: '2020-04-23T15:50:31.921Z',
+                    endTime: null,
+                    submittedAt: '2020-04-23T15:50:30.896Z',
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
                 }
             ])
 
@@ -270,6 +275,9 @@ describe("Queue API", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e4')
             await Box.findByIdAndDelete('9cb763b6e72611381ef053f4')
             await Box.findByIdAndDelete('9cb763b6e72611381ef063f4')
+            await QueueItemModel.deleteMany({
+                box: { $in: ['9cb763b6e72611381ef043e4', '9cb763b6e72611381ef053f4', '9cb763b6e72611381ef063f4']}
+            })
             await Subscriber.deleteMany({})
         })
 
@@ -296,7 +304,6 @@ describe("Queue API", () => {
                     description: null,
                     lang: 'English',
                     name: 'Box with empty playlist',
-                    playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: true,
                     options: {
@@ -310,18 +317,6 @@ describe("Queue API", () => {
                     description: null,
                     lang: 'English',
                     name: 'Box with a video already added to it',
-                    playlist: [
-                        {
-                            isPreselected: false,
-                            stateForcedWithBerries: false,
-                            _id: '9cb763b6e72611381ef04401',
-                            video: '9cb81150594b2e75f06ba8fe',
-                            startTime: '2020-04-23T15:50:31.921Z',
-                            endTime: null,
-                            submittedAt: '2020-04-23T15:50:30.896Z',
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        }
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: true,
                     options: {
@@ -347,8 +342,6 @@ describe("Queue API", () => {
                     description: null,
                     lang: 'English',
                     name: 'Box with a 3 Minute duration restriction',
-                    playlist: [
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: true,
                     options: {
@@ -369,6 +362,20 @@ describe("Queue API", () => {
                         vip: ['addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit'],
                         simple: ['addVideo']
                     }
+                }
+            ])
+
+            await QueueItemModel.create([
+                {
+                    box: '9cb763b6e72611381ef053f4',
+                    isPreselected: false,
+                    stateForcedWithBerries: false,
+                    _id: '9cb763b6e72611381ef04401',
+                    video: '9cb81150594b2e75f06ba8fe',
+                    startTime: '2020-04-23T15:50:31.921Z',
+                    endTime: null,
+                    submittedAt: '2020-04-23T15:50:30.896Z',
+                    submitted_by: '9ca0df5f86abeb66da97ba5d'
                 }
             ])
 
@@ -422,6 +429,9 @@ describe("Queue API", () => {
             await Box.findByIdAndDelete('9cb763b6e72611381ef043e4')
             await Box.findByIdAndDelete('9cb763b6e72611381ef053f4')
             await Subscriber.deleteMany({})
+            await QueueItemModel.deleteMany({
+                box: { $in: ['9cb763b6e72611381ef053f4'] }
+            })
         })
 
 
