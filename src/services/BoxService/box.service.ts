@@ -188,7 +188,7 @@ class BoxService {
                         .find({
                             box: startSyncRequest.boxToken
                         })
-                        .sort({ submittedAt: 1 })
+                        .sort({ submittedAt: -1 })
                         .populate("video")
                         .populate("submitted_by", "_id name settings.picture")
 
@@ -532,6 +532,7 @@ class BoxService {
             })
 
             void this.sendBoxToSubscribers(videoSubmissionRequest.boxToken)
+            void this.sendQueueToSubscribers(videoSubmissionRequest.boxToken)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
                 userToken: videoSubmissionRequest.userToken,
                 boxToken: videoSubmissionRequest.boxToken,
@@ -558,12 +559,13 @@ class BoxService {
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
 
             void this.sendBoxToSubscribers(playlistSubmissionRequest.boxToken)
-            void this.sendQueueToSubscribers(playlistSubmissionRequest.boxToken)
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
             if (!await QueueItemModel.exists({ box: playlistSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
                 void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
             }
+
+            void this.sendQueueToSubscribers(playlistSubmissionRequest.boxToken)
         } catch (error) {
             const message = new FeedbackMessage({
                 contents: "Your playlist could not be submitted.",
@@ -703,7 +705,7 @@ class BoxService {
             .find({
                 box: boxToken
             })
-            .sort({ submittedAt: 1 })
+            .sort({ submittedAt: -1 })
             .populate("video")
             .populate("submitted_by", "_id name settings.picture")
 
