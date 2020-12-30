@@ -556,10 +556,15 @@ export class QueueService {
             return null
         }
 
-        const currentVideo: PlayingItem = _.find(box.playlist, video => video.startTime !== null && video.endTime === null)
+        const currentVideo: PlayingItem = _.find(box.playlist, (video: QueueItem) => video.startTime !== null && video.endTime === null)
+
+        if (!currentVideo) {
+            return null
+        }
+
         currentVideo.position = Math.round((Date.now() - Date.parse(currentVideo.startTime.toString())) / 1000)
 
-        return currentVideo ?? null
+        return currentVideo
     }
 
     /**
