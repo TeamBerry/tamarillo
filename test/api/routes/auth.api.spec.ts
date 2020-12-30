@@ -383,7 +383,6 @@ describe("Auth API", () => {
                     description: null,
                     lang: 'en',
                     name: 'Test box',
-                    playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     private: true,
                     open: true
@@ -393,7 +392,6 @@ describe("Auth API", () => {
                     description: 'Closed box',
                     lang: 'en',
                     name: 'Closed box',
-                    playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     private: false,
                     open: false
@@ -403,7 +401,6 @@ describe("Auth API", () => {
                     description: 'Open box to delete',
                     lang: 'en',
                     name: 'Open box to delete',
-                    playlist: [],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     private: true,
                     open: true

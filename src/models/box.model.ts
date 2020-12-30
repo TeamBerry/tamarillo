@@ -8,6 +8,7 @@ export class Box {
     public description: string
     public lang: string
     public name: string
+    // DELETEME: After migration
     public playlist: Array<QueueItem>
     public open: boolean
     public private: boolean
@@ -25,6 +26,8 @@ export class Box {
     public acl: ACLConfig
     // Date until when the box appears in the featured space
     public featured: Date
+    // The currently playing video
+    public currentVideo?: QueueItem
     // The number of users in the box
     public users?: number
 }
@@ -35,6 +38,7 @@ const boxSchema = new Schema(
         description: String,
         lang: String,
         name: String,
+        // DELETEME: After migration
         playlist: [{
             submittedAt: Date,
             video: { type: Schema.Types.ObjectId, ref: "Video" },

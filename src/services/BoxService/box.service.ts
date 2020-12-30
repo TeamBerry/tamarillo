@@ -15,7 +15,7 @@ const badgeQueue = new Queue("badges")
 
 // Models
 import { Subscriber, ConnectionRequest, BerryCount, PopulatedSubscriberDocument, Connection } from "../../models/subscriber.model"
-import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage, QueueItem } from "@teamberry/muscadine"
+import { Message, FeedbackMessage, QueueItemActionRequest, VideoSubmissionRequest, PlaylistSubmissionRequest, SyncPacket, BoxScope, SystemMessage } from "@teamberry/muscadine"
 
 // Import services that need to be managed
 import chatService from "./chat.service"
@@ -26,6 +26,7 @@ import { RoleChangeRequest } from "../../models/role-change.model"
 import aclService from "./acl.service"
 import { BadgeEvent } from "../../models/badge.job"
 import { Badge } from "../../models/badge.model"
+import { QueueItemModel } from "../../models/queue-item.model"
 const BoxSchema = require("./../../models/box.model")
 
 const PLAY_NEXT_BERRY_COST = 10
@@ -470,32 +471,38 @@ class BoxService {
 
         try {
             // Submitting video
-            let response: Partial<{ systemMessage: SystemMessage, feedbackMessage: FeedbackMessage, updatedBox: any, syncPacket: SyncPacket }> = await queueService.onVideoSubmitted(videoSubmissionRequest)
+            const { feedbackMessage, systemMessage, addedVideo} = await queueService.onVideoSubmitted(videoSubmissionRequest)
 
-            io.in(videoSubmissionRequest.boxToken).emit("chat", response.systemMessage)
-            io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
+            io.in(videoSubmissionRequest.boxToken).emit("chat", systemMessage)
+            this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
-            const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
-            if (currentVideoIndex === -1) {
+            if (await QueueItemModel.exists({ box: videoSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
                 void this.transitionToNextVideo(videoSubmissionRequest.boxToken)
             } else {
                 // If the queue was not empty, apply eventual next / now flags so the video is preselected or plays now
                 if (videoSubmissionRequest.flag === 'next') { // The video is submitted in preselection
-                    const targetVideo: QueueItem = response.updatedBox.playlist.find((video: QueueItem) => video.video.link === videoSubmissionRequest.link)
-                    response = await queueService.onVideoPreselected({ item: targetVideo._id.toString(), boxToken: videoSubmissionRequest.boxToken, userToken: videoSubmissionRequest.userToken })
+                    const nextResponse = await queueService.onVideoPreselected(
+                        {
+                            item: addedVideo._id.toString(),
+                            boxToken: videoSubmissionRequest.boxToken,
+                            userToken: videoSubmissionRequest.userToken
+                        })
 
-                    io.in(videoSubmissionRequest.boxToken).emit("chat", response.systemMessage)
-                    io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
+                    io.in(videoSubmissionRequest.boxToken).emit("chat", nextResponse.systemMessage)
                 }
 
                 if (videoSubmissionRequest.flag === 'now') { // The video is submitted and played now
-                    const targetVideo: QueueItem = response.updatedBox.playlist.find((video: QueueItem) => video.video.link === videoSubmissionRequest.link)
-                    response = await queueService.onVideoForcePlayed({ item: targetVideo._id.toString(), boxToken: videoSubmissionRequest.boxToken, userToken: videoSubmissionRequest.userToken })
+                    const nowResponse = await queueService.onVideoForcePlayed(
+                        {
+                            item: addedVideo._id.toString(),
+                            boxToken: videoSubmissionRequest.boxToken,
+                            userToken: videoSubmissionRequest.userToken
+                        }
+                    )
 
-                    io.in(videoSubmissionRequest.boxToken).emit("chat", response.systemMessage)
-                    io.in(videoSubmissionRequest.boxToken).emit("box", response.updatedBox)
-                    io.in(videoSubmissionRequest.boxToken).emit("sync", response.syncPacket)
+                    io.in(videoSubmissionRequest.boxToken).emit("chat", nowResponse.systemMessage)
+                    io.in(videoSubmissionRequest.boxToken).emit("sync", nowResponse.syncPacket)
                 }
             }
 
@@ -512,7 +519,7 @@ class BoxService {
                 removeOnComplete: true
             })
 
-            this.emitToSockets(sourceSubscriber.connexions, 'chat', response.feedbackMessage)
+            void this.sendBoxToSubscribers(videoSubmissionRequest.boxToken)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
                 userToken: videoSubmissionRequest.userToken,
                 boxToken: videoSubmissionRequest.boxToken,
@@ -533,15 +540,16 @@ class BoxService {
         const sourceSubscriber = await Subscriber.findOne({ userToken: playlistSubmissionRequest.userToken, boxToken: playlistSubmissionRequest.boxToken })
 
         try {
-            const response = await queueService.onPlaylistSubmitted(playlistSubmissionRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onPlaylistSubmitted(playlistSubmissionRequest)
 
-            io.in(playlistSubmissionRequest.boxToken).emit("chat", response.systemMessage)
-            io.in(playlistSubmissionRequest.boxToken).emit("box", response.updatedBox)
-            this.emitToSockets(sourceSubscriber.connexions, 'chat', response.feedbackMessage)
+            io.in(playlistSubmissionRequest.boxToken).emit("chat", systemMessage)
+            this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
+
+            void this.sendBoxToSubscribers(playlistSubmissionRequest.boxToken)
+            void this.sendQueueToSubscribers(playlistSubmissionRequest.boxToken)
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
-            const currentVideoIndex = _.findIndex(response.updatedBox.playlist, video => video.startTime !== null && video.endTime === null)
-            if (currentVideoIndex === -1) {
+            if (await QueueItemModel.exists({ box: playlistSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
                 void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
             }
         } catch (error) {
@@ -557,10 +565,11 @@ class BoxService {
     public async onPlayNextRequest(playNextRequest: QueueItemActionRequest): Promise<void> {
         const sourceSubscriber = await Subscriber.findOne({ userToken: playNextRequest.userToken, boxToken: playNextRequest.boxToken })
         try {
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoPreselected(playNextRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(playNextRequest)
 
             io.in(playNextRequest.boxToken).emit("chat", systemMessage)
-            io.in(playNextRequest.boxToken).emit("box", updatedBox)
+            void this.sendBoxToSubscribers(playNextRequest.boxToken)
+            void this.sendQueueToSubscribers(playNextRequest.boxToken)
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
                 userToken: playNextRequest.userToken,
@@ -580,11 +589,12 @@ class BoxService {
     public async onPlayNowRequest(playNowRequest: QueueItemActionRequest): Promise<void> {
         const sourceSubscriber = await Subscriber.findOne({ userToken: playNowRequest.userToken, boxToken: playNowRequest.boxToken })
         try {
-            const { syncPacket, updatedBox, systemMessage, feedbackMessage } = await queueService.onVideoForcePlayed(playNowRequest)
+            const { syncPacket, systemMessage, feedbackMessage } = await queueService.onVideoForcePlayed(playNowRequest)
 
             io.in(playNowRequest.boxToken).emit("sync", syncPacket)
-            io.in(playNowRequest.boxToken).emit("box", updatedBox)
             io.in(playNowRequest.boxToken).emit("chat", systemMessage)
+            void this.sendBoxToSubscribers(playNowRequest.boxToken)
+            void this.sendQueueToSubscribers(playNowRequest.boxToken)
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
@@ -606,11 +616,11 @@ class BoxService {
         const sourceSubscriber = await Subscriber.findOne({ userToken: videoCancelRequest.userToken, boxToken: videoCancelRequest.boxToken })
 
         try {
-            // Remove the video from the playlist (_id is sent)
-            const { systemMessage, feedbackMessage, updatedBox } = await queueService.onVideoCancelled(videoCancelRequest)
+            const { systemMessage, feedbackMessage } = await queueService.onVideoCancelled(videoCancelRequest)
 
             io.in(videoCancelRequest.boxToken).emit("chat", systemMessage)
-            io.in(videoCancelRequest.boxToken).emit("box", updatedBox)
+            void this.sendBoxToSubscribers(videoCancelRequest.boxToken)
+            void this.sendQueueToSubscribers(videoCancelRequest.boxToken)
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
         } catch (error) {
@@ -627,7 +637,7 @@ class BoxService {
         const sourceSubscriber = await Subscriber.findOne(boxScope)
         try {
 
-            const { syncPacket, updatedBox, systemMessage, feedbackMessage } = await queueService.onVideoSkipped(boxScope)
+            const { syncPacket, systemMessage, feedbackMessage } = await queueService.onVideoSkipped(boxScope)
 
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
                 userToken: boxScope.userToken,
@@ -636,8 +646,9 @@ class BoxService {
             })
 
             io.in(boxScope.boxToken).emit("sync", syncPacket)
-            io.in(boxScope.boxToken).emit("box", updatedBox)
             io.in(boxScope.boxToken).emit("chat", systemMessage)
+            void this.sendBoxToSubscribers(boxScope.boxToken)
+            void this.sendQueueToSubscribers(boxScope.boxToken)
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
         } catch (error) {
@@ -659,20 +670,32 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
-        const { syncPacket, updatedBox, systemMessage: feedbackMessage } = await queueService.transitionToNextVideo(boxToken)
+        const { syncPacket, systemMessage: feedbackMessage } = await queueService.transitionToNextVideo(boxToken)
 
         io.in(boxToken).emit("sync", syncPacket)
-        io.in(boxToken).emit("box", updatedBox)
         io.in(boxToken).emit("chat", feedbackMessage)
+        void this.sendBoxToSubscribers(boxToken)
+        void this.sendQueueToSubscribers(boxToken)
     }
 
     public async sendBoxToSubscribers(boxToken: string) {
-        const box = await BoxSchema.findById(boxToken)
+        const box = await BoxSchema
+            .findById(boxToken)
             .populate("creator", "_id name settings.picture")
-            .populate("playlist.video")
-            .populate("playlist.submitted_by", "_id name settings.picture")
 
         io.in(boxToken).emit("box", box)
+    }
+
+    public async sendQueueToSubscribers(boxToken: string) {
+        const queue = await QueueItemModel
+            .find({
+                box: boxToken
+            })
+            .sort({ submittedAt: 1 })
+            .populate("video")
+            .populate("submitted_by", "_id name settings.picture")
+
+        io.in(boxToken).emit("queue", queue)
     }
 
     public emitToSockets(connexions: Array<Connection>, channel: string, contents: unknown): void {

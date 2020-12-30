@@ -34,7 +34,6 @@ describe("Berries Service", () => {
             description: null,
             lang: 'English',
             name: 'Test box',
-            playlist: [],
             creator: '9ca0df5f86abeb66da97ba5d',
             open: true,
             options: {

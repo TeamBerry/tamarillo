@@ -14,6 +14,7 @@ import authService from '../../../src/api/services/auth.service'
 import { Subscriber, ActiveSubscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
 import { InviteDocument } from '../../../src/models/invite.model'
+import { QueueItemModel } from '../../../src/models/queue-item.model'
 
 describe("Box API", () => {
     const expressApp = express()
@@ -59,7 +60,6 @@ describe("Box API", () => {
                 description: null,
                 lang: 'en',
                 name: 'Test box',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 private: true,
                 open: true,
@@ -82,7 +82,6 @@ describe("Box API", () => {
                 description: 'Closed box',
                 lang: 'en',
                 name: 'Closed box',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 private: false,
                 open: false,
@@ -105,7 +104,6 @@ describe("Box API", () => {
                 description: 'Open box to delete',
                 lang: 'en',
                 name: 'Open box to delete',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 private: true,
                 open: true,
@@ -128,7 +126,6 @@ describe("Box API", () => {
                 description: 'Closed box to delete',
                 lang: 'en',
                 name: 'Closed box to delete',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 private: true,
                 open: false,
@@ -151,7 +148,6 @@ describe("Box API", () => {
                 description: 'Persona inside',
                 lang: 'en',
                 name: 'VGM Box',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5e',
                 private: true,
                 open: true,
@@ -174,7 +170,6 @@ describe("Box API", () => {
                 description: 'The most active box ever',
                 lang: 'en',
                 name: 'Anime Box',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5e',
                 private: false,
                 open: true,
@@ -197,7 +192,6 @@ describe("Box API", () => {
                 description: 'Box featured',
                 lang: 'en',
                 name: 'Anime + JPop',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5e',
                 private: false,
                 open: true,
@@ -372,7 +366,6 @@ describe("Box API", () => {
                 description: 'Test box edited',
                 lang: 'en',
                 name: 'Test box',
-                playlist: [],
                 creator: {
                     _id: '9ca0df5f86abeb66da97ba5d',
                     name: 'Ash Ketchum'
@@ -392,7 +385,6 @@ describe("Box API", () => {
                 description: 'Test box edited',
                 lang: 'en',
                 name: 'Test box',
-                playlist: [],
                 creator: {
                     _id: '9ca0df5f86abeb66da97ba5d',
                     name: 'Ash Ketchum'
@@ -686,8 +678,6 @@ describe("Box API", () => {
                     description: 'Box with empty playlist',
                     lang: 'en',
                     name: 'Empty playlist',
-                    playlist: [
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: false
                 },
@@ -696,22 +686,6 @@ describe("Box API", () => {
                     description: 'Box with playlist of unique videos only',
                     lang: 'en',
                     name: 'Box with playlist of unique videos only',
-                    playlist: [
-                        {
-                            video: '9bc72f3d7edc6312d0ef2e47',
-                            startTime: "2018-05-20T16:51:29.934+0000",
-                            endTime: "2019-07-11T08:53:53.415+0000",
-                            submittedAt: "2019-07-11T08:51:29.885+0000",
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        },
-                        {
-                            video: '9bc72f3d7edc6312d0ef2e48',
-                            startTime: "2019-07-11T08:53:53.415+0000",
-                            endTime: null,
-                            submittedAt: "2019-07-11T08:51:29.886+0000",
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        }
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: false
                 },
@@ -720,31 +694,61 @@ describe("Box API", () => {
                     description: 'Box with playlist with duplicate entry',
                     lang: 'en',
                     name: 'Box with playlist with duplicate entry',
-                    playlist: [
-                        {
-                            video: '9bc72f3d7edc6312d0ef2e47',
-                            startTime: "2018-05-20T16:51:29.934+0000",
-                            endTime: "2019-07-11T08:53:53.415+0000",
-                            submittedAt: "2019-07-11T08:51:29.885+0000",
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        },
-                        {
-                            video: '9bc72f3d7edc6312d0ef2e48',
-                            startTime: "2019-07-11T08:53:53.415+0000",
-                            endTime: null,
-                            submittedAt: "2019-07-11T08:51:29.886+0000",
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        },
-                        {
-                            video: '9bc72f3d7edc6312d0ef2e47',
-                            startTime: null,
-                            endTime: null,
-                            submittedAt: "2019-07-11T08:51:29.887+0000",
-                            submitted_by: '9ca0df5f86abeb66da97ba5d'
-                        }
-                    ],
                     creator: '9ca0df5f86abeb66da97ba5d',
                     open: false
+                }
+            ])
+
+            await QueueItemModel.create([
+                {
+                    video: '9bc72f3d7edc6312d0ef2e47',
+                    box: '9cb763b6e72611381ef043e9',
+                    startTime: "2018-05-20T16:51:29.934+0000",
+                    endTime: "2019-07-11T08:53:53.415+0000",
+                    submittedAt: "2019-07-11T08:51:29.885+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    video: '9bc72f3d7edc6312d0ef2e48',
+                    box: '9cb763b6e72611381ef043e9',
+                    startTime: "2019-07-11T08:53:53.415+0000",
+                    endTime: null,
+                    submittedAt: "2019-07-11T08:51:29.886+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    video: '9bc72f3d7edc6312d0ef2e47',
+                    box: '9cb763b6e72611381ef043ea',
+                    startTime: "2018-05-20T16:51:29.934+0000",
+                    endTime: "2019-07-11T08:53:53.415+0000",
+                    submittedAt: "2019-07-11T08:51:29.885+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    video: '9bc72f3d7edc6312d0ef2e48',
+                    box: '9cb763b6e72611381ef043ea',
+                    startTime: "2019-07-11T08:53:53.415+0000",
+                    endTime: null,
+                    submittedAt: "2019-07-11T08:51:29.886+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    video: '9bc72f3d7edc6312d0ef2e47',
+                    box: '9cb763b6e72611381ef043ea',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-07-11T08:51:29.887+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
                 }
             ])
 
@@ -775,6 +779,10 @@ describe("Box API", () => {
 
             await Video.deleteMany({
                 _id: { $in: ['9bc72f3d7edc6312d0ef2e47', '9bc72f3d7edc6312d0ef2e48'] }
+            })
+
+            await QueueItemModel.deleteMany({
+                box: { $in: ['9cb763b6e72611381ef043e8', '9cb763b6e72611381ef043e9', '9cb763b6e72611381ef043ea'] }
             })
 
             await UserPlaylist.findByIdAndDelete('7dec3a584ec1317ade113a58')

@@ -31,11 +31,7 @@ export class QueueApi {
         this.router.param("video", async (request: Request, response: Response, next: NextFunction) => {
             const box = response.locals.box
 
-            const targetVideoIndex: number = box.playlist.findIndex(
-                (queueItem: QueueItem) => queueItem._id.toString() === request.params.video.toString()
-            )
-
-            if (targetVideoIndex === -1) {
+            if (await QueueItemModel.exists({ box: box._id, _id: request.params.video})) {
                 return response.status(404).send('VIDEO_NOT_FOUND')
             }
 
