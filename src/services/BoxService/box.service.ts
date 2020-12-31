@@ -443,6 +443,10 @@ class BoxService {
                     void this.onVideoSkipRequest(job.data.requestContents)
                     break
 
+                case 'replayVideo':
+                    void this.onReplayRequest(job.data.requestContents)
+                    break
+
                 case 'removeVideo':
                     void this.onVideoCancelRequest(job.data.requestContents)
                     break
@@ -613,6 +617,27 @@ class BoxService {
             const message = new FeedbackMessage({
                 contents: error.message,
                 scope: playNowRequest.boxToken,
+                context: 'error'
+            })
+            this.emitToSockets(sourceSubscriber.connexions, 'chat', message)
+        }
+    }
+
+    public async onReplayRequest(videoReplayRequest: QueueItemActionRequest): Promise<void> {
+        const sourceSubscriber = await Subscriber.findOne({ userToken: videoReplayRequest.userToken, boxToken: videoReplayRequest.boxToken })
+
+        try {
+            const { systemMessage, feedbackMessage } = await queueService.onVideoReplayed(videoReplayRequest)
+
+            io.in(videoReplayRequest.boxToken).emit("chat", systemMessage)
+
+            void this.sendQueueToSubscribers(videoReplayRequest.boxToken)
+
+            this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
+        } catch (error) {
+            const message = new FeedbackMessage({
+                contents: error.message,
+                scope: videoReplayRequest.boxToken,
                 context: 'error'
             })
             this.emitToSockets(sourceSubscriber.connexions, 'chat', message)

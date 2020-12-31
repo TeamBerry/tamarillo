@@ -26,6 +26,7 @@ export class QueueApi {
         this.router.put("/skip", this.skipVideo)
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)
+        this.router.put("/:video/replay", this.replayVideo)
         this.router.delete("/:video", this.removeVideo)
 
         this.router.param("video", async (request: Request, response: Response, next: NextFunction) => {
@@ -142,6 +143,28 @@ export class QueueApi {
             })
 
             return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send(error.message)
+        }
+    }
+
+    public async replayVideo(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+
+        try {
+            queueActionsQueue.add({
+                type: 'replayVideo',
+                requestContents: {
+                    boxToken: request.params.box,
+                    userToken: decodedToken.user,
+                    item: request.params.video
+                } as QueueItemActionRequest
+            }, {
+                attempts: 5,
+                removeOnComplete: true
+            })
+
+            return response.status(503).send()
         } catch (error) {
             return response.status(500).send(error.message)
         }

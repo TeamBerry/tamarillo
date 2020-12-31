@@ -400,6 +400,49 @@ export class QueueService {
         }
     }
 
+    public async onVideoReplayed(request: QueueItemActionRequest): Promise<{ systemMessage: SystemMessage, feedbackMessage: FeedbackMessage }> {
+        try {
+            if (await aclService.isAuthorized({userToken: request.userToken, boxToken: request.boxToken}, 'addVideo') === ACLEvaluationResult.NO) {
+                throw new Error("You do not have the authorization to do this.")
+            }
+
+            const user = await User.findById(request.userToken)
+
+            const replayedVideo = await QueueItemModel
+                .findOneAndUpdate(
+                    { box: request.boxToken, _id: request.item },
+                    {
+                        $set: {
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: new Date()
+                        }
+                    },
+                    {
+                        new: true
+                    }
+                )
+                .populate('video', 'name')
+                .lean()
+
+            const systemMessage = new SystemMessage({
+                contents: `${user.name} has re-added the video "${replayedVideo.video.name}" to the queue.`,
+                scope: request.boxToken,
+                context: 'info'
+            })
+
+            const feedbackMessage = new FeedbackMessage({
+                contents: `The video "${replayedVideo.video.name}" has been re-added to the queue.`,
+                scope: request.boxToken,
+                context: 'success'
+            })
+
+            return { systemMessage, feedbackMessage }
+        } catch (error) {
+            throw new Error(error.message)
+        }
+    }
+
     /**
      * Adds the obtained video to the queue of the box
      *

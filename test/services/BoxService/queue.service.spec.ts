@@ -2248,6 +2248,151 @@ describe("Queue Service", () => {
         })
     })
 
+    describe('Replay a video', () => {
+        before(async () => {
+            await Subscriber.create([
+                {
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    connexions: [],
+                    berries: 0,
+                    role: 'admin'
+                },
+                {
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    connexions: [],
+                    berries: 17,
+                    role: 'simple'
+                },
+            ])
+
+            await Box.create([
+                {
+                    _id: '9cb763b6e72611381ef043e7',
+                    description: 'Box with a video playing',
+                    lang: 'English',
+                    name: 'Box playing in random mode',
+                    creator: '9ca0df5f86abeb66da97ba5d',
+                    open: true,
+                    options: {
+                        random: true,
+                        loop: true
+                    },
+                    acl: {
+                        moderator: [
+                            'addVideo',
+                            'removeVideo',
+                            'promoteVIP',
+                            'demoteVIP',
+                            'forceNext',
+                            'forcePlay'
+                        ],
+                        vip: [ 'addVideo', 'removeVideo', 'forceNext', 'bypassVideoDurationLimit' ],
+                        simple: []
+                    }
+                }
+            ])
+
+            await QueueItemModel.create([
+                {
+                    _id: '9cb763b6e72611381ef043f4',
+                    box: '9cb763b6e72611381ef043e7',
+                    video: '9cb81150594b2e75f06ba90c',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f3',
+                    box: '9cb763b6e72611381ef043e7',
+                    video: '9cb81150594b2e75f06ba90b',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f2',
+                    box: '9cb763b6e72611381ef043e7',
+                    video: '9cb81150594b2e75f06ba8fe',
+                    startTime: null,
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: true,
+                    stateForcedWithBerries: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f1',
+                    box: '9cb763b6e72611381ef043e7',
+                    video: '9cb81150594b2e75f06ba90a',
+                    startTime: "2019-05-31T09:21:12+0000",
+                    endTime: null,
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+                {
+                    _id: '9cb763b6e72611381ef043f0',
+                    box: '9cb763b6e72611381ef043e7',
+                    video: '9cb81150594b2e75f06ba90c',
+                    startTime: "2019-05-31T09:19:44+0000",
+                    endTime: "2019-05-31T09:21:12+0000",
+                    submittedAt: "2019-05-31T09:19:41+0000",
+                    submitted_by: '9ca0df5f86abeb66da97ba5d',
+                    isPreselected: false,
+                    stateForcedWithBerries: false
+                },
+            ])
+        })
+
+        after(async () => {
+            await Subscriber.deleteMany({})
+            await Box.findByIdAndDelete('9cb763b6e72611381ef043e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef143e7')
+            await Box.findByIdAndDelete('9cb763b6e72611381ef243e7')
+            await QueueItemModel.deleteMany({
+                box: { $in: ['9cb763b6e72611381ef043e7', '9cb763b6e72611381ef143e7', '9cb763b6e72611381ef243e7'] }
+            })
+        })
+
+        it("Refuses video if the user does not have enough ACL powers", async () => {
+            try {
+                await queueService.onVideoReplayed({
+                    boxToken: '9cb763b6e72611381ef043e7',
+                    userToken: '9ca0df5f86abeb66da97ba5e',
+                    item: '9cb763b6e72611381ef043f0'
+                })
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal("You do not have the authorization to do this.")
+            }
+        })
+
+        it("Re-adds the video", async () => {
+            const { systemMessage, feedbackMessage } = await queueService.onVideoReplayed({
+                boxToken: '9cb763b6e72611381ef043e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef043f0'
+            })
+
+            const replayedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', _id: '9cb763b6e72611381ef043f0' }).lean()
+
+            expect(replayedVideo.startTime).to.equal(null)
+            expect(replayedVideo.endTime).to.equal(null)
+
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has re-added the video "Connected" to the queue.`)
+            expect(feedbackMessage.contents).to.equal(`The video "Connected" has been re-added to the queue.`)
+        })
+    })
+
     describe("Get current video", () => {
         before(async () => {
             await Box.create([
