@@ -533,22 +533,33 @@ export class QueueService {
             return null
         }
 
-        await QueueItemModel.findOneAndUpdate(
-            { box: boxToken, startTime: { $ne: null }, endTime: null },
-            {
-                $set: {
-                    endTime: transitionTime,
-                    stateForcedWithBerries: false,
-                    isPreselected: false
-                }
-            },
-            {
-                new: true
+        let updateQuery = {}
+
+        // If the box is looping, the video is put back in queue with submittedAt to now, so it's the last one that will play
+        if (box.options.loop) {
+            updateQuery = {
+                startTime: null,
+                endTime: null,
+                stateForcedWithBerries: false,
+                isPreselected: false,
+                submittedAt: transitionTime
             }
+        } else {
+            updateQuery = {
+                endTime: transitionTime,
+                stateForcedWithBerries: false,
+                isPreselected: false
+            }
+        }
+
+        const previousVideo = await QueueItemModel.findOneAndUpdate(
+            { box: boxToken, startTime: { $ne: null }, endTime: null },
+            { $set: updateQuery },
+            { new: true }
         )
 
         const availableVideos = await QueueItemModel
-            .find({ box: boxToken, startTime: null })
+            .find({ box: boxToken, startTime: null, _id: { $ne: previousVideo?._id } })
             .sort({ submittedAt: 1 })
             .lean()
 
