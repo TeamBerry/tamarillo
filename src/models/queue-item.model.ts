@@ -1,7 +1,7 @@
 import { QueueItem } from "@teamberry/muscadine"
 import { model, Schema, Document } from "mongoose"
 
-export class QueueItemClass implements QueueItem {
+class QueueItemClass implements QueueItem {
     public box: string
     public submittedAt: Date
     public video: any
@@ -10,17 +10,6 @@ export class QueueItemClass implements QueueItem {
     public endTime: Date
     public isPreselected: boolean
     public stateForcedWithBerries: boolean
-
-    constructor(queueItem?: Partial<QueueItemClass>) {
-        this.box = queueItem.box
-        this.submittedAt = new Date()
-        this.video = queueItem.video
-        this.submitted_by = queueItem.submitted_by
-        this.startTime = queueItem.startTime ?? null
-        this.endTime = queueItem.endTime ?? null
-        this.isPreselected = queueItem.isPreselected ?? null
-        this.stateForcedWithBerries = queueItem?.stateForcedWithBerries ?? false
-    }
 }
 
 const queueItemSchema = new Schema(

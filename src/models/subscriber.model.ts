@@ -38,14 +38,6 @@ export class SubscriberClass {
     public connexions: Array<Connection>
     public berries: number
     public role: Role
-
-    constructor(subscriber: SubscriberClass) {
-        this.boxToken = subscriber.boxToken ?? null
-        this.userToken = subscriber.userToken ?? null
-        this.connexions = subscriber.connexions ?? []
-        this.berries = subscriber.berries ?? 0
-        this.role = subscriber.role ?? 'simple'
-    }
 }
 
 export interface ActiveSubscriber {

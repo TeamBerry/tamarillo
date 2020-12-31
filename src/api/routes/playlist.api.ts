@@ -32,7 +32,7 @@ export class PlaylistApi {
 
         // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
         this.router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingPlaylist: UserPlaylistClass = await UserPlaylist
+            const matchingPlaylist = await UserPlaylist
                 .findById(request.params.playlist)
                 .populate("user", "name")
                 .populate("videos", "name link")
@@ -58,10 +58,11 @@ export class PlaylistApi {
             filters.user = { $ne: decodedToken.user }
         }
 
-        const playlists: Array<UserPlaylistClass> = await UserPlaylist
+        const playlists = await UserPlaylist
             .find(filters)
             .populate("user", "name")
             .populate("videos", "name link")
+            .lean()
 
         return response.status(200).send(playlists)
     }
@@ -79,7 +80,7 @@ export class PlaylistApi {
      */
     public async show(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylistClass = response.locals.playlist
+        const playlist: UserPlaylistDocument = response.locals.playlist
 
         if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
@@ -106,7 +107,7 @@ export class PlaylistApi {
         }
 
         try {
-            const createdPlaylist: UserPlaylistClass = await UserPlaylist.create(request.body)
+            const createdPlaylist = await UserPlaylist.create(request.body)
 
             return response.status(201).send(createdPlaylist)
         } catch (error) {
@@ -133,7 +134,7 @@ export class PlaylistApi {
         }
 
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylistClass = response.locals.playlist
+        const playlist: UserPlaylistDocument = response.locals.playlist
 
         if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
@@ -146,7 +147,7 @@ export class PlaylistApi {
         }
 
         try {
-            const updatedPlaylist: UserPlaylistClass = await UserPlaylist
+            const updatedPlaylist = await UserPlaylist
                 .findByIdAndUpdate(
                     request.params.playlist,
                     {
@@ -158,6 +159,7 @@ export class PlaylistApi {
                 )
                 .populate("user", "name")
                 .populate("videos", "name link")
+                .lean()
 
             return response.status(200).send(updatedPlaylist)
         } catch (error) {
@@ -178,7 +180,7 @@ export class PlaylistApi {
      */
     public async destroy(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylistClass = response.locals.playlist
+        const playlist: UserPlaylistDocument = response.locals.playlist
 
         if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
@@ -207,7 +209,7 @@ export class PlaylistApi {
      */
     public async addVideoToPlaylist(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylistClass = response.locals.playlist
+        const playlist: UserPlaylistDocument = response.locals.playlist
 
         if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
@@ -258,7 +260,7 @@ export class PlaylistApi {
      */
     public async removeVideoFromPlaylist(request: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
-        const playlist: UserPlaylistClass = response.locals.playlist
+        const playlist: UserPlaylistDocument = response.locals.playlist
 
         if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
             return response.status(401).send('UNAUTHORIZED')
@@ -277,6 +279,7 @@ export class PlaylistApi {
                 )
                 .populate("user", "name")
                 .populate("videos", "name link")
+                .lean()
 
             return response.status(200).send(updatedPlaylist)
         } catch (error) {
