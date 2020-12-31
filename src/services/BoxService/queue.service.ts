@@ -564,9 +564,8 @@ export class QueueService {
             .lean()
 
         // Test if there are some videos remaining
-        if (availableVideos.length === 0 && box.options.loop) {
-            // Loop Mode if no more videos are upcoming and the loop is active
-            await this.loopPlaylist(boxToken)
+        if (availableVideos.length === 0) {
+            return null
         }
 
         let nextVideoToPlay: QueueItem = null
@@ -619,29 +618,6 @@ export class QueueService {
         }
 
         return null
-    }
-
-    /**
-     * Called if Loop Mode is enabled.
-     *
-     * If there are no more videos in the upcoming pool, the entire queue is resubmitted in order
-     *
-     * @private
-     * @param {string} boxToken
-     * @memberof PlaylistService
-     */
-    public async loopPlaylist(boxToken: string): Promise<void> {
-        await QueueItemModel.updateMany(
-            { box: boxToken },
-            {
-                $set: {
-                    startTime: null,
-                    endTime: null,
-                    isPreselected: false,
-                    stateForcedWithBerries: false
-                }
-            }
-        )
     }
 
     public async transitionToNextVideo(boxToken: string, targetVideo?: string, withBerries = false): Promise<{ syncPacket: SyncPacket, systemMessage: SystemMessage }> {

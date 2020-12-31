@@ -228,6 +228,20 @@ export class BoxApi {
                 }
             )
 
+            // If the box is set to loop, all played videos are reset
+            if (options && originalBox.options.loop !== options.loop && options.loop === true) {
+                await QueueItemModel.updateMany(
+                    { box: _id, startTime: { $ne: null }, endTime: { $ne: null } },
+                    {
+                        $set: {
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: new Date()
+                        }
+                    }
+                )
+            }
+
             this.createJob(_id, 'update')
 
             return response.status(200).send(updatedBox)
