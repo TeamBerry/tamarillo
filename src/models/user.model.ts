@@ -15,26 +15,6 @@ export class UserClass {
     }
     public acl?: ACLConfig
     public badges?: Array<{ badge: string, unlockedAt: Date }>
-
-    constructor(user?: Partial<UserClass>) {
-        this.name = user && user.name || null
-        this.mail = user && user.mail || null
-        this.password = user && user.password || null
-        this.resetToken = user && user.resetToken || null
-        this.settings = user && user.settings || {
-            theme: 'dark',
-            picture: null,
-            color: '#DF62A9',
-            isColorblind: false,
-            badge: null
-        }
-        this.acl = user && user.acl || {
-            moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
-            vip: ['addVideo', 'removeVideo', 'forceNext'],
-            simple: ['addVideo']
-        }
-        this.badges = user && user.badges || []
-    }
 }
 
 const userSchema = new Schema(
