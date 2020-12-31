@@ -13,16 +13,6 @@ export class UserPlaylistClass {
     public createdAt?: Date
     public updatedAt?: Date
     public isDeletable: boolean
-
-    constructor(data: UserPlaylistClass) {
-        this.name = data.name || null
-        this.user = data.user || { _id: null, name: null }
-        this.videos = data.videos || []
-        this.isPrivate = data.isPrivate || false
-        this.createdAt = data.createdAt || null
-        this.updatedAt = data.updatedAt || null
-        this.isDeletable = data.isDeletable || true
-    }
 }
 
 const userPlaylistSchema = new Schema(

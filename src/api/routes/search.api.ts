@@ -35,11 +35,11 @@ export class SearchApi {
             ;(youtubeRequest.data as YoutubeSearchListResponse).items.map((item: SearchListResponseItem) => {
                 videoIds.push(item.id.videoId)
 
-                videos.push(new VideoClass({
+                videos.push({
                     link: item.id.videoId,
                     name: item.snippet.title,
                     duration: null
-                }))
+                })
             })
 
             // Search does not get the duration of videos.

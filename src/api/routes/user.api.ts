@@ -223,9 +223,10 @@ export class UserApi {
                 delete filters.isPrivate
             }
 
-            const userPlaylists: UserPlaylistClass[] = await UserPlaylist
+            const userPlaylists = await UserPlaylist
                 .find(filters)
                 .populate("videos")
+                .lean()
 
             return response.status(200).send(userPlaylists)
         } catch (error) {

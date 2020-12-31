@@ -6,6 +6,7 @@ import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.m
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
 import QueueApi from "./queue.api"
 import { Invite } from "../../models/invite.model"
+import { QueueItemModel } from "../../models/queue-item.model"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../middlewares/auth.middleware")
@@ -43,8 +44,6 @@ export class BoxApi {
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
             const matchingBox = await Box.findById(request.params.box)
                 .populate("creator", "_id name settings.picture")
-                .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name settings.picture")
 
             if (!matchingBox) {
                 return response.status(404).send("BOX_NOT_FOUND")
@@ -105,26 +104,27 @@ export class BoxApi {
 
             const boxes: Array<any> = await Box.find(query)
                 .select('_id name creator description lang open private options featured')
-                .select({
-                    playlist: {
-                        $elemMatch: {
-                            $and: [
-                                {
-                                    startTime: { $ne: null },
-                                    endTime: null
-                                }
-                            ]
-                        }
-                    }
-                })
                 .populate("creator", "_id name settings.picture")
-                .populate("playlist.video")
                 .lean()
-
-            boxes.forEach(box => box.playlist = box.playlist ?? [])
 
             const boxTokens: Array<string> = boxes.map(box => box._id)
 
+            // Get currently playing video
+            const currentVideos = await QueueItemModel
+                .find({
+                    box: { $in: boxTokens },
+                    startTime: { $ne: null },
+                    endTime: null
+                })
+                .populate('video', 'link duration name')
+
+            boxes.forEach(box => {
+                const currentVideo = currentVideos.find(video => video.box.toString() === box._id.toString())
+
+                box.currentVideo = currentVideo ?? null
+            })
+
+            // Get watchers in each box
             const users: Array<{ _id: string, count: number }> = await Subscriber.aggregate([
                 {
                     $match: { "boxToken": { $in: boxTokens }, 'connexions.0': { $exists: true } }
@@ -227,6 +227,20 @@ export class BoxApi {
                     new: true
                 }
             )
+
+            // If the box is set to loop, all played videos are reset
+            if (options && originalBox.options.loop !== options.loop && options.loop === true) {
+                await QueueItemModel.updateMany(
+                    { box: _id, startTime: { $ne: null }, endTime: { $ne: null } },
+                    {
+                        $set: {
+                            startTime: null,
+                            endTime: null,
+                            submittedAt: new Date()
+                        }
+                    }
+                )
+            }
 
             this.createJob(_id, 'update')
 
@@ -433,18 +447,19 @@ export class BoxApi {
         }
 
         const decodedToken = response.locals.auth
-        const box = response.locals.box
 
         if (inputPlaylist.user.toString() !== decodedToken.user.toString()) {
             return response.status(401).send('UNAUTHORIZED')
         }
 
-        if (box.playlist.length === 0) {
+        const queue = await QueueItemModel.find({ box: response.locals.box._id })
+
+        if (queue.length === 0) {
             return response.status(412).send('EMPTY_PLAYLIST')
         }
 
         try {
-            box.playlist.forEach((queueItem: QueueItem) => {
+            queue.forEach((queueItem: QueueItem) => {
                 // If the playlist doesn't have the video, we add it to the playlist
                 const { video }: QueueItem['video'] = queueItem
                 if (!inputPlaylist.videos.includes(video._id)) {

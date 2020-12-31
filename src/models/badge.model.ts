@@ -13,7 +13,7 @@ interface NumberType {
     valueType?: 'number'
 }
 
-export class BadgeClass {
+class BadgeClass {
     public picture: string
     public name: string
     public description: string
@@ -21,16 +21,6 @@ export class BadgeClass {
     public availableFrom: Date
     public availableTo: Date
     public unlockConditions: BadgeEventSubject
-
-    constructor(badge: BadgeClass) {
-        this.picture = badge.picture
-        this.name = badge.name
-        this.description = badge.description
-        this.isSecret = badge.isSecret
-        this.availableFrom = badge.availableFrom
-        this.availableTo = badge.availableTo
-        this.unlockConditions = badge.unlockConditions
-    }
 }
 
 const badgeSchema = new Schema(
