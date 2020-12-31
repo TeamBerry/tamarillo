@@ -9,6 +9,7 @@ import authService from "../services/auth.service"
 import { UserPlaylist } from "../../models/user-playlist.model"
 import { User } from '../../models/user.model'
 import { Subscriber } from "../../models/subscriber.model"
+import { nanoid } from "nanoid"
 const Box = require("./../../models/box.model")
 
 const auth = require("./../middlewares/auth.middleware")
@@ -136,7 +137,7 @@ export class AuthApi {
         const mail = request.body.mail
 
         try {
-            const resetToken = authService.generateAuthenticationToken(20)
+            const resetToken = nanoid(20)
 
             await User.findOneAndUpdate(
                 { mail },
