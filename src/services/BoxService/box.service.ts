@@ -630,10 +630,14 @@ class BoxService {
             const { systemMessage, feedbackMessage } = await queueService.onVideoReplayed(videoReplayRequest)
 
             io.in(videoReplayRequest.boxToken).emit("chat", systemMessage)
+            this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
+
+            // If the playlist was over before the submission of the new video, the manager service relaunches the play
+            if (!await QueueItemModel.exists({ box: videoReplayRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
+                await this.transitionToNextVideo(videoReplayRequest.boxToken)
+            }
 
             void this.sendQueueToSubscribers(videoReplayRequest.boxToken)
-
-            this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
         } catch (error) {
             const message = new FeedbackMessage({
                 contents: error.message,
