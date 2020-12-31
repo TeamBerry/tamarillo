@@ -107,7 +107,7 @@ class BoxService {
                     }
 
                     const message: FeedbackMessage = new FeedbackMessage({
-                        contents: "You are now connected to the box! Click the ? icon in the menu for help on how to submit videos.",
+                        contents: "You are now connected to the box!",
                         source: "feedback",
                         scope: connexionRequest.boxToken,
                         context: 'success'
