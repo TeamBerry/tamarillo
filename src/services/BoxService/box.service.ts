@@ -185,7 +185,7 @@ class BoxService {
                         .find({
                             box: startSyncRequest.boxToken
                         })
-                        .sort({ submittedAt: -1 })
+                        .sort({ submittedAt: 1 })
                         .populate("video")
                         .populate("submitted_by", "_id name settings.picture")
 
@@ -380,11 +380,11 @@ class BoxService {
         })
 
         // Listen to the sync queue for autoplay
-        syncQueue.process((job, done) => {
+        syncQueue.process(async (job, done) => {
             const { boxToken, order } = job.data
 
             if (order === 'next') {
-                void this.transitionToNextVideo(boxToken)
+                await this.transitionToNextVideo(boxToken)
                 void this.sendQueueToSubscribers(boxToken)
             }
 
@@ -488,7 +488,7 @@ class BoxService {
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
             if (!await QueueItemModel.exists({ box: videoSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
-                void this.transitionToNextVideo(videoSubmissionRequest.boxToken)
+                await this.transitionToNextVideo(videoSubmissionRequest.boxToken)
             } else {
                 // If the queue was not empty, apply eventual next / now flags so the video is preselected or plays now
                 if (videoSubmissionRequest.flag === 'next') { // The video is submitted in preselection
@@ -557,7 +557,7 @@ class BoxService {
 
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
             if (!await QueueItemModel.exists({ box: playlistSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
-                void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
+                await this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
             }
 
             void this.sendQueueToSubscribers(playlistSubmissionRequest.boxToken)
@@ -694,7 +694,7 @@ class BoxService {
             .find({
                 box: boxToken
             })
-            .sort({ submittedAt: -1 })
+            .sort({ submittedAt: 1 })
             .populate("video")
             .populate("submitted_by", "_id name settings.picture")
 
