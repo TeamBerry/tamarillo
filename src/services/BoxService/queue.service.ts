@@ -1,7 +1,5 @@
-import * as _ from "lodash"
 const axios = require("axios")
 import moment = require("moment")
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const dotenv = require("dotenv")
 dotenv.config()
 import * as Queue from 'bull'

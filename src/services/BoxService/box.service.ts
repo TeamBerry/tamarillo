@@ -1,6 +1,3 @@
-// Utils imports
-import * as _ from "lodash"
-
 // MongoDB & Sockets
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mongoose = require("./../../config/connection")
@@ -388,6 +385,7 @@ class BoxService {
 
             if (order === 'next') {
                 void this.transitionToNextVideo(boxToken)
+                void this.sendQueueToSubscribers(boxToken)
             }
 
             done()
@@ -531,7 +529,6 @@ class BoxService {
                 removeOnComplete: true
             })
 
-            void this.sendBoxToSubscribers(videoSubmissionRequest.boxToken)
             void this.sendQueueToSubscribers(videoSubmissionRequest.boxToken)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
                 userToken: videoSubmissionRequest.userToken,
@@ -558,8 +555,6 @@ class BoxService {
             io.in(playlistSubmissionRequest.boxToken).emit("chat", systemMessage)
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
 
-            void this.sendBoxToSubscribers(playlistSubmissionRequest.boxToken)
-
             // If the playlist was over before the submission of the new video, the manager service relaunches the play
             if (!await QueueItemModel.exists({ box: playlistSubmissionRequest.boxToken, startTime: { $ne: null }, endTime: null })) {
                 void this.transitionToNextVideo(playlistSubmissionRequest.boxToken)
@@ -582,7 +577,6 @@ class BoxService {
             const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(playNextRequest)
 
             io.in(playNextRequest.boxToken).emit("chat", systemMessage)
-            void this.sendBoxToSubscribers(playNextRequest.boxToken)
             void this.sendQueueToSubscribers(playNextRequest.boxToken)
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
             this.emitToSockets(sourceSubscriber.connexions, 'berries', {
@@ -607,7 +601,6 @@ class BoxService {
 
             io.in(playNowRequest.boxToken).emit("sync", syncPacket)
             io.in(playNowRequest.boxToken).emit("chat", systemMessage)
-            void this.sendBoxToSubscribers(playNowRequest.boxToken)
             void this.sendQueueToSubscribers(playNowRequest.boxToken)
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
@@ -633,7 +626,6 @@ class BoxService {
             const { systemMessage, feedbackMessage } = await queueService.onVideoCancelled(videoCancelRequest)
 
             io.in(videoCancelRequest.boxToken).emit("chat", systemMessage)
-            void this.sendBoxToSubscribers(videoCancelRequest.boxToken)
             void this.sendQueueToSubscribers(videoCancelRequest.boxToken)
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
@@ -661,7 +653,6 @@ class BoxService {
 
             io.in(boxScope.boxToken).emit("sync", syncPacket)
             io.in(boxScope.boxToken).emit("chat", systemMessage)
-            void this.sendBoxToSubscribers(boxScope.boxToken)
             void this.sendQueueToSubscribers(boxScope.boxToken)
 
             this.emitToSockets(sourceSubscriber.connexions, 'chat', feedbackMessage)
@@ -684,12 +675,10 @@ class BoxService {
      * @memberof BoxService
      */
     public async transitionToNextVideo(boxToken: string) {
-        const { syncPacket, systemMessage: feedbackMessage } = await queueService.transitionToNextVideo(boxToken)
+        const { syncPacket, systemMessage } = await queueService.transitionToNextVideo(boxToken)
 
         io.in(boxToken).emit("sync", syncPacket)
-        io.in(boxToken).emit("chat", feedbackMessage)
-        void this.sendBoxToSubscribers(boxToken)
-        void this.sendQueueToSubscribers(boxToken)
+        io.in(boxToken).emit("chat", systemMessage)
     }
 
     public async sendBoxToSubscribers(boxToken: string) {

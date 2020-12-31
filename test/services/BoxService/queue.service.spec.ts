@@ -4,7 +4,6 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
-import * as _ from 'lodash'
 
 import queueService from '../../../src/services/BoxService/queue.service'
 const Box = require('../../../src/models/box.model')
