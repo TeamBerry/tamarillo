@@ -35,7 +35,7 @@ const queueItemSchema = new Schema(
         stateForcedWithBerries: { type: Boolean, default: false }
     },
     {
-        timestamps: false
+        timestamps: true
     }
 )
 

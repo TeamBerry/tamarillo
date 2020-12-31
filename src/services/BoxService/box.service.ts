@@ -393,8 +393,6 @@ class BoxService {
 
         // Activity for all users in boxes
         berriesQueue.process(async (job, done) => {
-            console.log('BERRIES JOB DONE: ', job.data)
-
             const scope: BoxScope = job.data.scope
             const amount: number = job.data.amount
 
