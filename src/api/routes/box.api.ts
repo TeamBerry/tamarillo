@@ -44,8 +44,6 @@ export class BoxApi {
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
             const matchingBox = await Box.findById(request.params.box)
                 .populate("creator", "_id name settings.picture")
-                .populate("playlist.video")
-                .populate("playlist.submitted_by", "_id name settings.picture")
 
             if (!matchingBox) {
                 return response.status(404).send("BOX_NOT_FOUND")
