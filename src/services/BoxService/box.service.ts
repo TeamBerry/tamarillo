@@ -4,7 +4,7 @@ const mongoose = require("./../../config/connection")
 const express = require("express")()
 const http = require("http").Server(express)
 const io = require("socket.io")(http)
-io.set("transports", ["websocket"])
+
 import * as Queue from 'bull'
 const syncQueue = new Queue("sync")
 const boxQueue = new Queue("box")
