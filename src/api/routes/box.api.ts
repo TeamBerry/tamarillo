@@ -227,6 +227,9 @@ export class BoxApi {
                     new: true
                 }
             )
+                .select('_id name creator description lang open private options featured')
+                .populate("creator", "_id name settings.picture")
+                .lean()
 
             // If the box is set to loop, all played videos are reset
             if (options && originalBox.options.loop !== options.loop && options.loop === true) {
