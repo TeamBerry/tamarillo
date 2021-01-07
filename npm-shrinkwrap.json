@@ -1,6 +1,6 @@
 {
     "name": "tamarillo",
-    "version": "2.4.1",
+    "version": "2.4.2",
     "lockfileVersion": 1,
     "requires": true,
     "dependencies": {
@@ -5530,6 +5530,11 @@
             "version": "5.7.0",
             "resolved": "https://registry.npmjs.org/semver/-/semver-5.7.0.tgz",
             "integrity": "sha512-Ya52jSX2u7QKghxeoFGpLwCtGlt7j0oY9DYb5apt9nPlJ42ID+ulTXESnt/qAQcoSERyZ5sl3LDIOw0nAn/5DA=="
+        },
+        "semver-compare": {
+            "version": "1.0.0",
+            "resolved": "https://registry.npmjs.org/semver-compare/-/semver-compare-1.0.0.tgz",
+            "integrity": "sha1-De4hahyUGrN+nvsXiPavxf9VN/w="
         },
         "send": {
             "version": "0.17.1",

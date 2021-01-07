@@ -3,6 +3,7 @@ import { Request, Response, Router } from "express"
 const Queue = require("bull")
 const mailQueue = new Queue("mail")
 import * as bcrypt from 'bcrypt'
+const cmp = require('semver-compare')
 
 import { MailJob } from "../../models/mail.job"
 import authService from "../services/auth.service"
@@ -27,6 +28,7 @@ export class AuthApi {
     }
 
     public init(): void {
+        this.router.post("/compat", this.getAllowedVersions)
         this.router.post("/login", this.login)
         this.router.post("/signup", this.signup.bind(this))
         this.router.post("/reset", this.triggerPasswordReset.bind(this))
@@ -34,6 +36,20 @@ export class AuthApi {
         this.router.get("/reset/:token", this.checkResetToken)
         this.router.post("/reset/:token", this.resetPassword.bind(this))
         this.router.post("/deactivate", auth.isAuthorized, this.deactivateAccount.bind(this))
+    }
+
+    public async getAllowedVersions(request: Request, response: Response): Promise<Response> {
+        const currentVersion: string = request.body.version
+
+        if (!currentVersion) {
+            return response.status(412).send('VERSION_NOT_SPECIFIED')
+        }
+
+        if (cmp(currentVersion, '0.16.0') === -1) {
+            return response.status(403).send('UPGRADE_MANDATORY')
+        }
+
+        return response.status(200).send('OK')
     }
 
     /**
