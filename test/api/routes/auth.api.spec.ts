@@ -23,6 +23,32 @@ describe("Auth API", () => {
         expressApp.use('/', AuthApi)
     })
 
+    describe("Service for Android app to check if the version is allowed to operate", () => {
+        it("Denies operation if now version is sent", () => supertest(expressApp)
+            .post("/compat")
+            .expect(412, 'VERSION_NOT_SPECIFIED'))
+
+
+        it("Denies operation if the version is too low", async () => {
+            return supertest(expressApp)
+                .post("/compat")
+                .send({ version: "0.11.0" })
+                .expect(403, 'UPGRADE_MANDATORY')
+        })
+
+        it('Accepts operation if the version is equal', async () => {
+            return supertest(expressApp)
+                .post("/compat")
+                .send({ version: "0.16.0" })
+                .expect(200)
+        })
+
+        it('Accepts operation if the version is superior', () => supertest(expressApp)
+            .post("/compat")
+            .send({ version: "0.16.1" })
+            .expect(200))
+    })
+
     describe("Login", () => {
         before(async () => {
             await User.findByIdAndDelete('9ca0df5f86abeb66da97ba5d')
