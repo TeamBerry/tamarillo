@@ -15,7 +15,7 @@ import { Subscriber } from "../../../src/models/subscriber.model"
 import { User } from "../../../src/models/user.model"
 import { QueueItemModel } from "../../../src/models/queue-item.model"
 
-describe.only("Queue Service", () => {
+describe("Queue Service", () => {
 
     before(async () => {
         await Box.deleteMany({})
