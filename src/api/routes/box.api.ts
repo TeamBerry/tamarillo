@@ -228,7 +228,7 @@ export class BoxApi {
                     new: true
                 }
             )
-                .select('_id name creator description lang open private options featured')
+                .select('-playlist')
                 .populate("creator", "_id name settings.picture")
                 .lean()
 
