@@ -176,9 +176,10 @@ export class QueueService {
                 areBerriesSpent = true
             }
 
-            const alreadySelectedVideo = await QueueItemModel
-                .findOne({ box: request.boxToken, isPreselected: true })
+            const nextVideos: Array<string> = (await QueueItemModel
+                .find({ box: request.boxToken, setToNext: { $ne: null } })
                 .populate('video', 'name')
+            ).map(queueItem => queueItem._id.toString())
 
             const targetVideo = await QueueItemModel
                 .findOne({ box: request.boxToken, _id: request.item })
@@ -211,66 +212,41 @@ export class QueueService {
                 context: 'success'
             })
 
-            // Unselect already selected video if it exists
-            if (alreadySelectedVideo) {
-                // If the already preselected video was forced with berries, the operation cannot continue
-                if (alreadySelectedVideo.stateForcedWithBerries === true) {
-                    throw new Error("Another video has already been preselected with berries. You cannot overwrite the preselected video.")
+            // Unselect the video if it was already set to next
+            if (nextVideos && nextVideos.includes(targetVideo._id.toString())) {
+                // But not if it has been done with berries
+                if (targetVideo.stateForcedWithBerries) {
+                    throw new Error("This video has been prioritised with the use of berries. You cannot remove it.")
                 }
 
-                alreadySelectedVideo.isPreselected = false
-                await alreadySelectedVideo.save()
+                targetVideo.setToNext = null
 
                 if (areBerriesSpent) {
-                    systemMessage.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to remove the preslection on "$OLD_VIDEO$".`
-                    feedbackMessage.contents = `You spent ${PLAY_NEXT_BERRY_COST} berries to unselect "$OLD_VIDEO$".`
+                    systemMessage.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to remove the priority on "${targetVideo.video.name}".`
+                    feedbackMessage.contents = `You spent ${PLAY_NEXT_BERRY_COST} berries to remove the priority on "${targetVideo.video.name}".`
                     systemMessage.context = 'berries'
                 } else {
-                    systemMessage.contents = `${user.name} has removed the preselection on "$OLD_VIDEO$".`
-                    feedbackMessage.contents = 'You unselected "$OLD_VIDEO$".'
+                    systemMessage.contents = `${user.name} has removed the priority on "${targetVideo.video.name}".`
+                    feedbackMessage.contents = `You removed the priority on "${targetVideo.video.name}".`
                 }
-            }
-
-            // Preselect new video if it's not the same as the one that just got deselected
-            if (
-                (targetVideo && !alreadySelectedVideo)
-                || (targetVideo && alreadySelectedVideo && targetVideo._id.toString() !== alreadySelectedVideo._id.toString())
-            ) {
-
-                targetVideo.isPreselected = true
+            } else {
+                targetVideo.setToNext = new Date()
 
                 if (areBerriesSpent) {
                     targetVideo.stateForcedWithBerries = true
-                    systemMessage.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to preselect the video "$NEW_VIDEO$". It will be the next video to play.`
-                    feedbackMessage.contents = `You spent ${PLAY_NEXT_BERRY_COST} berries to play "$NEW_VIDEO$" next.`
+                    systemMessage.contents = `${user.name} has spent ${PLAY_NEXT_BERRY_COST} berries to select the video "${targetVideo.video.name}" to play in priority.`
+                    feedbackMessage.contents = `You spent ${PLAY_NEXT_BERRY_COST} berries to play "${targetVideo.video.name}" in priority.`
                     systemMessage.context = 'berries'
                 } else {
-                    systemMessage.contents = `${user.name} has preselected the video "$NEW_VIDEO$". It will be the next video to play.`
-                    feedbackMessage.contents = `You selected "$NEW_VIDEO$" to play next.`
+                    systemMessage.contents = `${user.name} has selected the video "${targetVideo.video.name}" to play in priority.`
+                    feedbackMessage.contents = `You selected "${targetVideo.video.name}" to play in priority.`
                 }
-
-                await targetVideo.save()
             }
+
+            await targetVideo.save()
 
             if (areBerriesSpent) {
                 await berriesService.decreaseBerryCount({ userToken: request.userToken, boxToken: request.boxToken }, PLAY_NEXT_BERRY_COST)
-            }
-
-            // Feedback messages
-            if (systemMessage.contents.includes('$OLD_VIDEO$')) {
-                systemMessage.contents = systemMessage.contents.replace(/\$OLD_VIDEO\$/gm, `${alreadySelectedVideo.video.name}`)
-            }
-
-            if (systemMessage.contents.includes('$NEW_VIDEO$')) {
-                systemMessage.contents = systemMessage.contents.replace(/\$NEW_VIDEO\$/gm, `${targetVideo.video.name}`)
-            }
-
-            if (feedbackMessage.contents.includes('$OLD_VIDEO$')) {
-                feedbackMessage.contents = feedbackMessage.contents.replace(/\$OLD_VIDEO\$/gm, `${alreadySelectedVideo.video.name}`)
-            }
-
-            if (feedbackMessage.contents.includes('$NEW_VIDEO$')) {
-                feedbackMessage.contents = feedbackMessage.contents.replace(/\$NEW_VIDEO\$/gm, `${targetVideo.video.name}`)
             }
 
             return { systemMessage, feedbackMessage }
@@ -471,6 +447,7 @@ export class QueueService {
                 submittedAt: new Date(),
                 submitted_by: userToken,
                 isPreselected: false,
+                setToNext: null,
                 stateForcedWithBerries: false
             })
 
@@ -518,8 +495,9 @@ export class QueueService {
             submittedAt: new Date(),
             submitted_by: userToken,
             isPreselected: false,
+            setToNext: null,
             stateForcedWithBerries: false
-        }))
+        } as QueueItem))
 
         await QueueItemModel.create(queueItems)
 
@@ -585,13 +563,15 @@ export class QueueService {
                 endTime: null,
                 stateForcedWithBerries: false,
                 isPreselected: false,
+                setToNext: null,
                 submittedAt: transitionTime
             }
         } else {
             updateQuery = {
                 endTime: transitionTime,
                 stateForcedWithBerries: false,
-                isPreselected: false
+                isPreselected: false,
+                setToNext: null
             }
         }
 
@@ -620,7 +600,10 @@ export class QueueService {
 
         // Look for a preselected video if it exists
         if (!nextVideoToPlay) {
-            nextVideoToPlay = await QueueItemModel.findOne({ box: boxToken, isPreselected: true }).lean()
+            nextVideoToPlay = await QueueItemModel
+                .findOne({ box: boxToken, setToNext: { $ne: null } })
+                .sort({ setToNext: 1 })
+                .lean()
         }
 
         // Get a video the normal way
@@ -642,6 +625,7 @@ export class QueueService {
                         startTime: transitionTime,
                         endTime: null,
                         isPreselected: false,
+                        setToNext: null,
                         stateForcedWithBerries: nextVideoToPlay.stateForcedWithBerries ? nextVideoToPlay.stateForcedWithBerries : withBerries
                     }
                 },
