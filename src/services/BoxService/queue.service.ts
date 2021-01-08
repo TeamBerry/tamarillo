@@ -219,7 +219,6 @@ export class QueueService {
                     throw new Error("This video has been prioritised with the use of berries. You cannot remove it.")
                 }
 
-                targetVideo.isPreselected = false
                 targetVideo.setToNext = null
 
                 if (areBerriesSpent) {
@@ -231,7 +230,6 @@ export class QueueService {
                     feedbackMessage.contents = `You removed the priority on "${targetVideo.video.name}".`
                 }
             } else {
-                targetVideo.isPreselected = true
                 targetVideo.setToNext = new Date()
 
                 if (areBerriesSpent) {
