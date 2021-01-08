@@ -708,6 +708,7 @@ describe("Box API", () => {
                     submittedAt: "2019-07-11T08:51:29.885+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -718,6 +719,7 @@ describe("Box API", () => {
                     submittedAt: "2019-07-11T08:51:29.886+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -728,6 +730,7 @@ describe("Box API", () => {
                     submittedAt: "2019-07-11T08:51:29.885+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -738,6 +741,7 @@ describe("Box API", () => {
                     submittedAt: "2019-07-11T08:51:29.886+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -748,6 +752,7 @@ describe("Box API", () => {
                     submittedAt: "2019-07-11T08:51:29.887+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])

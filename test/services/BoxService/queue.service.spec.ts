@@ -15,7 +15,7 @@ import { Subscriber } from "../../../src/models/subscriber.model"
 import { User } from "../../../src/models/user.model"
 import { QueueItemModel } from "../../../src/models/queue-item.model"
 
-describe("Queue Service", () => {
+describe.only("Queue Service", () => {
 
     before(async () => {
         await Box.deleteMany({})
@@ -69,6 +69,7 @@ describe("Queue Service", () => {
                 submittedAt: "2019-05-31T09:19:41+0000",
                 submitted_by: '9ca0df5f86abeb66da97ba5d',
                 isPreselected: false,
+                setToNext: null,
                 stateForcedWithBerries: false
             }
         ])
@@ -243,6 +244,7 @@ describe("Queue Service", () => {
                 {
                     box: '9cb763b6e72611381ef053f4',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                     _id: '9cb763b6e72611381ef04401',
                     video: '9cb81150594b2e75f06ba8fe',
@@ -720,6 +722,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -731,6 +734,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -742,6 +746,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -753,6 +758,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -764,6 +770,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -775,6 +782,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -786,6 +794,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -797,6 +806,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -808,6 +818,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -819,6 +830,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -830,6 +842,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -841,6 +854,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: true
                 },
                 {
@@ -852,6 +866,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -863,6 +878,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -874,6 +890,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -885,6 +902,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -896,6 +914,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: true
                 },
                 {
@@ -907,6 +926,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -918,6 +938,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -929,6 +950,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])
@@ -1081,6 +1103,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1092,6 +1115,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1103,6 +1127,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1114,6 +1139,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1125,6 +1151,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1136,6 +1163,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1147,6 +1175,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1158,6 +1187,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1169,6 +1199,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1180,6 +1211,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1191,6 +1223,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1202,6 +1235,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: true
                 },
                 {
@@ -1213,6 +1247,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1224,6 +1259,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1235,6 +1271,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1246,6 +1283,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1257,6 +1295,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: true
                 },
                 {
@@ -1268,6 +1307,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1279,6 +1319,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1290,6 +1331,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])
@@ -1365,21 +1407,6 @@ describe("Queue Service", () => {
             }
         })
 
-        it('Refuses if there is another video already preselected with berries', async () => {
-            const preselectRequest: QueueItemActionRequest = {
-                boxToken: '9cb763b6e72611381ef243e7',
-                userToken: '9ca0df5f86abeb66da97ba5f',
-                item: '9cb763b6e72611381ef243f4'
-            }
-
-            try {
-                await queueService.onVideoPreselected(preselectRequest)
-                expect.fail()
-            } catch (error) {
-                expect(error.message).to.equal("Another video has already been preselected with berries. You cannot overwrite the preselected video.")
-            }
-        })
-
         it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef143e7',
@@ -1389,15 +1416,14 @@ describe("Queue Service", () => {
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
-            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef143e7', isPreselected: true }).lean()
-
-            expect(preselectedVideo._id.toString()).to.equal('9cb763b6e72611381ef143f4')
+            const targetVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef143e7', _id: '9cb763b6e72611381ef143f4' }).lean()
+            expect(targetVideo.setToNext).to.not.be.null
 
             const targetSubscription = await Subscriber.findOne({ userToken: '9ca0df5f86abeb66da97ba5f', boxToken: '9cb763b6e72611381ef143e7' })
 
             expect(targetSubscription.berries).to.equal(1)
-            expect(systemMessage.contents).to.equal(`Brock has spent 10 berries to preselect the video "Connected". It will be the next video to play.`)
-            expect(feedbackMessage.contents).to.equal(`You spent 10 berries to play "Connected" next.`)
+            expect(systemMessage.contents).to.equal(`Brock has spent 10 berries to select the video "Connected" to play in priority.`)
+            expect(feedbackMessage.contents).to.equal(`You spent 10 berries to play "Connected" in priority.`)
         })
 
         it('Accepts the played video in loop mode', async () => {
@@ -1409,14 +1435,14 @@ describe("Queue Service", () => {
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
-            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef343e7', isPreselected: true }).lean()
-            expect(preselectedVideo._id.toString()).to.equal('9cb763b6e72611381ef343f0')
+            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef343e7', _id: '9cb763b6e72611381ef343f0' }).lean()
+            expect(preselectedVideo.setToNext).to.not.be.null
 
-            expect(systemMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
-            expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play next.`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has selected the video "Connected" to play in priority.`)
+            expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play in priority.`)
         })
 
-        it('Preselects a video if no other video is preselected', async () => {
+        it('Adds the video to the "next" mini-queue', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -1425,34 +1451,14 @@ describe("Queue Service", () => {
 
             const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(preselectRequest)
 
-            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', isPreselected: true }).lean()
-            expect(preselectedVideo._id.toString()).to.equal('9cb763b6e72611381ef043f4')
+            const targetVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', _id: '9cb763b6e72611381ef043f4' }).lean()
+            expect(targetVideo.setToNext).to.not.be.null
 
-            expect(systemMessage.contents).to.equal(`Ash Ketchum has preselected the video "Connected". It will be the next video to play.`)
-            expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play next.`)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has selected the video "Connected" to play in priority.`)
+            expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play in priority.`)
         })
 
-        it('Preselects a video and unselects the preselected one if it is different', async () => {
-            await queueService.onVideoPreselected({
-                boxToken: '9cb763b6e72611381ef043e7',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef043f4'
-            })
-
-            await queueService.onVideoPreselected({
-                boxToken: '9cb763b6e72611381ef043e7',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                item: '9cb763b6e72611381ef043f3'
-            })
-
-            const previousPreselectedVideo = await QueueItemModel.findById('9cb763b6e72611381ef043f4').lean()
-            expect(previousPreselectedVideo.isPreselected).to.equal(false)
-
-            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', isPreselected: true }).lean()
-            expect(preselectedVideo._id.toString()).to.equal('9cb763b6e72611381ef043f3')
-        })
-
-        it('Unselects a video if it is the one preselected', async () => {
+        it('Removes the video from the "next" mini-queue', async () => {
             await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -1465,11 +1471,11 @@ describe("Queue Service", () => {
                 item: '9cb763b6e72611381ef043f4'
             })
 
-            expect(systemMessage.contents).to.equal(`Ash Ketchum has removed the preselection on "Connected".`)
-            expect(feedbackMessage.contents).to.equal(`You unselected "Connected".`)
+            const targetVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', _id: '9cb763b6e72611381ef043f4' }).lean()
+            expect(targetVideo.setToNext).to.equal(null)
 
-            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', isPreselected: true }).lean()
-            expect(preselectedVideo).to.equal(null)
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has removed the priority on "Connected".`)
+            expect(feedbackMessage.contents).to.equal(`You removed the priority on "Connected".`)
         })
     })
 
@@ -1580,6 +1586,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1591,6 +1598,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1602,6 +1610,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1613,6 +1622,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1624,6 +1634,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1635,6 +1646,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1646,6 +1658,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1657,6 +1670,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1668,6 +1682,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1679,6 +1694,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -1690,6 +1706,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1701,6 +1718,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: true
                 },
                 {
@@ -1712,6 +1730,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1723,6 +1742,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: true
                 },
                 {
@@ -1734,6 +1754,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1745,6 +1766,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1756,6 +1778,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: true
                 },
                 {
@@ -1767,6 +1790,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1778,6 +1802,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -1789,6 +1814,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])
@@ -1923,9 +1949,6 @@ describe("Queue Service", () => {
             const playingVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', startTime: { $ne: null }, endTime: null })
             expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef043f3')
 
-            const preselectedVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef043e7', isPreselected: true })
-            expect(preselectedVideo._id.toString()).to.equal('9cb763b6e72611381ef043f2')
-
             expect(systemMessage.contents).to.equal(`Currently playing: "The Evil King".`)
             expect(feedbackMessage.contents).to.equal(`You force played "The Evil King".`)
         })
@@ -2019,6 +2042,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2030,6 +2054,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2041,6 +2066,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: false
                 },
                 {
@@ -2052,6 +2078,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2063,6 +2090,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2074,6 +2102,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -2085,6 +2114,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -2096,6 +2126,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -2107,6 +2138,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -2118,6 +2150,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false,
                 },
                 {
@@ -2129,6 +2162,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2140,6 +2174,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: true
                 },
                 {
@@ -2151,6 +2186,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2162,6 +2198,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: true
                 },
                 {
@@ -2173,6 +2210,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])
@@ -2304,6 +2342,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2315,6 +2354,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2326,6 +2366,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: false
                 },
                 {
@@ -2337,6 +2378,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2348,6 +2390,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
             ])
@@ -2424,6 +2467,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2436,6 +2480,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])
@@ -2562,6 +2607,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2573,6 +2619,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2584,6 +2631,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2595,6 +2643,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2606,6 +2655,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2617,6 +2667,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2628,6 +2679,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2639,6 +2691,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2650,6 +2703,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2661,6 +2715,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41Z",
                     stateForcedWithBerries: false
                 },
                 {
@@ -2671,7 +2726,8 @@ describe("Queue Service", () => {
                     endTime: null,
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false,
+                    isPreselected: true,
+                    setToNext: "2019-05-31T09:19:42Z",
                     stateForcedWithBerries: false
                 },
                 {
@@ -2683,6 +2739,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2694,6 +2751,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2705,6 +2763,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2716,6 +2775,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2727,6 +2787,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2738,6 +2799,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2749,6 +2811,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2760,6 +2823,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2771,6 +2835,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: true,
+                    setToNext: "2019-05-31T09:19:41",
                     stateForcedWithBerries: false
                 },
                 {
@@ -2782,6 +2847,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2793,6 +2859,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 },
                 {
@@ -2804,6 +2871,7 @@ describe("Queue Service", () => {
                     submittedAt: "2019-05-31T09:19:41+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
                     isPreselected: false,
+                    setToNext: null,
                     stateForcedWithBerries: false
                 }
             ])
@@ -2865,10 +2933,12 @@ describe("Queue Service", () => {
             expect(nextVideo._id.toString()).to.equal('9cb763b6e72611381ef043f6')
         })
 
-        it('Gets the preselected video if it exists', async () => {
+        it('Gets the next video from the "next" mini-queue', async () => {
             const nextVideo = await queueService.getNextVideo('9cb763b6e72611381ef04500')
 
             expect(nextVideo._id.toString()).to.equal('9cb763b6e72611381ef04504')
+            expect(nextVideo.endTime).to.equal(null)
+            expect(nextVideo.setToNext).to.equal(null)
         })
 
         it('Gets the selected video (overwrite by forcePlay)', async () => {
