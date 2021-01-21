@@ -66,7 +66,6 @@ describe("ACL Service", () => {
                 description: 'The Pokémon Box',
                 lang: 'en',
                 name: 'Pokémon',
-                playlist: [],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: true,
                 options: {

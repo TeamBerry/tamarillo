@@ -11,6 +11,7 @@ import { Session } from "./../../../src/models/session.model"
 import authService from '../../../src/api/services/auth.service'
 import { Subscriber } from '../../../src/models/subscriber.model'
 import { User } from '../../../src/models/user.model'
+import { QueueItemModel } from '../../../src/models/queue-item.model'
 
 describe("Box Middleware", () => {
     const expressApp = express()
@@ -55,18 +56,6 @@ describe("Box Middleware", () => {
                 description: null,
                 lang: 'English',
                 name: 'Box with a video already added to it',
-                playlist: [
-                    {
-                        isPreselected: false,
-                        stateForcedWithBerries: false,
-                        _id: '9cb763b6e72611381ef04401',
-                        video: '9cb81150594b2e75f06ba8fe',
-                        startTime: '2020-04-23T15:50:31.921Z',
-                        endTime: null,
-                        submittedAt: '2020-04-23T15:50:30.896Z',
-                        submitted_by: '9ca0df5f86abeb66da97ba5d'
-                    }
-                ],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: true,
                 private: true,
@@ -81,18 +70,6 @@ describe("Box Middleware", () => {
                 description: null,
                 lang: 'English',
                 name: 'Box with a 3 Minute duration restriction',
-                playlist: [
-                    {
-                        isPreselected: false,
-                        stateForcedWithBerries: false,
-                        _id: '9cb763b6e72611381ef04401',
-                        video: '9cb81150594b2e75f06ba8fe',
-                        startTime: '2020-04-23T15:50:31.921Z',
-                        endTime: null,
-                        submittedAt: '2020-04-23T15:50:30.896Z',
-                        submitted_by: '9ca0df5f86abeb66da97ba5d'
-                    }
-                ],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: true,
                 private: false,
@@ -120,23 +97,27 @@ describe("Box Middleware", () => {
                 description: 'Closed box',
                 lang: 'English',
                 name: 'Closed box',
-                playlist: [
-                    {
-                        _id: '9cb763b6e72611381ef043e9',
-                        video: '9cb81150594b2e75f06ba90a',
-                        startTime: null,
-                        endTime: null,
-                        submittedAt: "2019-05-31T09:19:41+0000",
-                        submitted_by: '9ca0df5f86abeb66da97ba5d',
-                        isPreselected: false
-                    }
-                ],
                 creator: '9ca0df5f86abeb66da97ba5d',
                 open: false,
                 options: {
                     random: true,
                     loop: false
                 }
+            }
+        ])
+
+        await QueueItemModel.create([
+            {
+                box: '9cb763b6e72611381ef063f4',
+                isPreselected: false,
+                setToNext: null,
+                stateForcedWithBerries: false,
+                _id: '9cb763b6e72611381ef04402',
+                video: '9cb81150594b2e75f06ba8fe',
+                startTime: '2020-04-23T15:50:31.921Z',
+                endTime: null,
+                submittedAt: '2020-04-23T15:50:30.896Z',
+                submitted_by: '9ca0df5f86abeb66da97ba5d'
             }
         ])
 
@@ -275,6 +256,7 @@ describe("Box Middleware", () => {
         await User.deleteMany({})
         await Video.deleteMany({})
         await Subscriber.deleteMany({})
+        await QueueItemModel.deleteMany({})
     })
 
     describe("Privacy", () => {

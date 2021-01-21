@@ -5,6 +5,7 @@ const auth = require("./../middlewares/auth.middleware")
 const boxMiddleware = require("./../middlewares/box.middleware")
 
 import * as Queue from 'bull'
+import { QueueItemModel } from "../../models/queue-item.model"
 const queueActionsQueue = new Queue("actions-queue")
 
 export class QueueApi {
@@ -25,16 +26,13 @@ export class QueueApi {
         this.router.put("/skip", this.skipVideo)
         this.router.put("/:video/next", this.playNext)
         this.router.put("/:video/now", this.playNow)
+        this.router.put("/:video/replay", this.replayVideo)
         this.router.delete("/:video", this.removeVideo)
 
         this.router.param("video", async (request: Request, response: Response, next: NextFunction) => {
             const box = response.locals.box
 
-            const targetVideoIndex: number = box.playlist.findIndex(
-                (queueItem: QueueItem) => queueItem._id.toString() === request.params.video.toString()
-            )
-
-            if (targetVideoIndex === -1) {
+            if (!await QueueItemModel.exists({ box: box._id, _id: request.params.video})) {
                 return response.status(404).send('VIDEO_NOT_FOUND')
             }
 
@@ -43,7 +41,14 @@ export class QueueApi {
     }
 
     public async getQueue(request: Request, response: Response): Promise<Response> {
-        return response.status(200).send(response.locals.box.playlist)
+        const queue = await QueueItemModel
+            .find({
+                box: request.params.box
+            })
+            .sort({ submittedAt: -1 })
+            .lean()
+
+        return response.status(200).send(queue)
     }
 
     public async addVideo(request: Request, response: Response): Promise<Response> {
@@ -138,6 +143,28 @@ export class QueueApi {
             })
 
             return response.status(200).send()
+        } catch (error) {
+            return response.status(500).send(error.message)
+        }
+    }
+
+    public async replayVideo(request: Request, response: Response): Promise<Response> {
+        const decodedToken = response.locals.auth
+
+        try {
+            queueActionsQueue.add({
+                type: 'replayVideo',
+                requestContents: {
+                    boxToken: request.params.box,
+                    userToken: decodedToken.user,
+                    item: request.params.video
+                } as QueueItemActionRequest
+            }, {
+                attempts: 5,
+                removeOnComplete: true
+            })
+
+            return response.status(503).send()
         } catch (error) {
             return response.status(500).send(error.message)
         }
