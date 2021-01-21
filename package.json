@@ -18,7 +18,8 @@
         "restart:prod": "pm2 restart processes.json",
         "build": "npm run tsc && npm run emails",
         "lint:check": "eslint -c .eslintrc.json --ext .ts src",
-        "lint:fix": "eslint -c .eslintrc.json --ext .ts src --fix"
+        "lint:fix": "eslint -c .eslintrc.json --ext .ts src --fix",
+        "preversion": "node scripts/craberry-compat.js"
     },
     "repository": {
         "type": "git",
@@ -63,6 +64,7 @@
         "chai": "4.2.0",
         "chai-as-promised": "7.1.1",
         "eslint": "7.18.0",
+        "inquirer": "^7.3.3",
         "migrate-mongo": "8.1.4",
         "mocha": "8.2.1",
         "nyc": "15.1.0",
