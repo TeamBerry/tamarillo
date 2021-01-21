@@ -1029,6 +1029,13 @@ describe("Queue Service", () => {
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 78,
+                    role: 'admin'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
                     boxToken: '9cb763b6e72611381ef343e7',
                     connexions: [],
                     berries: 0,
@@ -1458,6 +1465,37 @@ describe("Queue Service", () => {
             expect(feedbackMessage.contents).to.equal(`You selected "Connected" to play in priority.`)
         })
 
+        it('Refuses the removal if the video was prioritised with berries', async () => { 
+            const priorityRemovalRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef243e7',
+                userToken: '9ca0df5f86abeb66da97ba5f',
+                item: '9cb763b6e72611381ef243f3'
+            }
+
+            try {
+                await queueService.onVideoPreselected(priorityRemovalRequest)
+                expect.fail()
+            } catch (error) {
+                expect(error.message).to.equal('This video has been prioritised with the use of berries. You cannot remove it.')
+            }
+        })
+        
+        it('Accepts the removal if the user can bypass berries', async () => { 
+            const priorityRemovalRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef243e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef243f3'
+            }
+
+            const { systemMessage, feedbackMessage } = await queueService.onVideoPreselected(priorityRemovalRequest)
+
+            const targetVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef243e7', _id: '9cb763b6e72611381ef243f3' }).lean()
+            expect(targetVideo.setToNext).to.equal(null)
+
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has removed the priority on "The Evil King".`)
+            expect(feedbackMessage.contents).to.equal(`You removed the priority on "The Evil King".`)
+        })
+
         it('Removes the video from the "next" mini-queue', async () => {
             await queueService.onVideoPreselected({
                 boxToken: '9cb763b6e72611381ef043e7',
@@ -1509,6 +1547,13 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 78,
                     role: 'simple'
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 78,
+                    role: 'admin'
                 },
                 {
                     userToken: '9ca0df5f86abeb66da97ba5d',
@@ -1902,6 +1947,22 @@ describe("Queue Service", () => {
             }
         })
 
+        it('Accepts if the user can bypass berries', async () => {
+            const preselectRequest: QueueItemActionRequest = {
+                boxToken: '9cb763b6e72611381ef243e7',
+                userToken: '9ca0df5f86abeb66da97ba5d',
+                item: '9cb763b6e72611381ef243f4'
+            }
+
+            const { systemMessage, feedbackMessage } = await queueService.onVideoForcePlayed(preselectRequest)
+
+            const playingVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef243e7', startTime: { $ne: null }, endTime: null })
+            expect(playingVideo._id.toString()).to.equal('9cb763b6e72611381ef243f4')
+
+            expect(systemMessage.contents).to.equal(`Currently playing: "Connected".`)
+            expect(feedbackMessage.contents).to.equal(`You force played "Connected".`)
+        })
+
         it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
             const preselectRequest: QueueItemActionRequest = {
                 boxToken: '9cb763b6e72611381ef143e7',
@@ -1984,7 +2045,14 @@ describe("Queue Service", () => {
                     connexions: [],
                     berries: 78,
                     role: 'simple'
-                }
+                },
+                {
+                    userToken: '9ca0df5f86abeb66da97ba5d',
+                    boxToken: '9cb763b6e72611381ef243e7',
+                    connexions: [],
+                    berries: 78,
+                    role: 'admin'
+                },
             ])
         })
 
@@ -2251,6 +2319,20 @@ describe("Queue Service", () => {
             } catch (error) {
                 expect(error.message).to.equal("An user has used berries to play the currently playing video. You cannot skip it.")
             }
+        })
+
+        it('Accepts if the user can bypass berries', async () => {
+            const skipRequest: BoxScope = {
+                boxToken: '9cb763b6e72611381ef243e7',
+                userToken: '9ca0df5f86abeb66da97ba5d'
+            }
+
+            const { systemMessage, feedbackMessage } = await queueService.onVideoSkipped(skipRequest)
+
+            const playingVideo = await QueueItemModel.findOne({ box: '9cb763b6e72611381ef243e7', startTime: { $ne: null }, endTime: null }).populate('video').lean()
+
+            expect(systemMessage.contents).to.equal(`Ash Ketchum has skipped the previous video. Currently playing: "${playingVideo.video.name}".`)
+            expect(feedbackMessage.contents).to.equal(`You skipped the previous video.`)
         })
 
         it('Accepts the non-admin requests and subtracts the amount of berries', async () => {
