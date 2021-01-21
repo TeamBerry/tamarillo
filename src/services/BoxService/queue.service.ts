@@ -215,7 +215,7 @@ export class QueueService {
             // Unselect the video if it was already set to next
             if (nextVideos && nextVideos.includes(targetVideo._id.toString())) {
                 // But not if it has been done with berries
-                if (targetVideo.stateForcedWithBerries) {
+                if (targetVideo.stateForcedWithBerries && await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'bypassBerries') === ACLEvaluationResult.NO) {
                     throw new Error("This video has been prioritised with the use of berries. You cannot remove it.")
                 }
 
@@ -274,8 +274,11 @@ export class QueueService {
                 areBerriesSpent = true
             }
 
-            if (await QueueItemModel.exists({ box: request.boxToken, startTime: { $ne: null }, endTime: null, stateForcedWithBerries: true })) {
-                // If the already preselected video was forced with berries, the operation cannot continue
+            // If the already preselected video was forced with berries and the user cannot bypass it, the operation cannot continue
+            if (
+                await QueueItemModel.exists({ box: request.boxToken, startTime: { $ne: null }, endTime: null, stateForcedWithBerries: true })
+                && await aclService.isAuthorized({ userToken: request.userToken, boxToken: request.boxToken }, 'bypassBerries') === ACLEvaluationResult.NO
+            ) {
                 throw new Error("An user has used berries to play the currently playing video. You cannot overwrite it.")
             }
 
@@ -331,18 +334,21 @@ export class QueueService {
 
             let areBerriesSpent = false
 
-            const ACLEvaluation = await aclService.isAuthorized({ userToken: scope.userToken, boxToken: scope.boxToken }, 'skipVideo')
+            const ACLEvaluation = await aclService.isAuthorized(scope, 'skipVideo')
             if (ACLEvaluation === ACLEvaluationResult.NO) {
                 throw new Error("You do not have the authorization to do this.")
             } else if (ACLEvaluation === ACLEvaluationResult.BERRIES) {
-                const subscriber = await Subscriber.findOne({ userToken: scope.userToken, boxToken: scope.boxToken })
+                const subscriber = await Subscriber.findOne(scope)
                 if (subscriber.berries < PLAY_NOW_BERRY_COST) {
                     throw new Error(`You do not have enough berries to use this action. You need ${SKIP_BERRY_COST - subscriber.berries} more.`)
                 }
                 areBerriesSpent = true
             }
 
-            if (await QueueItemModel.exists({ box: scope.boxToken, startTime: { $ne: null }, endTime: null, stateForcedWithBerries: true })) {
+            if (
+                await QueueItemModel.exists({ box: scope.boxToken, startTime: { $ne: null }, endTime: null, stateForcedWithBerries: true })
+                && await aclService.isAuthorized(scope, 'bypassBerries') === ACLEvaluationResult.NO
+            ) {
                 // If the already preselected video was forced with berries, the operation cannot continue
                 throw new Error("An user has used berries to play the currently playing video. You cannot skip it.")
             }
@@ -358,7 +364,7 @@ export class QueueService {
             })
 
             if (areBerriesSpent) {
-                await berriesService.decreaseBerryCount({ userToken: scope.userToken, boxToken: scope.boxToken }, SKIP_BERRY_COST)
+                await berriesService.decreaseBerryCount(scope, SKIP_BERRY_COST)
 
                 systemMessage.context = 'berries'
                 systemMessage.contents = `${user.name} has spent ${SKIP_BERRY_COST} berries to skip the previous video. Currently playing: "${playingVideo.video.name}".`
