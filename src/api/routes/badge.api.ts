@@ -1,5 +1,4 @@
 import { Request, Response, Router } from 'express'
-import * as _ from "lodash"
 
 import { Badge } from '../../models/badge.model'
 const auth = require("./../middlewares/auth.middleware")
@@ -19,7 +18,7 @@ export class BadgeApi {
         this.router.post('/', this.store)
     }
 
-    public async index(request: Request, response: Response): Promise<Response> {
+    public async index(_: Request, response: Response): Promise<Response> {
         const badges = await Badge.find({
             isSecret: false,
             $and: [
@@ -50,7 +49,7 @@ export class BadgeApi {
         }
 
         try {
-            if (_.isEmpty(request.body)) {
+            if (Object.keys(request.body).length === 0) {
                 return response.status(412).send('MISSING_PARAMETERS')
             }
 

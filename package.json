@@ -19,7 +19,7 @@
         "build": "npm run tsc && npm run emails",
         "lint:check": "eslint -c .eslintrc.json --ext .ts src",
         "lint:fix": "eslint -c .eslintrc.json --ext .ts src --fix",
-        "preversion": "node ./scripts/cranberry-compat.js"
+        "preversion": "node ./scripts/cranberry-compat.js && git add ."
     },
     "repository": {
         "type": "git",
@@ -33,7 +33,6 @@
     "homepage": "https://github.com/TeamBerry/tamarillo#readme",
     "dependencies": {
         "@teamberry/muscadine": "^0.12.0",
-        "array-move": "^3.0.0",
         "aws-sdk": "^2.653.0",
         "axios": "^0.21.1",
         "bcrypt": "^5.0.0",
@@ -44,7 +43,6 @@
         "email-templates": "^8.0.0",
         "express": "^4.17.1",
         "jsonwebtoken": "^8.2.2",
-        "lodash": "^4.17.19",
         "moment": "^2.20.1",
         "mongoose": "^5.9.7",
         "multer": "^1.4.2",
@@ -64,7 +62,7 @@
         "chai": "4.2.0",
         "chai-as-promised": "7.1.1",
         "eslint": "7.18.0",
-        "inquirer": "^7.3.3",
+        "inquirer": "7.3.3",
         "migrate-mongo": "8.1.4",
         "mocha": "8.2.1",
         "nyc": "15.1.0",

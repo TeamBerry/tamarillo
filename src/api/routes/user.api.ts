@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response, Router } from "express"
-import * as _ from "lodash"
 const multer = require('multer')
 const upload = multer({ dest: 'upload/' })
 
@@ -54,7 +53,7 @@ export class UserApi {
      * - 500 Server Error if something else happens
      * @memberof UserApi
      */
-    public async show(request: Request, response: Response): Promise<Response> {
+    public async show(_: Request, response: Response): Promise<Response> {
         const user = await User.findById(response.locals.auth.user)
             .select('-password -resetToken')
 
@@ -69,7 +68,7 @@ export class UserApi {
      * @returns {Promise<Response>}
      * @memberof UserApi
      */
-    public async favorites(request: Request, response: Response): Promise<Response> {
+    public async favorites(_: Request, response: Response): Promise<Response> {
         const favorites = await UserPlaylist
             .findOne({ user: response.locals.auth.user, name: 'Favorites' })
             .populate("user", "name")
@@ -89,7 +88,7 @@ export class UserApi {
     public async updateFavorites(request: Request, response: Response): Promise<Response> {
         const command: { action: 'like' | 'unlike', target: string } = request.body
 
-        if (_.isEmpty(command)) {
+        if (Object.keys(command).length === 0) {
             return response.status(412).send()
         }
 
@@ -126,7 +125,7 @@ export class UserApi {
         try {
             const settings: Partial<UserClass['settings']> = request.body
 
-            if (_.isEmpty(request.body)) {
+            if (Object.keys(request.body).length === 0) {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
@@ -153,7 +152,7 @@ export class UserApi {
         try {
             const acl: UserClass['acl'] = request.body
 
-            if (_.isEmpty(request.body)) {
+            if (Object.keys(request.body).length === 0) {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
@@ -281,7 +280,7 @@ export class UserApi {
         }
     }
 
-    public async deleteProfilePicture(request: Request, response: Response): Promise<Response> {
+    public async deleteProfilePicture(_: Request, response: Response): Promise<Response> {
         const userToken: string = response.locals.auth.user
 
         try {
