@@ -19,7 +19,7 @@
         "build": "npm run tsc && npm run emails",
         "lint:check": "eslint -c .eslintrc.json --ext .ts src",
         "lint:fix": "eslint -c .eslintrc.json --ext .ts src --fix",
-        "preversion": "node scripts/craberry-compat.js"
+        "preversion": "node ./scripts/craberry-compat.js"
     },
     "repository": {
         "type": "git",
