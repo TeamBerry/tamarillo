@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response, Router } from "express"
-import * as _ from "lodash"
 const axios = require("axios")
 
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from "../../models/user-playlist.model"
@@ -48,7 +47,7 @@ export class PlaylistApi {
         })
     }
 
-    public async index(request: Request, response: Response): Promise<Response> {
+    public async index(_: Request, response: Response): Promise<Response> {
         const filters: Partial<{ isPrivate: boolean, user: any }> = { isPrivate: false }
 
         // Excluding the user from the search to display only playlists to "discover"
@@ -70,7 +69,6 @@ export class PlaylistApi {
     /**
      * Gets a single playlist from the collection of user playlists
      *
-     * @param {Request} request Contains the ObjectId of the box as a request parameter
      * @param {Response} response
      * @returns {Promise<Response>} The playlist if it exists or one of the following error codes:
      * - 401 'UNAUTHORIZED': No JWT was given to the API
@@ -78,7 +76,7 @@ export class PlaylistApi {
      * - 500 Server Error: Something wrong occurred
      * @memberof PlaylistApi
      */
-    public async show(request: Request, response: Response): Promise<Response> {
+    public async show(_: Request, response: Response): Promise<Response> {
         const decodedToken = response.locals.auth
         const playlist: UserPlaylistDocument = response.locals.playlist
 
@@ -102,7 +100,7 @@ export class PlaylistApi {
      * @memberof PlaylistApi
      */
     public async store(request: Request, response: Response): Promise<Response> {
-        if (_.isEmpty(request.body)) {
+        if (Object.keys(request.body).length === 0) {
             return response.status(412).send('MISSING_PARAMETERS')
         }
 
@@ -129,7 +127,7 @@ export class PlaylistApi {
      * @memberof PlaylistApi
      */
     public async update(request: Request, response: Response): Promise<Response> {
-        if (_.isEmpty(request.body)) {
+        if (Object.keys(request.body).length === 0) {
             return response.status(412).send('MISSING_PARAMETERS')
         }
 

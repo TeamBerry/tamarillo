@@ -1,6 +1,5 @@
 import { QueueItem } from "@teamberry/muscadine"
 import { NextFunction, Request, Response, Router } from "express"
-import * as _ from "lodash"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
@@ -64,7 +63,7 @@ export class BoxApi {
      * @returns {Promise<Response>} The list of boxes
      * @memberof BoxApi
      */
-    public async index(request: Request, response: Response): Promise<Response> {
+    public async index(_: Request, response: Response): Promise<Response> {
         try {
             let query: unknown = { open: true, private: { $ne: true } }
 
@@ -162,7 +161,7 @@ export class BoxApi {
      * - 500 Server Error: Something wrong occurred
      * @memberof BoxApi
      */
-    public async show(request: Request, response: Response): Promise<Response> {
+    public async show(_: Request, response: Response): Promise<Response> {
         return response.status(200).send(response.locals.box)
     }
 
@@ -198,7 +197,7 @@ export class BoxApi {
      */
     public async update(request: Request, response: Response): Promise<Response> {
         try {
-            if (_.isEmpty(request.body)) {
+            if (Object.keys(request.body).length === 0) {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
@@ -255,7 +254,7 @@ export class BoxApi {
     }
 
     public async patchSettings(request: Request, response: Response): Promise<Response> {
-        if (_.isEmpty(request.body)) {
+        if (Object.keys(request.body).length === 0) {
             return response.status(412).send("MISSING_PARAMETERS")
         }
 
@@ -514,7 +513,7 @@ export class BoxApi {
         }
 
         try {
-            if (_.isEmpty(request.body)) {
+            if (Object.keys(request.body).length === 0) {
                 return response.status(412).send("MISSING_PARAMETERS")
             }
 
