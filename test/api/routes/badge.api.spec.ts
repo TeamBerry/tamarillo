@@ -90,7 +90,7 @@ describe("Badge API", () => {
                 availableTo: null,
                 unlockConditions: {
                     key: 'subscription.berries',
-                    value: 50,
+                    value: '50',
                     valueType: 'number'
                 }
             },
@@ -104,7 +104,7 @@ describe("Badge API", () => {
                 availableTo: null,
                 unlockConditions: {
                     key: 'subscription.berries',
-                    value: 200,
+                    value: '200',
                     valueType: 'number'
                 }
             }
@@ -137,7 +137,7 @@ describe("Badge API", () => {
                 availableTo: null,
                 unlockConditions: {
                     key: 'user.life',
-                    value: 525600,
+                    value: '525600',
                     valueType: 'number'
                 }
             })
@@ -160,7 +160,7 @@ describe("Badge API", () => {
                 availableTo: null,
                 unlockConditions: {
                     key: 'user.life',
-                    value: 525600,
+                    value: '525600',
                     valueType: 'number'
                 }
             })

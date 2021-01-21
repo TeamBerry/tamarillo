@@ -60,7 +60,7 @@ class BadgeService {
             possibleBadges.forEach(badge => {
                 if (
                     (badge.unlockConditions.valueType === 'string' && subject.value === badge.unlockConditions.value)
-                        || (badge.unlockConditions.valueType === 'number' && subject.value >= badge.unlockConditions.value)
+                        || (badge.unlockConditions.valueType === 'number' && +subject.value >= +badge.unlockConditions.value)
                 ) {
                     targetUser.badges.push({
                         badge: badge._id.toString(),

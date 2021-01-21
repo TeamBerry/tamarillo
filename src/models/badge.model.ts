@@ -33,7 +33,7 @@ const badgeSchema = new Schema(
         availableTo: { type: Date, default: null },
         unlockConditions: {
             key: String,
-            value: { type: [String, Number] },
+            value: String,
             valueType: String
         }
     },

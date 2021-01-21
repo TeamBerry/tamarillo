@@ -85,7 +85,7 @@ describe("Badge Service", () => {
                 availableTo: null,
                 unlockConditions: {
                     key: 'subscription.berries',
-                    value: 50,
+                    value: '50',
                     valueType: 'number'
                 }
             },
@@ -99,7 +99,7 @@ describe("Badge Service", () => {
                 availableTo: null,
                 unlockConditions: {
                     key: 'subscription.berries',
-                    value: 200,
+                    value: '200',
                     valueType: 'number'
                 }
             }
