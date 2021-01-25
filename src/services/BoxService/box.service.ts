@@ -122,7 +122,7 @@ class BoxService {
                         socket.emit('permissions', [])
                     } else {
                         socket.emit('permissions', userSubscription.role === 'admin' ?
-                            ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser']
+                            ['addVideo', 'removeVideo', 'forceNext', 'forcePlay', 'skipVideo', 'editBox', 'promoteVIP', 'demoteVIP', 'bypassVideoDurationLimit', 'inviteUser', 'bypassBerries']
                             : box.acl[userSubscription.role])
 
                         // Berries are only collected for real sessions
