@@ -203,8 +203,8 @@ describe("Queue Service", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],
@@ -229,8 +229,8 @@ describe("Queue Service", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],
@@ -453,8 +453,8 @@ describe("Queue Service", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],
@@ -479,8 +479,8 @@ describe("Queue Service", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],
@@ -2403,8 +2403,8 @@ describe("Queue Service", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],

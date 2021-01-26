@@ -197,8 +197,8 @@ describe("Queue API", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],
@@ -331,8 +331,8 @@ describe("Queue API", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],
@@ -357,8 +357,8 @@ describe("Queue API", () => {
                         moderator: [
                             'addVideo',
                             'removeVideo',
-                            'promoteVIP',
-                            'demoteVIP',
+                            'setVIP',
+                            'unsetVIP',
                             'forceNext',
                             'forcePlay'
                         ],

@@ -31,7 +31,7 @@ const userSchema = new Schema(
             badge: { type: String, default: null }
         },
         acl: {
-            moderator: { type: Array, default: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'] },
+            moderator: { type: Array, default: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'] },
             vip: { type: Array, default: ['addVideo', 'removeVideo', 'forceNext'] },
             simple: { type: Array, default: ['addVideo'] }
         },

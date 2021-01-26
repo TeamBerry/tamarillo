@@ -83,8 +83,8 @@ describe("Box Middleware", () => {
                     moderator: [
                         'addVideo',
                         'removeVideo',
-                        'promoteVIP',
-                        'demoteVIP',
+                        'setVIP',
+                        'unsetVIP',
                         'forceNext',
                         'forcePlay'
                     ],
