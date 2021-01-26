@@ -486,16 +486,15 @@ export class BoxApi {
 
             const activeSubscribers: Array<PopulatedSubscriberDocument> = await Subscriber
                 .find({
-                    "boxToken": request.params.box,
-                    "userToken": { $not: /^user-[a-zA-Z0-9]{20}/ },
-                    "connexions.0": { $exists: true }
+                    boxToken: request.params.box,
+                    userToken: { $not: /^user-[a-zA-Z0-9]{20}/ }
                 })
                 .populate('userToken', 'name settings.picture', 'User')
                 .lean()
 
             const subscribers: Array<ActiveSubscriber> = activeSubscribers.map(activeSubscriber => ({
                 ...activeSubscriber.userToken,
-                origin: activeSubscriber.connexions[0].origin,
+                origin: activeSubscriber?.connexions[0]?.origin ?? null,
                 role: activeSubscriber.role
             }))
 
