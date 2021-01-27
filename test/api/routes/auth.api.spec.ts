@@ -268,7 +268,7 @@ describe("Auth API", () => {
                     badge: null
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 }
@@ -288,7 +288,7 @@ describe("Auth API", () => {
                     badge: null
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 }
@@ -357,7 +357,7 @@ describe("Auth API", () => {
                     badge: null
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 }
@@ -385,7 +385,7 @@ describe("Auth API", () => {
                     badge: null
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 }

@@ -70,7 +70,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -92,7 +92,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -114,7 +114,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -136,7 +136,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -158,7 +158,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -180,7 +180,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -202,7 +202,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -419,7 +419,7 @@ describe("Box API", () => {
                     expect(updatedBox.name).to.equal('Test box')
                     expect(updatedBox.description).to.equal('Test box edited')
                     expect(updatedBox.acl).to.deep.equal({
-                        moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                        moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                         vip: ['addVideo', 'removeVideo', 'forceNext'],
                         simple: ['addVideo']
                     })
