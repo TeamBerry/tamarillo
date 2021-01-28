@@ -444,7 +444,11 @@ export class QueueService {
             throw new Error(`This video exceeds the limit of ${box.options.videoMaxDurationLimit} minutes. Please submit a shorter video.`)
         }
 
-        if (!await QueueItemModel.exists({ box: boxToken, video: video._id })) {
+        const existingVideo = await QueueItemModel.findOne({ box: boxToken, video: video._id })
+
+        if (existingVideo) {
+            return existingVideo
+        } else {
             const addedVideo = await QueueItemModel.create({
                 box: boxToken,
                 video: video._id,
@@ -462,8 +466,6 @@ export class QueueService {
 
             return addedVideo
         }
-
-        return null
     }
 
     /**
