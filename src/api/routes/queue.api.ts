@@ -17,10 +17,10 @@ export class QueueApi {
     }
 
     public init(): void {
-        this.router.get("/", [auth.canBeAuthorized, boxMiddleware.boxPrivacy], this.getQueue)
+        this.router.get("/", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.getQueue)
 
         // All subsequent routes require authentication
-        this.router.use([auth.isAuthorized, boxMiddleware.boxPrivacy, boxMiddleware.boxMustBeOpen])
+        this.router.use([auth.isAuthorized, boxMiddleware.publicOrPrivateWithSubscription, boxMiddleware.openOnly])
         this.router.post("/video", this.addVideo.bind(this))
         this.router.post("/playlist", this.addPlaylist.bind(this))
         this.router.put("/skip", this.skipVideo)

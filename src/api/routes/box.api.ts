@@ -23,20 +23,20 @@ export class BoxApi {
 
     public init(): void {
         this.router.get("/", auth.canBeAuthorized, this.index)
-        this.router.get("/:box", auth.canBeAuthorized, this.show)
+        this.router.get("/:box", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.show)
+        this.router.get("/:box/users", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.users)
         this.router.use("/:box/queue", QueueApi)
 
         // All subsequent routes require authentication
         this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
-        this.router.put("/:box/feature", [boxMiddleware.boxMustBeOpen, boxMiddleware.boxMustBePublic], this.feature)
+        this.router.put("/:box/feature", [boxMiddleware.openOnly, boxMiddleware.publicOnly], this.feature)
         this.router.patch('/:box', this.patchSettings.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
         this.router.post("/:box/close", this.close.bind(this))
         this.router.post("/:box/open", this.open.bind(this))
-        this.router.get("/:box/users", this.users)
-        this.router.post("/:box/invite", boxMiddleware.boxMustBeOpen, this.generateInvite.bind(this))
+        this.router.post("/:box/invite", boxMiddleware.openOnly, this.generateInvite.bind(this))
 
         this.router.post('/:box/convert', this.convertPlaylist)
 
