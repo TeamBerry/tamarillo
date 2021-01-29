@@ -23,9 +23,9 @@ export class BoxApi {
 
     public init(): void {
         this.router.get("/", auth.canBeAuthorized, this.index)
-        this.router.get("/:box", auth.canBeAuthorized, this.show)
-        this.router.use("/:box/queue", QueueApi)
+        this.router.get("/:box", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.show)
         this.router.get("/:box/users", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.users)
+        this.router.use("/:box/queue", QueueApi)
 
         // All subsequent routes require authentication
         this.router.use(auth.isAuthorized)

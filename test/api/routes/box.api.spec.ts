@@ -338,15 +338,15 @@ describe("Box API", () => {
             .expect(404, 'BOX_NOT_FOUND'))
 
         it("Sends a 200 with the proper box if the id matches", () => supertest(expressApp)
-            .get('/9cb763b6e72611381ef043e4')
+            .get('/9cb763b6e72611381ef053e9')
             .expect(200)
             .then(response => {
                 const box = response.body
 
-                expect(box._id).to.equal('9cb763b6e72611381ef043e4')
+                expect(box._id).to.equal('9cb763b6e72611381ef053e9')
                 expect(box.creator).to.eql({
-                    _id: '9ca0df5f86abeb66da97ba5d',
-                    name: 'Ash Ketchum',
+                    _id: '9ca0df5f86abeb66da97ba5e',
+                    name: 'Shirona',
                     settings: {
                         picture: 'default-picture'
                     }
