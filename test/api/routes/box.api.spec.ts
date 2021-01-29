@@ -891,7 +891,7 @@ describe("Box API", () => {
 
         it("Sends a 200 with the users", () => supertest(expressApp)
             .get('/9cb763b6e72611381ef043e4/users')
-            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .set('Authorization', `Bearer ${shironaJWT.bearer}`)
             .expect(200)
             .then(response => {
                 const users: Array<ActiveSubscriber> = response.body
