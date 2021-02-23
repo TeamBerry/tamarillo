@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 require("./../config/connection")
+const Queue = require("bull")
+const boxQueue = new Queue("box")
 
 import { QueueItemModel } from "../models/queue-item.model"
 const BoxSchema = require("./../models/box.model")
@@ -23,6 +25,9 @@ export class BoxClosingCron {
             if (!lastPlayedVideo) {
                 box.open = false
                 await box.save()
+
+                // Create a job to alert people in the box
+                boxQueue.add({ boxToken: box._id, subject: "close" })
             }
         }
         process.exit()
