@@ -23,5 +23,6 @@ services:
       - "1025:25"
     container_name: berrybox_maildev
 
+# Give the volumes
 volumes:
   mongo-data:
