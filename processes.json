@@ -39,17 +39,24 @@
         "min_uptime": 3000
     },
     {
-        "name": "box-deletion.cron",
-        "script": "dist/crons/box-deletion.cron.js",
-        "instances": 1,
-        "cron_restart": "0 */1 * * *",
-        "autorestart": false
-    },
-    {
         "name": "box-unfeaturing.cron",
         "script": "dist/crons/box-unfeaturing.cron.js",
         "instances": 1,
         "cron_restart": "*/15 * * * *",
+        "autorestart": false
+    },
+    {
+        "name": "box-closing.cron",
+        "script": "dist/crons/box-closing.cron.js",
+        "instances": 1,
+        "cron_restart": "0 0 * * *",
+        "autorestart": false
+    },
+    {
+        "name": "box-deletion.cron",
+        "script": "dist/crons/box-deletion.cron.js",
+        "instances": 1,
+        "cron_restart": "0 0 * * *",
         "autorestart": false
     }
 ]
