@@ -32,7 +32,7 @@
     },
     "homepage": "https://github.com/TeamBerry/tamarillo#readme",
     "dependencies": {
-        "@teamberry/muscadine": "^0.13.0",
+        "@teamberry/muscadine": "^1.0.0",
         "aws-sdk": "^2.653.0",
         "axios": "^0.21.1",
         "bcrypt": "^5.0.0",

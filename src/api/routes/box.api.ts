@@ -42,7 +42,6 @@ export class BoxApi {
 
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
             const matchingBox = await Box.findById(request.params.box)
-                .select('-playlist')
                 .populate("creator", "_id name settings.picture")
 
             if (!matchingBox) {
@@ -227,7 +226,6 @@ export class BoxApi {
                     new: true
                 }
             )
-                .select('-playlist')
                 .populate("creator", "_id name settings.picture")
                 .lean()
 
