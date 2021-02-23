@@ -58,7 +58,6 @@ describe("Queue API", () => {
             endTime: null,
             submittedAt: "2019-05-31T09:19:41+0000",
             submitted_by: '9ca0df5f86abeb66da97ba5d',
-            isPreselected: false,
             setToNext: null,
             stateForcedWithBerries: false
         })
@@ -211,7 +210,6 @@ describe("Queue API", () => {
             await QueueItemModel.create([
                 {
                     box: '9cb763b6e72611381ef053f4',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false,
                     _id: '9cb763b6e72611381ef04401',
@@ -223,7 +221,6 @@ describe("Queue API", () => {
                 },
                 {
                     box: '9cb763b6e72611381ef063f4',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false,
                     _id: '9cb763b6e72611381ef04402',
@@ -371,7 +368,6 @@ describe("Queue API", () => {
             await QueueItemModel.create([
                 {
                     box: '9cb763b6e72611381ef053f4',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false,
                     _id: '9cb763b6e72611381ef04401',

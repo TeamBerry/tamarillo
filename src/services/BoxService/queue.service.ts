@@ -456,7 +456,6 @@ export class QueueService {
                 endTime: null,
                 submittedAt: new Date(),
                 submitted_by: userToken,
-                isPreselected: false,
                 setToNext: null,
                 stateForcedWithBerries: false
             })
@@ -502,7 +501,6 @@ export class QueueService {
             endTime: null,
             submittedAt: new Date(),
             submitted_by: userToken,
-            isPreselected: false,
             setToNext: null,
             stateForcedWithBerries: false
         } as QueueItem))
@@ -570,7 +568,6 @@ export class QueueService {
                 startTime: null,
                 endTime: null,
                 stateForcedWithBerries: false,
-                isPreselected: false,
                 setToNext: null,
                 submittedAt: transitionTime
             }
@@ -578,7 +575,6 @@ export class QueueService {
             updateQuery = {
                 endTime: transitionTime,
                 stateForcedWithBerries: false,
-                isPreselected: false,
                 setToNext: null
             }
         }
@@ -632,7 +628,6 @@ export class QueueService {
                     $set: {
                         startTime: transitionTime,
                         endTime: null,
-                        isPreselected: false,
                         setToNext: null,
                         stateForcedWithBerries: nextVideoToPlay.stateForcedWithBerries ? nextVideoToPlay.stateForcedWithBerries : withBerries
                     }

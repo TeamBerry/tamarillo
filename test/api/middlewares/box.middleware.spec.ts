@@ -109,7 +109,6 @@ describe("Box Middleware", () => {
         await QueueItemModel.create([
             {
                 box: '9cb763b6e72611381ef063f4',
-                isPreselected: false,
                 setToNext: null,
                 stateForcedWithBerries: false,
                 _id: '9cb763b6e72611381ef04402',
