@@ -14,7 +14,7 @@ jobs:
         node-version: [10.x, 12.x, 14.x]
     services:
       mongo:
-        image: mongo:3.6.14
+        image: mongo:3.7.9
         ports:
           - 27017:27017
       redis:
