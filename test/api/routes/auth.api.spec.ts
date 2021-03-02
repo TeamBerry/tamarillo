@@ -39,13 +39,13 @@ describe("Auth API", () => {
         it('Accepts operation if the version is equal', async () => {
             return supertest(expressApp)
                 .post("/compat")
-                .send({ version: "0.17.0" })
+                .send({ version: "1.0.0" })
                 .expect(200)
         })
 
         it('Accepts operation if the version is superior', () => supertest(expressApp)
             .post("/compat")
-            .send({ version: "0.19.1" })
+            .send({ version: "1.5.1" })
             .expect(200))
     })
 
