@@ -70,7 +70,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -92,7 +92,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -114,7 +114,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -136,7 +136,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -158,7 +158,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -180,7 +180,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -202,7 +202,7 @@ describe("Box API", () => {
                     videoMaxDurationLimit: 0
                 },
                 acl: {
-                    moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                    moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                     vip: ['addVideo', 'removeVideo', 'forceNext'],
                     simple: ['addVideo']
                 },
@@ -338,15 +338,15 @@ describe("Box API", () => {
             .expect(404, 'BOX_NOT_FOUND'))
 
         it("Sends a 200 with the proper box if the id matches", () => supertest(expressApp)
-            .get('/9cb763b6e72611381ef043e4')
+            .get('/9cb763b6e72611381ef053e9')
             .expect(200)
             .then(response => {
                 const box = response.body
 
-                expect(box._id).to.equal('9cb763b6e72611381ef043e4')
+                expect(box._id).to.equal('9cb763b6e72611381ef053e9')
                 expect(box.creator).to.eql({
-                    _id: '9ca0df5f86abeb66da97ba5d',
-                    name: 'Ash Ketchum',
+                    _id: '9ca0df5f86abeb66da97ba5e',
+                    name: 'Shirona',
                     settings: {
                         picture: 'default-picture'
                     }
@@ -419,7 +419,7 @@ describe("Box API", () => {
                     expect(updatedBox.name).to.equal('Test box')
                     expect(updatedBox.description).to.equal('Test box edited')
                     expect(updatedBox.acl).to.deep.equal({
-                        moderator: ['addVideo', 'removeVideo', 'promoteVIP', 'demoteVIP', 'forceNext', 'forcePlay'],
+                        moderator: ['addVideo', 'removeVideo', 'setVIP', 'unsetVIP', 'forceNext', 'forcePlay'],
                         vip: ['addVideo', 'removeVideo', 'forceNext'],
                         simple: ['addVideo']
                     })
@@ -707,7 +707,6 @@ describe("Box API", () => {
                     endTime: "2019-07-11T08:53:53.415+0000",
                     submittedAt: "2019-07-11T08:51:29.885+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false
                 },
@@ -718,7 +717,6 @@ describe("Box API", () => {
                     endTime: null,
                     submittedAt: "2019-07-11T08:51:29.886+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false
                 },
@@ -729,7 +727,6 @@ describe("Box API", () => {
                     endTime: "2019-07-11T08:53:53.415+0000",
                     submittedAt: "2019-07-11T08:51:29.885+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false
                 },
@@ -740,7 +737,6 @@ describe("Box API", () => {
                     endTime: null,
                     submittedAt: "2019-07-11T08:51:29.886+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false
                 },
@@ -751,7 +747,6 @@ describe("Box API", () => {
                     endTime: null,
                     submittedAt: "2019-07-11T08:51:29.887+0000",
                     submitted_by: '9ca0df5f86abeb66da97ba5d',
-                    isPreselected: false,
                     setToNext: null,
                     stateForcedWithBerries: false
                 }
@@ -891,7 +886,7 @@ describe("Box API", () => {
 
         it("Sends a 200 with the users", () => supertest(expressApp)
             .get('/9cb763b6e72611381ef043e4/users')
-            .set('Authorization', `Bearer ${ashJWT.bearer}`)
+            .set('Authorization', `Bearer ${shironaJWT.bearer}`)
             .expect(200)
             .then(response => {
                 const users: Array<ActiveSubscriber> = response.body

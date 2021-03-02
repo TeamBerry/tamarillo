@@ -23,26 +23,25 @@ export class BoxApi {
 
     public init(): void {
         this.router.get("/", auth.canBeAuthorized, this.index)
-        this.router.get("/:box", auth.canBeAuthorized, this.show)
+        this.router.get("/:box", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.show)
+        this.router.get("/:box/users", [auth.canBeAuthorized, boxMiddleware.publicOrPrivateWithSubscription], this.users)
         this.router.use("/:box/queue", QueueApi)
 
         // All subsequent routes require authentication
         this.router.use(auth.isAuthorized)
         this.router.post("/", this.store)
         this.router.put("/:box", this.update.bind(this))
-        this.router.put("/:box/feature", [boxMiddleware.boxMustBeOpen, boxMiddleware.boxMustBePublic], this.feature)
+        this.router.put("/:box/feature", [boxMiddleware.openOnly, boxMiddleware.publicOnly], this.feature)
         this.router.patch('/:box', this.patchSettings.bind(this))
         this.router.delete("/:box", this.destroy.bind(this))
         this.router.post("/:box/close", this.close.bind(this))
         this.router.post("/:box/open", this.open.bind(this))
-        this.router.get("/:box/users", this.users)
-        this.router.post("/:box/invite", boxMiddleware.boxMustBeOpen, this.generateInvite.bind(this))
+        this.router.post("/:box/invite", boxMiddleware.openOnly, this.generateInvite.bind(this))
 
         this.router.post('/:box/convert', this.convertPlaylist)
 
         this.router.param("box", async (request: Request, response: Response, next: NextFunction) => {
             const matchingBox = await Box.findById(request.params.box)
-                .select('-playlist')
                 .populate("creator", "_id name settings.picture")
 
             if (!matchingBox) {
@@ -227,7 +226,6 @@ export class BoxApi {
                     new: true
                 }
             )
-                .select('-playlist')
                 .populate("creator", "_id name settings.picture")
                 .lean()
 
@@ -486,16 +484,15 @@ export class BoxApi {
 
             const activeSubscribers: Array<PopulatedSubscriberDocument> = await Subscriber
                 .find({
-                    "boxToken": request.params.box,
-                    "userToken": { $not: /^user-[a-zA-Z0-9]{20}/ },
-                    "connexions.0": { $exists: true }
+                    boxToken: request.params.box,
+                    userToken: { $not: /^user-[a-zA-Z0-9]{20}/ }
                 })
                 .populate('userToken', 'name settings.picture', 'User')
                 .lean()
 
             const subscribers: Array<ActiveSubscriber> = activeSubscribers.map(activeSubscriber => ({
                 ...activeSubscriber.userToken,
-                origin: activeSubscriber.connexions[0].origin,
+                origin: activeSubscriber?.connexions[0]?.origin ?? null,
                 role: activeSubscriber.role
             }))
 
