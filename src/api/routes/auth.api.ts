@@ -45,7 +45,7 @@ export class AuthApi {
             return response.status(412).send('VERSION_NOT_SPECIFIED')
         }
 
-        if (cmp(currentVersion, '0.17.0') === -1) {
+        if (cmp(currentVersion, '1.0.0') === -1) {
             return response.status(403).send('UPGRADE_MANDATORY')
         }
 
