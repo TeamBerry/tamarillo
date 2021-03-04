@@ -14,7 +14,8 @@ mongoose.connect(
             password: process.env.MONGO_PASSWORD
         },
         useNewUrlParser: true,
-        useFindAndModify: true
+        useFindAndModify: false,
+        useUnifiedTopology: true
     }
 )
 
