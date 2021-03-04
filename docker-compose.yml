@@ -4,6 +4,10 @@ version: "2"
 services:
   database:
     image: mongo
+    environment:
+      # Preset for development.
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=K0ru5jy2Vfcxn8Niho5OqV
     ports:
       - "27017:27017"
     container_name: berrybox_mongo
