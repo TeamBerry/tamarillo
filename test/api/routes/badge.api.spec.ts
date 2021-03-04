@@ -122,7 +122,7 @@ describe("Badge API", () => {
         .then(response => {
             const badges: Array<BadgeDocument> = response.body
 
-            expect(badges).to.have.lengthOf(3)
+            expect(badges).to.have.lengthOf(4)
         }))
 
     describe("Create a badge", () => {
