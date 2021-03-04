@@ -21,19 +21,9 @@ export class BadgeApi {
     public async index(_: Request, response: Response): Promise<Response> {
         const badges = await Badge.find({
             isSecret: false,
-            $and: [
-                {
-                    $or: [
-                        { availableFrom: null },
-                        { availableFrom: { $lte: new Date() } }
-                    ]
-                },
-                {
-                    $or: [
-                        { availableTo: null },
-                        { availableTo: { $gte: new Date() } }
-                    ]
-                }
+            $or: [
+                { availableFrom: null },
+                { availableFrom: { $lte: new Date() } }
             ]
         })
             .select('-unlockConditions')
