@@ -490,11 +490,13 @@ export class BoxApi {
                 .populate('userToken', 'name settings.picture', 'User')
                 .lean()
 
-            const subscribers: Array<ActiveSubscriber> = activeSubscribers.map(activeSubscriber => ({
-                ...activeSubscriber.userToken,
-                origin: activeSubscriber?.connexions[0]?.origin ?? null,
-                role: activeSubscriber.role
-            }))
+            const subscribers: Array<ActiveSubscriber> = activeSubscribers
+                .filter(activeSubscriber => activeSubscriber.userToken)
+                .map(activeSubscriber => ({
+                    ...activeSubscriber.userToken,
+                    origin: activeSubscriber?.connexions[0]?.origin ?? null,
+                    role: activeSubscriber.role
+                }))
 
             return response.status(200).send(subscribers)
         } catch (error) {
