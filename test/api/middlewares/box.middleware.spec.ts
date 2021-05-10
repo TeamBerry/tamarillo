@@ -299,7 +299,7 @@ describe("Box Middleware", () => {
     describe("Box Open", () => {
         it("Refuses request if the box is closed", async () => {
             return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e5/queue')
+                .post('/9cb763b6e72611381ef043e5/queue/video')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send({ _id: '9cb81150594b2e75f06ba8fe' })
                 .expect(403, 'BOX_CLOSED')

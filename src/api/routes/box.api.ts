@@ -3,7 +3,7 @@ import { Request, Response, Router } from "express"
 import { BoxJob } from "../../models/box.job"
 import { UserPlaylist, UserPlaylistDocument } from "../../models/user-playlist.model"
 import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../../models/subscriber.model"
-import QueueApi from "./queue.api"
+import { QueueApi } from "./queue.api"
 import { Invite } from "../../models/invite.model"
 import { QueueItemModel } from "../../models/queue-item.model"
 const Queue = require("bull")
