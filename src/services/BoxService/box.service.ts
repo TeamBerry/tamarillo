@@ -43,7 +43,7 @@ class BoxService {
         // Start listening on port 8008.
         http.listen(8008, async () => {
             // Empty all connexions
-            await Subscriber.update({}, { $set: { connexions: [] } }, { multi: true })
+            await Subscriber.updateMany({}, { $set: { connexions: [] } }, { multi: true })
         })
 
         io.on("connection", socket => {

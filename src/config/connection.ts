@@ -5,7 +5,19 @@ dotenv.config()
 
 const dbName = process.env.NODE_ENV === 'test' ? 'kiwi_test' : 'kiwi'
 
-mongoose.connect(`mongodb://127.0.0.1:27017/${dbName}`, { useNewUrlParser: true, useFindAndModify: true })
+mongoose.connect(
+    `mongodb://127.0.0.1:27017/${dbName}`,
+    {
+        authSource: "admin",
+        auth: {
+            user: process.env.MONGO_USER,
+            password: process.env.MONGO_PASSWORD
+        },
+        useNewUrlParser: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true
+    }
+)
 
 const db = mongoose.connection
 
