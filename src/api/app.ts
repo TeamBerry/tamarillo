@@ -17,16 +17,9 @@ class App {
         this.app = express()
 
         this.app.use(cors())
+        this.app.use(express.json())
 
-        this.middlewares()
         this.routes()
-    }
-
-    private middlewares(): void {
-        this.app.use(bodyParser.json({
-            limit: "15mb",
-            type: "application/json"
-        }))
     }
 
     private routes(): void {
