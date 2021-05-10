@@ -1,12 +1,11 @@
 import * as express from "express"
-import * as bodyParser from "body-parser"
 import * as supertest from "supertest"
 
 describe("Auth Middleware", () => {
     const expressApp = express()
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
     })
 
     it("Refuses access if there's no given JWT", () => supertest(expressApp)

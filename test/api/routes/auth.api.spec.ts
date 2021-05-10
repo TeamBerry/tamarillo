@@ -1,12 +1,11 @@
 /* eslint-disable no-unused-expressions */
 import * as bcrypt from "bcrypt"
-import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import AuthApi from './../../../src/api/routes/auth.api'
+import { AuthApi } from './../../../src/api/routes/auth.api'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 import { User } from "../../../src/models/user.model"
 import { Session } from "../../../src/models/session.model"
@@ -19,7 +18,7 @@ describe("Auth API", () => {
     const expressApp = express()
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', AuthApi)
     })
 

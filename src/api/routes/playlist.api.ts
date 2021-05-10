@@ -6,100 +6,64 @@ import { Video } from "../../models/video.model"
 import { User } from "../../models/user.model"
 const auth = require("./../middlewares/auth.middleware")
 
-export class PlaylistApi {
-    public router: Router
+const router = Router()
 
-    constructor() {
-        this.router = Router()
-        this.init()
+const verifyPlaylistOwnership = (decodedToken, playlist: UserPlaylistClass) => {
+    if (playlist.user instanceof User) {
+        return decodedToken.user.toString() === playlist.user._id.toString()
+    } else {
+        return decodedToken.user.toString() === playlist.user.toString()
+    }
+}
+
+router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
+    const matchingPlaylist = await UserPlaylist
+        .findById(request.params.playlist)
+        .populate("user", "name")
+        .populate("videos", "name link")
+
+    if (!matchingPlaylist) {
+        return response.status(404).send("PLAYLIST_NOT_FOUND")
     }
 
-    public init(): void {
-        // This API is public but the results might change depending on the presence of a JWT
-        this.router.get('/', auth.canBeAuthorized, this.index)
+    // Give the found playlist to APIs so they don't have to search a second time
+    response.locals.playlist = matchingPlaylist
 
-        // All next APIs require authentication
-        this.router.use(auth.isAuthorized)
-        this.router.get("/:playlist", this.show.bind(this))
-        this.router.post("/", this.store)
-        this.router.put("/:playlist", this.update.bind(this))
-        this.router.delete("/:playlist", this.destroy.bind(this))
+    next()
+})
 
-        // Manipulate videos in playlists
-        this.router.post("/:playlist/videos", this.addVideoToPlaylist.bind(this))
-        this.router.delete("/:playlist/videos/:video", this.removeVideoFromPlaylist.bind(this))
+router.get("/", auth.canBeAuthorized, async (_: Request, response: Response) => {
+    const filters: Partial<{ isPrivate: boolean, user: any }> = { isPrivate: false }
 
-        // Middleware testing if the user exists. Sends a 404 'USER_NOT_FOUND' if it doesn't, or let the request through
-        this.router.param("playlist", async (request: Request, response: Response, next: NextFunction): Promise<Response> => {
-            const matchingPlaylist = await UserPlaylist
-                .findById(request.params.playlist)
-                .populate("user", "name")
-                .populate("videos", "name link")
-
-            if (!matchingPlaylist) {
-                return response.status(404).send("PLAYLIST_NOT_FOUND")
-            }
-
-            // Give the found playlist to APIs so they don't have to search a second time
-            response.locals.playlist = matchingPlaylist
-
-            next()
-        })
+    // Excluding the user from the search to display only playlists to "discover"
+    // The user can go to "My Playlists" to see his own playlists
+    const decodedToken = response.locals.auth
+    if (decodedToken) {
+        filters.user = { $ne: decodedToken.user }
     }
 
-    public async index(_: Request, response: Response): Promise<Response> {
-        const filters: Partial<{ isPrivate: boolean, user: any }> = { isPrivate: false }
+    const playlists = await UserPlaylist
+        .find(filters)
+        .populate("user", "name")
+        .populate("videos", "name link")
+        .lean()
 
-        // Excluding the user from the search to display only playlists to "discover"
-        // The user can go to "My Playlists" to see his own playlists
-        const decodedToken = response.locals.auth
-        if (decodedToken) {
-            filters.user = { $ne: decodedToken.user }
-        }
+    return response.status(200).send(playlists)
+})
 
-        const playlists = await UserPlaylist
-            .find(filters)
-            .populate("user", "name")
-            .populate("videos", "name link")
-            .lean()
+router.get("/:playlist", auth.isAuthorized, async (_: Request, response: Response) => {
+    const decodedToken = response.locals.auth
+    const playlist: UserPlaylistDocument = response.locals.playlist
 
-        return response.status(200).send(playlists)
+    if (!verifyPlaylistOwnership(decodedToken, playlist)) {
+        return response.status(401).send('UNAUTHORIZED')
     }
 
-    /**
-     * Gets a single playlist from the collection of user playlists
-     *
-     * @param {Response} response
-     * @returns {Promise<Response>} The playlist if it exists or one of the following error codes:
-     * - 401 'UNAUTHORIZED': No JWT was given to the API
-     * - 404 'PLAYLIST_NOT_FOUND': No playlist matches the given ObjectId
-     * - 500 Server Error: Something wrong occurred
-     * @memberof PlaylistApi
-     */
-    public async show(_: Request, response: Response): Promise<Response> {
-        const decodedToken = response.locals.auth
-        const playlist: UserPlaylistDocument = response.locals.playlist
+    return response.status(200).send(response.locals.playlist)
+})
 
-        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
-            return response.status(401).send('UNAUTHORIZED')
-        }
-
-        return response.status(200).send(response.locals.playlist)
-    }
-
-    /**
-     * Stores a new playlist in the collection
-     *
-     * @param {Request} request The body contains the playlist
-     * @param {Response} response
-     * @returns {Promise<Response>} The created playlist is sent back as confirmation, or one of the
-     * following error codes:
-     * - 401 'UNAUTHORIZED': No JWT was given to the API
-     * - 412 'MISSING_PARAMETERS': No body was given
-     * - 500 Server Error: Something wrong occurred
-     * @memberof PlaylistApi
-     */
-    public async store(request: Request, response: Response): Promise<Response> {
+router.post("/", auth.isAuthorized, async (request: Request, response: Response) => {
+    {
         if (Object.keys(request.body).length === 0) {
             return response.status(412).send('MISSING_PARAMETERS')
         }
@@ -112,187 +76,138 @@ export class PlaylistApi {
             return response.status(500).send(error)
         }
     }
+})
 
-    /**
-     * Updates a playlist from the collection
-     *
-     * @param {Request} request The body contains the collection, the param contains the ObjectId of the target playlist
-     * @param {Response} response
-     * @returns {Promise<Response>} The updated playlist is sent back as confirmation, or one of the following codes:
-     * - 401 'UNAUTHORIZED': No JWT was given to the API
-     * - 404 'PLAYLIST_NOT_FOUND': No playlist matches the given ObjectId
-     * - 412 'MISSING_PARAMETERS': No body was given
-     * - 412 'IDENTIFIER_MIMSTACH': The id of the body and the request parameter don't match
-     * - 500 Server Error: Something wrong occurred
-     * @memberof PlaylistApi
-     */
-    public async update(request: Request, response: Response): Promise<Response> {
-        if (Object.keys(request.body).length === 0) {
-            return response.status(412).send('MISSING_PARAMETERS')
-        }
-
-        const decodedToken = response.locals.auth
-        const playlist: UserPlaylistDocument = response.locals.playlist
-
-        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
-            return response.status(401).send('UNAUTHORIZED')
-        }
-
-        const clientPlaylist: Partial<UserPlaylistClass> = request.body
-
-        if (request.body._id !== request.params.playlist) {
-            return response.status(412).send('IDENTIFIER_MISMATCH')
-        }
-
-        try {
-            const updatedPlaylist = await UserPlaylist
-                .findByIdAndUpdate(
-                    request.params.playlist,
-                    {
-                        $set: clientPlaylist
-                    },
-                    {
-                        new: true
-                    }
-                )
-                .populate("user", "name")
-                .populate("videos", "name link")
-                .lean()
-
-            return response.status(200).send(updatedPlaylist)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
+router.put("/:playlist", auth.isAuthorized, async (request: Request, response: Response) => {
+    if (Object.keys(request.body).length === 0) {
+        return response.status(412).send('MISSING_PARAMETERS')
     }
 
-    /**
-     * Deletes a playlist from the collection
-     *
-     * @param {Request} request Contains the ObjectId of the box as a request parameter
-     * @param {Response} response
-     * @returns {Promise<Response>} The deleted playlist is sent back as confirmation, or one of the following codes:
-     * - 401 'UNAUTHORIZED': No JWT was given to the API
-     * - 404 'PLAYLIST_NOT_FOUND': No playlist matches the given ObjectId
-     * - 500 Server Error: Something wrong occurred
-     * @memberof PlaylistApi
-     */
-    public async destroy(request: Request, response: Response): Promise<Response> {
-        const decodedToken = response.locals.auth
-        const playlist: UserPlaylistDocument = response.locals.playlist
+    const decodedToken = response.locals.auth
+    const playlist: UserPlaylistDocument = response.locals.playlist
 
-        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
-            return response.status(401).send('UNAUTHORIZED')
-        }
-
-        if (!playlist.isDeletable) {
-            return response.status(403).send('NOT_PERMITTED')
-        }
-
-        try {
-            const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.params.playlist)
-
-            return response.status(200).send(deletedPlaylist)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
+    if (!verifyPlaylistOwnership(decodedToken, playlist)) {
+        return response.status(401).send('UNAUTHORIZED')
     }
 
-    /**
-     * Adds a video to an existing playlist
-     *
-     * @param {Request} request
-     * @param {Response} response
-     * @returns {Promise<Response>} The updated playlist is sent back
-     * @memberof PlaylistApi
-     */
-    public async addVideoToPlaylist(request: Request, response: Response): Promise<Response> {
-        const decodedToken = response.locals.auth
-        const playlist: UserPlaylistDocument = response.locals.playlist
+    const clientPlaylist: Partial<UserPlaylistClass> = request.body
 
-        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
-            return response.status(401).send('UNAUTHORIZED')
-        }
-
-        try {
-            let video = request.body.videoId || null
-
-            if (!video) {
-                const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=${request.body.videoLink}&key=${process.env.YOUTUBE_API_KEY}`)
-
-                const youtubeResponse = youtubeRequest.data
-
-                video = (await Video.create({
-                    link: request.body.videoLink,
-                    name: youtubeResponse.items[0].snippet.title,
-                    duration: youtubeResponse.items[0].contentDetails.duration
-                }))._id
-            }
-
-            const updatedPlaylist: UserPlaylistDocument = await UserPlaylist
-                .findByIdAndUpdate(
-                    request.params.playlist,
-                    {
-                        $push: { videos: video }
-                    },
-                    {
-                        new: true
-                    }
-                )
-                .populate("user", "name")
-                .populate("videos", "name link")
-
-
-            return response.status(200).send(updatedPlaylist)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
+    if (request.body._id !== request.params.playlist) {
+        return response.status(412).send('IDENTIFIER_MISMATCH')
     }
 
-    /**
-     * Removes a video from a playlist
-     *
-     * @param {Request} request
-     * @param {Response} response
-     * @returns {Promise<Response>} The updated playlist
-     * @memberof PlaylistApi
-     */
-    public async removeVideoFromPlaylist(request: Request, response: Response): Promise<Response> {
-        const decodedToken = response.locals.auth
-        const playlist: UserPlaylistDocument = response.locals.playlist
+    try {
+        const updatedPlaylist = await UserPlaylist
+            .findByIdAndUpdate(
+                request.params.playlist,
+                {
+                    $set: clientPlaylist
+                },
+                {
+                    new: true
+                }
+            )
+            .populate("user", "name")
+            .populate("videos", "name link")
+            .lean()
 
-        if (!this.verifyPlaylistOwnership(decodedToken, playlist)) {
-            return response.status(401).send('UNAUTHORIZED')
-        }
+        return response.status(200).send(updatedPlaylist)
+    } catch (error) {
+        return response.status(500).send(error)
+    }
+})
 
-        try {
-            const updatedPlaylist: UserPlaylistDocument = await UserPlaylist
-                .findByIdAndUpdate(
-                    request.params.playlist,
-                    {
-                        $pull: { videos: request.params.video }
-                    },
-                    {
-                        new: true
-                    }
-                )
-                .populate("user", "name")
-                .populate("videos", "name link")
-                .lean()
+router.delete("/:playlist", auth.isAuthorized, async (request: Request, response: Response) => {
+    const decodedToken = response.locals.auth
+    const playlist: UserPlaylistDocument = response.locals.playlist
 
-            return response.status(200).send(updatedPlaylist)
-        } catch (error) {
-            return response.status(500).send(error)
-        }
+    if (!verifyPlaylistOwnership(decodedToken, playlist)) {
+        return response.status(401).send('UNAUTHORIZED')
     }
 
-    private verifyPlaylistOwnership(decodedToken, playlist: UserPlaylistClass) {
-        if (playlist.user instanceof User) {
-            return decodedToken.user.toString() === playlist.user._id.toString()
-        } else {
-            return decodedToken.user.toString() === playlist.user.toString()
-        }
+    if (!playlist.isDeletable) {
+        return response.status(403).send('NOT_PERMITTED')
     }
-}
 
-const playlistApi = new PlaylistApi()
-export default playlistApi.router
+    try {
+        const deletedPlaylist = await UserPlaylist.findByIdAndRemove(request.params.playlist)
+
+        return response.status(200).send(deletedPlaylist)
+    } catch (error) {
+        return response.status(500).send(error)
+    }
+})
+
+router.post("/:playlist/videos", auth.isAuthorized, async (request: Request, response: Response) => {
+    const decodedToken = response.locals.auth
+    const playlist: UserPlaylistDocument = response.locals.playlist
+
+    if (!verifyPlaylistOwnership(decodedToken, playlist)) {
+        return response.status(401).send('UNAUTHORIZED')
+    }
+
+    try {
+        let video = request.body.videoId || null
+
+        if (!video) {
+            const youtubeRequest = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&id=${request.body.videoLink}&key=${process.env.YOUTUBE_API_KEY}`)
+
+            const youtubeResponse = youtubeRequest.data
+
+            video = (await Video.create({
+                link: request.body.videoLink,
+                name: youtubeResponse.items[0].snippet.title,
+                duration: youtubeResponse.items[0].contentDetails.duration
+            }))._id
+        }
+
+        const updatedPlaylist: UserPlaylistDocument = await UserPlaylist
+            .findByIdAndUpdate(
+                request.params.playlist,
+                {
+                    $push: { videos: video }
+                },
+                {
+                    new: true
+                }
+            )
+            .populate("user", "name")
+            .populate("videos", "name link")
+
+
+        return response.status(200).send(updatedPlaylist)
+    } catch (error) {
+        return response.status(500).send(error)
+    }
+})
+
+router.delete("/:playlist/videos/:video", auth.isAuthorized, async (request: Request, response: Response) => {
+    const decodedToken = response.locals.auth
+    const playlist: UserPlaylistDocument = response.locals.playlist
+
+    if (!verifyPlaylistOwnership(decodedToken, playlist)) {
+        return response.status(401).send('UNAUTHORIZED')
+    }
+
+    try {
+        const updatedPlaylist: UserPlaylistDocument = await UserPlaylist
+            .findByIdAndUpdate(
+                request.params.playlist,
+                {
+                    $pull: { videos: request.params.video }
+                },
+                {
+                    new: true
+                }
+            )
+            .populate("user", "name")
+            .populate("videos", "name link")
+            .lean()
+
+        return response.status(200).send(updatedPlaylist)
+    } catch (error) {
+        return response.status(500).send(error)
+    }
+})
+
+export const PlaylistApi = router

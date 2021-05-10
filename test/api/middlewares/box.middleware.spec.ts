@@ -1,10 +1,9 @@
-import * as bodyParser from 'body-parser'
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import BoxApi from './../../../src/api/routes/box.api'
+import { BoxApi } from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
@@ -21,7 +20,7 @@ describe("Box Middleware", () => {
     let brockJWT: Session = null
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', BoxApi)
 
         await Box.deleteMany({})
@@ -300,7 +299,7 @@ describe("Box Middleware", () => {
     describe("Box Open", () => {
         it("Refuses request if the box is closed", async () => {
             return supertest(expressApp)
-                .post('/9cb763b6e72611381ef043e5/queue')
+                .post('/9cb763b6e72611381ef043e5/queue/video')
                 .set('Authorization', `Bearer ${ashJWT.bearer}`)
                 .send({ _id: '9cb81150594b2e75f06ba8fe' })
                 .expect(403, 'BOX_CLOSED')

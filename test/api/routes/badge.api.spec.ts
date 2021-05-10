@@ -1,4 +1,3 @@
-import * as bodyParser from 'body-parser'
 import * as chai from 'chai'
 import * as express from 'express'
 import * as supertest from 'supertest'
@@ -7,7 +6,7 @@ const expect = chai.expect
 
 import { Badge, BadgeDocument } from '../../../src/models/badge.model'
 import { User } from '../../../src/models/user.model'
-import BadgeApi from './../../../src/api/routes/badge.api'
+import { BadgeApi } from './../../../src/api/routes/badge.api'
 import { Session } from "./../../../src/models/session.model"
 
 describe("Badge API", () => {
@@ -17,7 +16,7 @@ describe("Badge API", () => {
     let adminJWT: Session = null
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', BadgeApi)
 
         const ashUser = await User.create({

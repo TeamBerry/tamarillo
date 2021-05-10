@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-expressions */
-import * as bodyParser from 'body-parser'
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import BoxApi from './../../../src/api/routes/box.api'
+import { BoxApi } from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"
@@ -24,7 +23,7 @@ describe("Box API", () => {
     let adminJWT: Session = null
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', BoxApi)
 
         await User.deleteMany({})
@@ -515,16 +514,16 @@ describe("Box API", () => {
             .set('Authorization', `Bearer ${ashJWT.bearer}`)
             .expect(404, 'BOX_NOT_FOUND'))
 
-        // it("Sends a 403 Forbidden error if the user attempting to close the box is not the author", () => {
+        // it("Sends a 403 Forbidden error if the user attempting to delete the box is not the author", () => {
         //     return supertest(expressApp)
         //         .delete('/9cb763b6e72611381ef044e4')
         //         .expect(403, 'FORBIDDEN');
         // });
 
-        it("Sends a 412 BOX_IS_OPEN Error if the box is still open when attempting to close it", () => supertest(expressApp)
+        it("Sends a 403 if the box is still open when attempting to delete it", () => supertest(expressApp)
             .delete('/9cb763b6e72611381ef043e6')
             .set('Authorization', `Bearer ${ashJWT.bearer}`)
-            .expect(412, 'BOX_IS_OPEN'))
+            .expect(403, 'BOX_OPEN'))
 
         it("Sends a 200 with the deleted box", () => supertest(expressApp)
             .delete('/9cb763b6e72611381ef043e7')

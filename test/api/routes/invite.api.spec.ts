@@ -1,10 +1,9 @@
-import * as bodyParser from 'body-parser'
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import InviteApi from './../../../src/api/routes/invite.api'
+import { InviteApi } from './../../../src/api/routes/invite.api'
 import { Invite, InviteDocument } from '../../../src/models/invite.model'
 import { User } from '../../../src/models/user.model'
 const Box = require('./../../../src/models/box.model')
@@ -13,7 +12,7 @@ describe("Invite API", () => {
     const expressApp = express()
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', InviteApi)
 
         await Box.deleteMany({})

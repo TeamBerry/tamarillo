@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-expressions */
-import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import UserApi from './../../../src/api/routes/user.api'
+import { UserApi } from './../../../src/api/routes/user.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylistClass, UserPlaylist } from './../../../src/models/user-playlist.model'
 import authService from "../../../src/api/services/auth.service"
@@ -19,7 +18,7 @@ describe("User API", () => {
     let foreignJWT: Session = null
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', UserApi)
 
         await User.deleteMany({})
@@ -213,7 +212,7 @@ describe("User API", () => {
 
     describe("Gets the playlists of an user", () => {
         it("Sends a 401 back if the API is accessed from an unauthentified source", () => supertest(expressApp)
-            .get('/9ca0df5f86abeb66da97ba4e/playlists')
+            .get('/9ca0df5f86abeb66da97ba5d/playlists')
             .expect(401, 'UNAUTHORIZED'))
 
         it("Sends a 404 back if no user matches the given id", () => supertest(expressApp)

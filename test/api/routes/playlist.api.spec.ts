@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-expressions */
-import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import PlaylistApi from './../../../src/api/routes/playlist.api'
+import { PlaylistApi } from './../../../src/api/routes/playlist.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Video, VideoDocument } from './../../../src/models/video.model'
@@ -19,7 +18,7 @@ describe("Playlists API", () => {
     let foreignJWT: Session = null
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', PlaylistApi)
 
         await User.deleteMany({})

@@ -1,14 +1,13 @@
-import * as bodyParser from "body-parser"
 import cors = require("cors")
 import * as express from "express"
 
-import BoxApi from "./../api/routes/box.api"
-import AuthApi from "./routes/auth.api"
-import PlaylistApi from "./routes/playlist.api"
-import UserApi from "./routes/user.api"
-import SearchApi from "./routes/search.api"
-import InviteApi from "./routes/invite.api"
-import BadgeApi from "./routes/badge.api"
+import { BoxApi } from "./../api/routes/box.api"
+import { AuthApi } from "./routes/auth.api"
+import { PlaylistApi } from "./routes/playlist.api"
+import { UserApi } from "./routes/user.api"
+import { SearchApi } from "./routes/search.api"
+import { InviteApi } from "./routes/invite.api"
+import { BadgeApi } from "./routes/badge.api"
 
 class App {
     public app: express.Application
@@ -17,16 +16,9 @@ class App {
         this.app = express()
 
         this.app.use(cors())
+        this.app.use(express.json())
 
-        this.middlewares()
         this.routes()
-    }
-
-    private middlewares(): void {
-        this.app.use(bodyParser.json({
-            limit: "15mb",
-            type: "application/json"
-        }))
     }
 
     private routes(): void {
