@@ -46,7 +46,7 @@ module.exports.openOnly = async (_: Request, response: Response, next: NextFunct
 module.exports.closedOnly = async (_: Request, response: Response, next: NextFunction) => {
     const matchingBox = response.locals.box
 
-    if (!matchingBox.open) {
+    if (matchingBox.open) {
         return response.status(403).send('BOX_OPEN')
     }
 
