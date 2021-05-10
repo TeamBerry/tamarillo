@@ -1,4 +1,3 @@
-import * as bodyParser from "body-parser"
 import cors = require("cors")
 import * as express from "express"
 
