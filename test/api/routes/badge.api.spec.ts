@@ -6,7 +6,7 @@ const expect = chai.expect
 
 import { Badge, BadgeDocument } from '../../../src/models/badge.model'
 import { User } from '../../../src/models/user.model'
-import BadgeApi from './../../../src/api/routes/badge.api'
+import { BadgeApi } from './../../../src/api/routes/badge.api'
 import { Session } from "./../../../src/models/session.model"
 
 describe("Badge API", () => {

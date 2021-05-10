@@ -7,7 +7,7 @@ import PlaylistApi from "./routes/playlist.api"
 import UserApi from "./routes/user.api"
 import SearchApi from "./routes/search.api"
 import InviteApi from "./routes/invite.api"
-import BadgeApi from "./routes/badge.api"
+import { BadgeApi } from "./routes/badge.api"
 
 class App {
     public app: express.Application
