@@ -6,7 +6,7 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import AuthApi from './../../../src/api/routes/auth.api'
+import { AuthApi } from './../../../src/api/routes/auth.api'
 import { UserPlaylist, UserPlaylistDocument } from "../../../src/models/user-playlist.model"
 import { User } from "../../../src/models/user.model"
 import { Session } from "../../../src/models/session.model"
