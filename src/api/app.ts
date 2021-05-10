@@ -1,7 +1,7 @@
 import cors = require("cors")
 import * as express from "express"
 
-import BoxApi from "./../api/routes/box.api"
+import { BoxApi } from "./../api/routes/box.api"
 import { AuthApi } from "./routes/auth.api"
 import PlaylistApi from "./routes/playlist.api"
 import UserApi from "./routes/user.api"

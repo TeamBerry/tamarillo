@@ -3,7 +3,7 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import BoxApi from './../../../src/api/routes/box.api'
+import { BoxApi } from './../../../src/api/routes/box.api'
 const Box = require('./../../../src/models/box.model')
 import { Video } from './../../../src/models/video.model'
 import { Session } from "./../../../src/models/session.model"

@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-expressions */
-import * as bodyParser from "body-parser"
 import * as chai from "chai"
 import * as express from "express"
 import * as supertest from "supertest"
@@ -19,7 +18,7 @@ describe("User API", () => {
     let foreignJWT: Session = null
 
     before(async () => {
-        expressApp.use(bodyParser.json({ limit: '15mb', type: 'application/json' }))
+        expressApp.use(express.json())
         expressApp.use('/', UserApi)
 
         await User.deleteMany({})
