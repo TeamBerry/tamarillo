@@ -4,7 +4,7 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import PlaylistApi from './../../../src/api/routes/playlist.api'
+import { PlaylistApi } from './../../../src/api/routes/playlist.api'
 import { Session } from "./../../../src/models/session.model"
 import { UserPlaylist, UserPlaylistClass, UserPlaylistDocument } from './../../../src/models/user-playlist.model'
 import { Video, VideoDocument } from './../../../src/models/video.model'
