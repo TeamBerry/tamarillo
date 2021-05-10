@@ -52,7 +52,7 @@
     },
     "devDependencies": {
         "@types/bcrypt": "3.0.1",
-        "@types/chai": "4.2.15",
+        "@types/chai": "4.2.18",
         "@types/express": "4.17.11",
         "@types/mocha": "8.2.2",
         "@types/mongoose": "5.10.3",
@@ -60,7 +60,7 @@
         "@types/node": "9.6.61",
         "@typescript-eslint/eslint-plugin": "4.22.1",
         "@typescript-eslint/parser": "4.22.1",
-        "chai": "4.3.3",
+        "chai": "4.3.4",
         "chai-as-promised": "7.1.1",
         "eslint": "7.26.0",
         "inquirer": "8.0.0",
