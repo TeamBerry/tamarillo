@@ -5,7 +5,7 @@ const Box = require("./../../models/box.model")
 
 const router = Router()
 
-router.get("/invite", [], async (request: Request, response: Response) => {
+router.get("/:invite", [], async (request: Request, response: Response) => {
     try {
         const invite = await Invite.findOne({ link: request.params.invite }).lean()
 
