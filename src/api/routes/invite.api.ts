@@ -3,46 +3,34 @@ import { Request, Response, Router } from "express"
 import { Invite } from "../../models/invite.model"
 const Box = require("./../../models/box.model")
 
-export class InviteApi {
-    public router: Router
+const router = Router()
 
-    constructor() {
-        this.router = Router()
-        this.init()
-    }
+router.get("/invite", [], async (request: Request, response: Response) => {
+    try {
+        const invite = await Invite.findOne({ link: request.params.invite }).lean()
 
-    public init(): void {
-        this.router.get("/:invite", this.match)
-    }
-
-    public async match(request: Request, response: Response): Promise<Response> {
-        try {
-            const invite = await Invite.findOne({ link: request.params.invite }).lean()
-
-            if (!invite) {
-                return response.status(404).send('INVITE_NOT_FOUND')
-            }
-
-            if (invite.expiresAt < new Date()) {
-                return response.status(404).send('INVITE_EXPIRED')
-            }
-
-            const matchingBox = await Box.findById(invite.boxToken).lean()
-
-            if (!matchingBox) {
-                return response.status(404).send('BOX_NOT_FOUND')
-            }
-
-            if (!matchingBox.open) {
-                return response.status(404).send('BOX_CLOSED')
-            }
-
-            return response.status(200).send(invite)
-        } catch (error) {
-            return response.status(500).send()
+        if (!invite) {
+            return response.status(404).send('INVITE_NOT_FOUND')
         }
-    }
-}
 
-const inviteApi = new InviteApi()
-export default inviteApi.router
+        if (invite.expiresAt < new Date()) {
+            return response.status(404).send('INVITE_EXPIRED')
+        }
+
+        const matchingBox = await Box.findById(invite.boxToken).lean()
+
+        if (!matchingBox) {
+            return response.status(404).send('BOX_NOT_FOUND')
+        }
+
+        if (!matchingBox.open) {
+            return response.status(404).send('BOX_CLOSED')
+        }
+
+        return response.status(200).send(invite)
+    } catch (error) {
+        return response.status(500).send()
+    }
+})
+
+export const InviteApi = router
