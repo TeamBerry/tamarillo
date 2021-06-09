@@ -234,12 +234,11 @@ class BoxService {
             })
 
             /**
-             * Every in-box communication regarding video sync between clients will go through this event.
+             * The user wants to sync itself back
              */
-            socket.on("sync", async (syncCommand: { boxToken: string, userToken: string, order: string }) => {
-                if (syncCommand.order === 'next') {
-                    void this.onVideoSkipRequest({boxToken: syncCommand.boxToken, userToken: syncCommand.userToken})
-                }
+            socket.on("sync", async (syncRequest: BoxScope) => {
+                const response = await this.onUserJoined(syncRequest.boxToken)
+                socket.emit("sync", response)
             })
 
             // Handling chat messages
