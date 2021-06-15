@@ -8,7 +8,8 @@ const router = Router({ mergeParams: true })
 router.get("/", [auth.isAuthorized, boxMiddleware.publicOrPrivateWithSubscription, boxMiddleware.openOnly], async (request: Request, response: Response) => {
     const invites = await Invite
         .find({
-            boxToken: request.params.box
+            boxToken: request.params.box,
+            expiresAt: { $gte: new Date() }
         })
         .populate('userToken', 'name settings.picture', 'User')
         .sort({ createdAt: -1 })
