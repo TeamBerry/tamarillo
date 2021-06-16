@@ -6,7 +6,7 @@ import { AuthApi } from "./routes/auth.api"
 import { PlaylistApi } from "./routes/playlist.api"
 import { UserApi } from "./routes/user.api"
 import { SearchApi } from "./routes/search.api"
-import { InviteApi } from "./routes/invite.api"
+import { AccessApi } from "./routes/access.api"
 import { BadgeApi } from "./routes/badge.api"
 
 class App {
@@ -25,7 +25,7 @@ class App {
         // Boxes
         this.app.use("/box", BoxApi)
         this.app.use("/boxes", BoxApi)
-        this.app.use("/invites", InviteApi)
+        this.app.use("/invites", AccessApi)
 
         // Users
         this.app.use("/user", UserApi)
