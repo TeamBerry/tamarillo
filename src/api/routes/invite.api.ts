@@ -1,36 +1,27 @@
-import { Request, Response, Router } from "express"
-
+import { Router, Request, Response } from "express"
 import { Invite } from "../../models/invite.model"
-const Box = require("./../../models/box.model")
+const auth = require("./../middlewares/auth.middleware")
+const boxMiddleware = require("./../middlewares/box.middleware")
 
-const router = Router()
+const router = Router({ mergeParams: true })
 
-router.get("/:invite", [], async (request: Request, response: Response) => {
-    try {
-        const invite = await Invite.findOne({ link: request.params.invite }).lean()
+router.get("/", [auth.isAuthorized, boxMiddleware.publicOrPrivateWithSubscription, boxMiddleware.openOnly], async (request: Request, response: Response) => {
+    const invites = await Invite
+        .find({
+            boxToken: request.params.box,
+            expiresAt: { $gte: new Date() }
+        })
+        .populate('userToken', 'name settings.picture', 'User')
+        .sort({ createdAt: -1 })
+        .lean()
 
-        if (!invite) {
-            return response.status(404).send('INVITE_NOT_FOUND')
-        }
+    return response.status(200).send(invites)
+})
 
-        if (invite.expiresAt < new Date()) {
-            return response.status(404).send('INVITE_EXPIRED')
-        }
+router.delete("/:invite", [auth.isAuthorized, boxMiddleware.publicOrPrivateWithSubscription, boxMiddleware.openOnly], async (request: Request, response: Response) => {
+    await Invite.findByIdAndRemove(request.params.invite)
 
-        const matchingBox = await Box.findById(invite.boxToken).lean()
-
-        if (!matchingBox) {
-            return response.status(404).send('BOX_NOT_FOUND')
-        }
-
-        if (!matchingBox.open) {
-            return response.status(404).send('BOX_CLOSED')
-        }
-
-        return response.status(200).send(invite)
-    } catch (error) {
-        return response.status(500).send()
-    }
+    return response.status(200).send()
 })
 
 export const InviteApi = router

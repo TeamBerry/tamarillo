@@ -6,7 +6,7 @@ import { Subscriber, ActiveSubscriber, PopulatedSubscriberDocument } from "../..
 import { QueueApi } from "./queue.api"
 import { Invite } from "../../models/invite.model"
 import { QueueItemModel } from "../../models/queue-item.model"
-import { BoxInviteApi } from "./box-invites.api"
+import { InviteApi } from "./invite.api"
 const Queue = require("bull")
 const boxQueue = new Queue("box")
 const auth = require("./../middlewares/auth.middleware")
@@ -247,7 +247,7 @@ router.patch("/:box", auth.isAuthorized, async (request: Request, response: Resp
     }
 })
 
-router.use("/:box/invites", BoxInviteApi)
+router.use("/:box/invites", InviteApi)
 
 router.post("/:box/invite", [auth.isAuthorized, boxMiddleware.openOnly], async (request: Request, response: Response) => {
     // TODO: Estimate ACL power
