@@ -10,7 +10,7 @@ import authService from '../../../src/api/services/auth.service'
 import { Session } from "../../../src/models/session.model"
 import { BoxApi } from "../../../src/api/routes/box.api"
 
-describe.only("Box Invites API", () => {
+describe("Box Invites API", () => {
     const expressApp = express()
     let ashJWT: Session = null
 
