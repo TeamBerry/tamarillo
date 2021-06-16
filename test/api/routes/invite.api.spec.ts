@@ -37,7 +37,7 @@ describe.only("Box Invites API", () => {
                 lang: 'en',
                 name: 'Test box',
                 creator: '9ca0df5f86abeb66da97ba5d',
-                private: true,
+                private: false,
                 open: true,
                 options: {
                     random: true,
@@ -76,6 +76,7 @@ describe.only("Box Invites API", () => {
         await Invite.create([
             // Invite for box
             {
+                _id: '7a9a64ce61afbe3404dac3be',
                 link: 'D63ca9d3',
                 boxToken: '9cb763b6e72611381ef043e4',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -83,6 +84,7 @@ describe.only("Box Invites API", () => {
             },
             // Expired invite
             {
+                _id: '7a9a64ce61afbe3404dac3bf',
                 link: '5D3e9d1a',
                 boxToken: '9cb763b6e72611381ef043e4',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -91,6 +93,7 @@ describe.only("Box Invites API", () => {
             },
             // Invite for closed box
             {
+                _id: '7a9a64ce61afbe3404dac3c0',
                 link: '9d3gE6Mo',
                 boxToken: '9cb763b6e72611381ef043e5',
                 userToken: '9ca0df5f86abeb66da97ba5d',
@@ -113,7 +116,12 @@ describe.only("Box Invites API", () => {
             const invites = response.body
 
             expect(invites).to.length(1)
-            expect(invites[0].user.name).to.equal('Ash Ketchum')
         })
+    )
+
+    it("Deletes an invite", () => supertest(expressApp)
+        .delete('/9cb763b6e72611381ef043e4/invites/7a9a64ce61afbe3404dac3bf')
+        .set('Authorization', `Bearer ${ashJWT.bearer}`)
+        .expect(200)
     )
 })
