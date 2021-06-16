@@ -3,21 +3,32 @@ import * as express from "express"
 import * as supertest from "supertest"
 const expect = chai.expect
 
-import { InviteApi } from './../../../src/api/routes/invite.api'
 import { Invite, InviteDocument } from '../../../src/models/invite.model'
 import { User } from '../../../src/models/user.model'
 const Box = require('./../../../src/models/box.model')
+import authService from '../../../src/api/services/auth.service'
+import { Session } from "../../../src/models/session.model"
+import { BoxApi } from "../../../src/api/routes/box.api"
 
-describe("Invite API", () => {
+describe.only("Box Invites API", () => {
     const expressApp = express()
+    let ashJWT: Session = null
 
     before(async () => {
         expressApp.use(express.json())
-        expressApp.use('/', InviteApi)
+        expressApp.use('/', BoxApi)
 
         await Box.deleteMany({})
         await Invite.deleteMany({})
         await User.deleteMany({})
+
+        const ashUser = await User.create({
+            _id: '9ca0df5f86abeb66da97ba5d',
+            name: 'Ash Ketchum',
+            mail: 'ash@pokemon.com',
+            password: 'Pikachu'
+        })
+        ashJWT = authService.createSession(ashUser)
 
         await Box.create([
             {
@@ -85,13 +96,6 @@ describe("Invite API", () => {
                 userToken: '9ca0df5f86abeb66da97ba5d',
                 expiresAt: new Date(Date.now() + 900).getTime()
             },
-            // Invite for no box
-            {
-                link: '0FE3ju97',
-                boxToken: '9cb763b6e72611381ef043e3',
-                userToken: '9ca0df5f86abeb66da97ba5d',
-                expiresAt: new Date(Date.now() + 900).getTime()
-            }
         ])
     })
 
@@ -101,30 +105,15 @@ describe("Invite API", () => {
         await User.deleteMany({})
     })
 
-    describe("Matches an invite to its box", () => {
-        it("Rejects the invite if it does not exist", () => supertest(expressApp)
-            .get('/9Jk3e6P')
-            .expect(404, 'INVITE_NOT_FOUND'))
+    it("Gets all the valid invites of a box", () => supertest(expressApp)
+        .get('/9cb763b6e72611381ef043e4/invites')
+        .set('Authorization', `Bearer ${ashJWT.bearer}`)
+        .expect(200)
+        .then(response => {
+            const invites = response.body
 
-        it("Rejects the invite if it has expired", () => supertest(expressApp)
-            .get('/5D3e9d1a')
-            .expect(404, 'INVITE_EXPIRED'))
-
-        it("Rejects the invite if the matching box does not exist", () => supertest(expressApp)
-            .get('/0FE3ju97')
-            .expect(404, 'BOX_NOT_FOUND'))
-
-        it("Rejects the invite if the matching box is closed", () => supertest(expressApp)
-            .get('/9d3gE6Mo')
-            .expect(404, 'BOX_CLOSED'))
-
-        it("Sends back the invite", () => supertest(expressApp)
-            .get('/D63ca9d3')
-            .expect(200)
-            .then(response => {
-                const invite: InviteDocument = response.body
-
-                expect(invite.boxToken).to.equal('9cb763b6e72611381ef043e4')
-            }))
-    })
+            expect(invites).to.length(1)
+            expect(invites[0].user.name).to.equal('Ash Ketchum')
+        })
+    )
 })
