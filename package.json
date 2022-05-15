@@ -34,7 +34,7 @@
     "dependencies": {
         "@teamberry/muscadine": "^1.0.0",
         "aws-sdk": "^2.653.0",
-        "axios": "^0.21.1",
+        "axios": "^0.27.0",
         "bcrypt": "^5.0.0",
         "bull": "^3.13.0",
         "cors": "^2.8.4",
