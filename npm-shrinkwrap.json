@@ -713,9 +713,9 @@
             }
         },
         "@types/node": {
-            "version": "14.17.27",
-            "resolved": "https://registry.npmjs.org/@types/node/-/node-14.17.27.tgz",
-            "integrity": "sha512-94+Ahf9IcaDuJTle/2b+wzvjmutxXAEXU6O81JHblYXUg2BDG+dnBy7VxIPHKAyEEDHzCMQydTJuWvrE+Aanzw=="
+            "version": "16.11.60",
+            "resolved": "https://registry.npmjs.org/@types/node/-/node-16.11.60.tgz",
+            "integrity": "sha512-kYIYa1D1L+HDv5M5RXQeEu1o0FKA6yedZIoyugm/MBPROkLpX4L7HRxMrPVyo8bnvjpW/wDlqFNGzXNMb7AdRw=="
         },
         "@types/qs": {
             "version": "6.9.6",
